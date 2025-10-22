@@ -4,10 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
     <title>Sign Up - Amarelle</title>
-    <link rel="stylesheet" href="../login.css">
-</head>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
+<link rel="stylesheet" href="public/login.css"></head>
 
 <body>
     <div class="header">
@@ -18,7 +17,14 @@
 
     <div class="content">
         <h1>Join Amarelle</h1>
-        <form action="register.php" method="POST" class="register-form">
+
+        <?php if (!empty($error)): ?>
+            <p style="color:red;"><?php echo $error; ?></p>
+        <?php elseif (!empty($success)): ?>
+            <p style="color:green;"><?php echo $success; ?></p>
+        <?php endif; ?>
+
+        <form action="" method="POST" class="register-form">
             <div class="form-row">
                 <div class="form-group">
                     <label for="firstname">First Name</label>
@@ -42,10 +48,12 @@
                     <input type="email" id="email" name="email" placeholder="Enter your email address" required>
                 </div>
             </div>
+
             <div class="form-group">
                 <label for="address">Address</label>
                 <input type="text" id="address" name="address" placeholder="Enter your address" required>
             </div>
+
             <label for="contact_num">Contact Number</label>
             <div class="contact-group">
                 <span class="contact-prefix">+639</span>
@@ -55,14 +63,12 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <input type="password" id="password" name="password" placeholder="Create a strong password"
-                        required>
+                    <input type="password" id="password" name="password" placeholder="Create a strong password" required>
                 </div>
 
                 <div class="form-group">
                     <label for="confirmPassword">Confirm Password</label>
-                    <input type="password" id="confirmPassword" name="confirmPassword"
-                        placeholder="Re-enter your password" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password" required>
                 </div>
             </div>
 
@@ -79,7 +85,4 @@
         <p>© 2025 Amarelle. All rights reserved.</p>
     </div>
 </body>
-
-
-
 </html>

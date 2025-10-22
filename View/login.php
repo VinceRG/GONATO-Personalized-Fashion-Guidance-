@@ -6,20 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
     <title>Login - Amarelle</title>
-    <link rel="stylesheet" href="../login.css">
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="public/login.css">
 </head>
 
 <body>
     <div class="header">
-        <a href="landing_page.html" class="logo-link">
+        <a href="index.php?page=landing" class="logo-link">
             <div class="logo">Amarelle</div>
         </a>
     </div>
 
     <div class="content">
         <h1>Sign In</h1>
-        <form id="loginForm" action="login.php" method="POST">
+
+        <?php if (!empty($message)): ?>
+            <p style="color:green;"><?php echo htmlspecialchars($message); ?></p>
+        <?php endif; ?>
+
+        <form id="loginForm" action="index.php?page=login" method="POST">
             <label for="username">Username or Email</label>
             <input type="text" id="username" name="username" placeholder="Enter your username or email" required>
 
@@ -30,7 +34,7 @@
 
             <p>
                 Don't have an account yet?
-                <a href="register.php">Sign Up here</a>
+                <a href="index.php?page=register">Sign Up here</a>
             </p>
         </form>
     </div>
@@ -39,5 +43,4 @@
         <p>© 2025 Amarelle. All rights reserved.</p>
     </div>
 </body>
-
 </html>
