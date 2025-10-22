@@ -5,7 +5,6 @@ require_once __DIR__ . '/../Model/registerfunc.php';
 class RegisterController {
     private $userModel;
     
-
     public function __construct() {
         $this->userModel = new User();
     }
@@ -13,7 +12,6 @@ class RegisterController {
     public function index() {
         $error = "";
         $success = "";
-        require_once './View/register.php';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $firstname = trim($_POST['firstname']);
@@ -41,6 +39,7 @@ class RegisterController {
             }
         }
 
-        include __DIR__ . '/../View/register.php';
+        // ✅ Only include once, after processing
+        require_once __DIR__ . '/../View/register.php';
     }
 }

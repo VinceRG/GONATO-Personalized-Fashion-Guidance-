@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seasonal Color Analysis</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 { color: #1c1e21; margin-bottom: 1rem; }
+        p { color: #606770; margin-bottom: 2rem; }
+        
+        .button-group { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+        .button, input[type="file"]::file-selector-button {
+            flex: 1;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+        .button:hover, input[type="file"]::file-selector-button:hover {
+            background-color: #0056b3;
+        }
+        input[type="file"] {
+            display: none;
+        }
+        .button-secondary {
+            background-color: #6c757d;
+        }
+        .button-secondary:hover {
+            background-color: #5a6268;
+        }
+        .camera-view {
+            display: none;
+            margin-bottom: 1rem;
+            position: relative;
+        }
+        video {
+            width: 100%;
+            border-radius: 8px;
+            transform: scaleX(-1); /* Mirror mode */
+        }
+        canvas { display: none; }
+        
+        #loader {
+            display: none;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto 0;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #result-container {
+            display: none;
+            margin-top: 2rem;
+            text-align: left;
+            background: #f9f9f9;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        #result-container h3 { margin-top: 0; }
+        .color-swatch {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 1px solid #ccc;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Seasonal Color Analysis</h1>
+        <p>Upload a clear, well-lit photo or use your camera to find your perfect color season.</p>
+        
+        <div class="button-group">
+            <label for="image-upload" class="button">Upload Photo</label>
+            <input type="file" id="image-upload" accept="image/jpeg, image/png">
+            <button id="start-camera" class="button button-secondary">Use Camera</button>
+        </div>
+
+        <div class="camera-view" id="camera-view">
+            <video id="video-player" autoplay playsinline></video>
+            <button id="snap-photo" class="button" style="width: 100%; margin-top: 1rem;">Snap Photo</button>
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <div id="loader"></div>
+        <div id="result-container">
+            <h3>Your Season is: <strong id="result-season"></strong></h3>
+            <p id="result-description"></p>
+            <hr>
+            <p><strong>Undertone:</strong> <span id="result-undertone"></span></p>
+            <p><strong>Contrast:</strong> <span id="result-contrast"></span></p>
+            <p><strong>Skin Tone:</strong> <span id="skin-swatch" class="color-swatch"></span> <span id="result-skin"></span></p>
+            <p><strong>Eye Tone:</strong> <span id="eye-swatch" class="color-swatch"></span> <span id="result-eye"></span></p>
+            <p><strong>Best Colors:</strong> <span id="result-palette"></span></p>
+        </div>
+        <div id="error-message" style="color: red; margin-top: 1rem;"></div>
+    </div>
+
+    <script>
+        // Get all the elements we need
+        const video = document.getElementById('video-player');
+        const canvas = document.getElementById('canvas');
+        const startCameraButton = document.getElementById('start-camera');
+        const snapPhotoButton = document.getElementById('snap-photo');
+        const imageUploadInput = document.getElementById('image-upload');
+        const cameraView = document.getElementById('camera-view');
+        
+        const loader = document.getElementById('loader');
+        const resultContainer = document.getElementById('result-container');
+        const errorMessage = document.getElementById('error-message');
+        
+        let videoStream = null;
+
+        // --- 1. Start Camera ---
+        startCameraButton.addEventListener('click', async () => {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                video.srcObject = videoStream;
+                cameraView.style.display = 'block';
+            } catch (err) {
+                console.error("Error accessing camera: ", err);
+                errorMessage.textContent = "Could not access camera. Please check permissions.";
+            }
+        });
+
+        // --- 2. Snap Photo ---
+        snapPhotoButton.addEventListener('click', () => {
+            // Set canvas size to match video
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            
+            // Draw the mirrored video frame to the canvas
+            const context = canvas.getContext('2d');
+            context.save();
+            context.scale(-1, 1); // Flip horizontally
+            context.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+            context.restore(); // Restore context to normal
+
+            // Convert canvas to a JPEG blob and upload it
+            canvas.toBlob((blob) => {
+                sendImageToBackend(blob, 'camera-capture.jpg');
+                // Stop the camera
+                if (videoStream) {
+                    videoStream.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                    cameraView.style.display = 'none';
+                }
+            }, 'image/jpeg', 0.9);
+        });
+
+        // --- 3. Handle File Upload ---
+        imageUploadInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                sendImageToBackend(file, file.name);
+            }
+        });
+
+        // --- 4. Send Image to PHP Backend ---
+        async function sendImageToBackend(imageFile, fileName) {
+            // Reset UI
+            loader.style.display = 'block';
+            resultContainer.style.display = 'none';
+            errorMessage.textContent = '';
+            
+            // Create FormData to send
+            const formData = new FormData();
+            formData.append('image', imageFile, fileName);
+
+            try {
+                // Send the image to our PHP endpoint
+                const response = await fetch('analysis.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Handle errors from the server (PHP or Python)
+                    throw new Error(data.error || 'Unknown analysis error');
+                }
+                
+                // Success! Display the results
+                displayResults(data);
+
+            } catch (err) {
+                console.error('Upload failed:', err);
+                errorMessage.textContent = `Analysis Failed: ${err.message}`;
+            } finally {
+                loader.style.display = 'none';
+                imageUploadInput.value = ''; // Reset file input
+            }
+        }
+
+        // --- 5. Display Results ---
+        function displayResults(data) {
+            document.getElementById('result-season').textContent = data.seasonal_color;
+            document.getElementById('result-description').textContent = data.description;
+            document.getElementById('result-undertone').textContent = data.undertone;
+            document.getElementById('result-contrast').textContent = data.contrast_level;
+            
+            document.getElementById('result-skin').textContent = data.skin_tone.hex;
+            document.getElementById('skin-swatch').style.backgroundColor = data.skin_tone.hex;
+            
+            document.getElementById('result-eye').textContent = data.eye_tone.hex;
+            document.getElementById('eye-swatch').style.backgroundColor = data.eye_tone.hex;
+
+            document.getElementById('result-palette').textContent = data.color_palette.best.join(', ');
+            
+            resultContainer.style.display = 'block';
+        }
+
+    </script>
+</body>
+</html>
