@@ -41,6 +41,6 @@ class RegisterController {
             }
         }
 
-        include __DIR__ . '/../View/register.php';
     }
 }
+?>

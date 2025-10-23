@@ -56,8 +56,8 @@
 
             <label for="contact_num">Contact Number</label>
             <div class="contact-group">
-                <span class="contact-prefix">+639</span>
-                <input type="text" id="contact_num" name="contact_num" maxlength="9" placeholder="XX XXX XXXX" required>
+                <span class="contact-prefix">+63</span>
+                <input type="text" id="contact_num" name="contact_num" maxlength="10" placeholder="XXX XXX XXXX" required>
             </div>
 
             <div class="form-row">
