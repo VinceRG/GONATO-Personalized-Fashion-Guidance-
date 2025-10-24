@@ -45,7 +45,6 @@
             </div>
 
             <div class="subsection">
-              
               <h2 class="section-title" style="font-size:1.6rem; margin:0 0 1rem 0;">Recommendations</h2>
               <p class="section-subtitle" style="margin:0 0 1.25rem 0;">Based on your recent interactions, here are pieces we think you'll love. Tap any item to add it to your cart or view details.</p>
               <div class="clothes-grid">
@@ -137,8 +136,8 @@
               </div>
 
               <div class="upload-section">
-                <button class="btn"><i class="bi bi-camera"></i> Use Camera</button>
-                <button class="btn"><i class="bi bi-upload"></i> Upload Image</button>
+                <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
+                <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
               </div>
 
               <ul class="feature-list">
@@ -147,6 +146,14 @@
                 <li>Personalized seasonal color palette</li>
                 <li>Complementary color recommendations</li>
               </ul>
+
+              <!-- Hidden Color Analysis Result -->
+              <div id="colorSeasons" class="color-seasons-container">
+                <h3>Your Color Palette</h3>
+                <p>Your best palette is <strong>Soft Autumn</strong>.</p>
+                <p>Recommended tones: warm beige, muted green, soft coral.</p>
+                <button class="close-btn" onclick="toggleAnalysis('colorSeasons', false)">Close Analysis</button>
+              </div>
             </div>
 
             <div class="option-card">
@@ -157,8 +164,8 @@
               </div>
 
               <div class="upload-section">
-                <button class="btn"><i class="bi bi-camera"></i> Use Camera</button>
-                <button class="btn"><i class="bi bi-upload"></i> Upload Image</button>
+                <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-camera"></i> Use Camera</button>
+                <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-upload"></i> Upload Image</button>
               </div>
 
               <ul class="feature-list">
@@ -167,9 +174,17 @@
                 <li>Shape-specific outfit recommendations</li>
                 <li>Personalized fit suggestions</li>
               </ul>
+
+              <!-- Hidden Body Shape Result -->
+              <div id="bodyShapes" class="body-shapes-container">
+                <h3>Your Body Shape</h3>
+                <p>Your shape appears to be <strong>Hourglass</strong>.</p>
+                <p>Suggested styles: wrap dresses, high-waist skirts, fitted tops.</p>
+                <button class="close-btn" onclick="toggleAnalysis('bodyShapes', false)">Close Analysis</button>
+              </div>
             </div>
           </div>
-        </section>  
+        </section>
     </div>
   </div>
 
@@ -211,10 +226,8 @@
         const id = '#' + entry.target.id;
         const correspondingLink = document.querySelector(`.nav-links a[href="${id}"]`);
         if (entry.isIntersecting) {
-
           navLinks.forEach(l => l.classList.remove('active'));
           if (correspondingLink) correspondingLink.classList.add('active');
-
           sections.forEach(s => s.classList.remove('active'));
           entry.target.classList.add('active');
         }
@@ -240,6 +253,37 @@
     document.querySelector('.cart-button').addEventListener('click', () => {
       alert('Shopping cart feature coming soon!');
     });
+
+    /* ---- NEW ANALYSIS FUNCTIONALITY ---- */
+    function toggleAnalysis(targetId, show) {
+      const targetElement = document.getElementById(targetId);
+      if (!targetElement) return;
+      const card = targetElement.closest('.option-card');
+      const uploadSection = card.querySelector('.upload-section');
+      const featureList = card.querySelector('.feature-list');
+      if (show) {
+        targetElement.classList.add('show-results');
+        uploadSection.classList.add('hidden');
+        featureList.classList.add('hidden');
+        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        targetElement.classList.remove('show-results');
+        uploadSection.classList.remove('hidden');
+        featureList.classList.remove('hidden');
+      }
+    }
+
+    function simulateAnalysis(targetId) {
+      const button = event.target;
+      button.disabled = true;
+      const originalText = button.textContent;
+      button.textContent = "Analyzing...";
+      setTimeout(() => {
+        button.disabled = false;
+        button.textContent = originalText;
+        toggleAnalysis(targetId, true);
+      }, 1500);
+    }
   </script>
 </body>
 </html>
