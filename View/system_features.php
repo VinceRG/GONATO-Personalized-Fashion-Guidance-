@@ -50,7 +50,7 @@
               <p class="section-subtitle" style="margin:0 0 1.25rem 0;">Based on your recent interactions, here are pieces we think you'll love. Tap any item to add it to your cart or view details.</p>
               <div class="clothes-grid">
                 <div class="clothes-item">
-                  <img src="https://via.placeholder.com/400x300" alt="Outfit 1" />
+                  <img src="source/hourglass/autumn/AIRism Cotton Flare Midi Dress brown.avif" alt="Outfit 1" />
                   <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
                   <div class="clothes-caption">
                     <div class="title">Rustic Wrap Dress</div>
@@ -59,7 +59,34 @@
                 </div>
 
                 <div class="clothes-item">
-                  <img src="https://via.placeholder.com/400x300" alt="Outfit 2" />
+                  <img src="source/hourglass/Autumn/Smart Ankle Pants.avif" alt="Outfit 1" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Rustic Wrap Dress</div>
+                    <div class="price">$79</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="source/hourglass/autumn/Souffle Yarn Dress olive.avif" alt="Outfit 1" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Rustic Wrap Dress</div>
+                    <div class="price">$79</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="source/hourglass/spring/Cotton Ribbed Long-Sleeve Cropped Cardigan Olive.avif" alt="Outfit 1" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Rustic Wrap Dress</div>
+                    <div class="price">$79</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="source/Inverted Triangle/winter/Rayon Long Sleeve Blouse dark brown.avif" alt="Outfit 2" />
                   <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
                   <div class="clothes-caption">
                     <div class="title">Sage Linen Blouse</div>
@@ -68,7 +95,25 @@
                 </div>
 
                 <div class="clothes-item">
-                  <img src="https://via.placeholder.com/400x300" alt="Outfit 3" />
+                  <img src="source/Inverted Triangle/winter/Smart Wide Pants body.webp" alt="Outfit 2" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Sage Linen Blouse</div>
+                    <div class="price">$49</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="source/Inverted Triangle/winter/Volume Sleeve Short Sleeve Dress black.jfif" alt="Outfit 2" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Sage Linen Blouse</div>
+                    <div class="price">$49</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="source/hourglass/winter/Flare Dress.avif" alt="Outfit 3" />
                   <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
                   <div class="clothes-caption">
                     <div class="title">Midnight Tailored Coat</div>
