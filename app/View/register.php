@@ -6,11 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Amarelle</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
-<link rel="stylesheet" href="public/login.css"></head>
+    <link rel="stylesheet" href="public/css/login.css">
+</head>
+
 
 <body>
     <div class="header">
-        <a href="landing_page.html" class="logo-link">
+        <a href="index.php?page=landing" class="logo-link">
             <div class="logo">Amarelle</div>
         </a>
     </div>
@@ -56,8 +58,8 @@
 
             <label for="contact_num">Contact Number</label>
             <div class="contact-group">
-                <span class="contact-prefix">+63</span>
-                <input type="text" id="contact_num" name="contact_num" maxlength="10" placeholder="XXX XXX XXXX" required>
+                <span class="contact-prefix">+639</span>
+                <input type="text" id="contact_num" name="contact_num" maxlength="9" placeholder="XX XXX XXXX" required>
             </div>
 
             <div class="form-row">
@@ -76,7 +78,7 @@
 
             <p>
                 Already have an account?
-                <a href="login.php">Login here</a>
+                <a href="index.php?page=login">Login here</a>
             </p>
         </form>
     </div>

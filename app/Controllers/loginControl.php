@@ -1,13 +1,14 @@
 <?php
+// app/Controllers/loginControl.php
+
 class LoginController {
     public function index() {
         $message = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $username = $_POST['username'] ?? '';
-            $password = $_POST['password'] ?? '';
+            $username = trim($_POST['username'] ?? '');
+            $password = trim($_POST['password'] ?? '');
 
-            // ✅ For now, no database check — just simulate login success
             if (!empty($username) && !empty($password)) {
                 $message = "Successfully logged in!";
             } else {
@@ -15,6 +16,7 @@ class LoginController {
             }
         }
 
-        require_once './View/login.php';
+        // ✅ Correct view path
+        require_once __DIR__ . '/../View/login.php';
     }
 }

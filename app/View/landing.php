@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">    
     <title>Amarelle - Your Personal Fashion Intelligence</title>
-<link rel="stylesheet" href="public/css/landing.css"></head>
+    <link rel="stylesheet" href="public/css/landing.css">
+
+
+</head>
 <body>
     <nav>
         <div class="nav-brand">[Logo] Amarelle</div>
