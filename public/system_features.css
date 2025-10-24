@@ -1,4 +1,4 @@
-    @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
+        @import url("https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap");
 
       :root {
         --font-family: 'Lexend', sans-serif;
@@ -29,16 +29,13 @@
       body {
         font-family: var(--font-family);
         background: radial-gradient(circle, #A68763 0%, transparent 65%);
-        /* Remove padding here to let results-container manage layout */
       }
 
       .results-container {
         display: flex;
-        /* Removed min-height: 100vh; to allow content height to govern */
         position: relative;
-        /* Push content over to make space for fixed sidebar */
         margin-left: 280px; 
-        width: calc(100% - 280px); /* Fill the rest of the screen */
+        width: calc(100% - 280px); 
       }
 
       /* SIDEBAR */
@@ -48,7 +45,7 @@
         left: 0;
         width: 280px;
         height: 100vh;
-        background: rgba(255, 252, 252, 0.1);
+        background: radial-gradient(circle, #A68763 0%, transparent 65%);
         backdrop-filter: blur(20px);
         border-right: 1px solid rgba(255, 255, 255, 0.4);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -98,20 +95,16 @@
         color: white;
       }
 
-      /* MAIN CONTENT FIXES */
+      /* MAIN CONTENT */
       .main-content {
         flex: 1;
-        /* Set height to 100vh for scrollable content area */
         height: 100vh; 
         background: rgba(255, 252, 252, 0.1);
         backdrop-filter: blur(20px);
         overflow-y: auto;
-        /* Remove vertical centering to allow natural flow */
         align-items: flex-start; 
         justify-content: flex-start;
-        /* Removed margin and width settings to let flex take over */
-        padding: var(--spacing-xlarge) var(--spacing-large); /* Added body padding back here */
-        /* Set border radius for the main content box */
+        padding: var(--spacing-xlarge) var(--spacing-large); 
         border-radius: 1.5rem;
       }
 
@@ -120,7 +113,6 @@
         animation: fadeIn 0.4s ease-in;
         width: 100%;
         max-width: 1400px;
-        /* Center content horizontally within the main-content scroll area */
         margin: 0 auto; 
       }
 
@@ -142,7 +134,6 @@
 
       /* TEXT STYLES */
 
-      /* Removed #overview #catalog-shop padding for better spacing control on sections */
       #catalog-shop {
         padding-top: 0;
       }
@@ -194,7 +185,7 @@
         width: 100%;
         max-width: 1200px;
         margin: 0 auto;
-        padding: 0; /* Removed 1rem padding */
+        padding: 0; 
       }
 
       .option-card {
@@ -323,7 +314,6 @@
         transform: translateX(4px);
       }
 
-      /* Enhance option card hover state */
       .option-card:hover {
         transform: translateY(-8px);
         box-shadow: var(--shadow-elegant);
@@ -403,11 +393,10 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 2.5rem;
-        padding: 0; /* Removed padding: 1.5rem; */
+        padding: 0; 
       }
       
       .subsection {
-        /* Added margin-top to separate subsection from main header */
         margin-top: 3rem; 
       }
 
@@ -510,7 +499,7 @@
         }
         
         .main-content {
-          padding: 2.5rem 2rem; /* Adjusted padding for smaller screens */
+          padding: 2.5rem 2rem; 
         }
 
         .options-container {

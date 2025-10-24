@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="public/system_features.css"/>
 
   <script src="https://cdn.tailwindcss.com"></script>
+
 </head>
 
 <body>
@@ -146,7 +147,6 @@
         target.classList.add('active');
 
         const mainContent = document.querySelector('.main-content');
-        // Scroll to the target element's top within the scrollable area
         const targetTop = target.offsetTop; 
         mainContent.scrollTo({ top: targetTop, behavior: 'smooth' });
 
