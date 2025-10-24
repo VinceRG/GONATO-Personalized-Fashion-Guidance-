@@ -12,9 +12,7 @@
 <div class="overlay">
   <div class="modal">
     <div class="modal-header">
-      <button class="close-btn" onclick="window.history.back()">
-        <i class="bi bi-x"></i>
-      </button>
+      
       <div class="tabs">
         <button class="tab-btn active" data-tab="account">
           <i class="bi bi-person"></i> Account
@@ -23,6 +21,9 @@
           <i class="bi bi-bag"></i> Purchases
         </button>
       </div>
+      <button class="close-btn" onclick="window.history.back()">
+        <i class="bi bi-x"></i>
+      </button>
     </div>
     
     <div class="modal-body">
