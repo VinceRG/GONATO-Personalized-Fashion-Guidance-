@@ -107,6 +107,7 @@ body {
     display: flex;
     gap: 0.5rem;
     flex: 1;
+
 }
 
 .tab-btn {
@@ -126,18 +127,9 @@ body {
     gap: 0.5rem;
 }
 
-.tab-btn:hover {
-    background: rgba(255, 255, 255, 0.5);
-}
-
-.tab-btn {
-    transition: background 0.2s ease, color 0.2s ease;
-}
-
 .tab-btn.active {
     background: #2D2D2D;
     color: #fff;
-    /* makes the icon and text white for contrast */
     font-weight: 600;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
