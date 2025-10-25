@@ -13,7 +13,7 @@
     <nav>
         <div class="nav-brand">[Logo] Amarelle</div>
         <div class="nav-links">
-            <a href="#features-grid" class="nav-link">Features</a>
+            <a href="index.php?page=features" class="nav-link">Features</a>
             <div class="nav-auth">
                 <a href="index.php?page=login" class="nav-login">Login</a>
                 <a href="index.php?page=register" class="nav-cta">Sign Up</a>

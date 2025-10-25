@@ -549,7 +549,13 @@ body {
         <div class="profile">
           <div class="profile-pic"></div>
           <div class="profile-info">
-            <h4>Guest User</h4>
+
+          <div class="header">
+        <a href="index.php?page=user_info" class="logo-link">
+             <h4>Guest User</h4>
+        </a>
+    </div>
+           
             <p><i>@username</i></p>
           </div>
         </div>
