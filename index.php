@@ -22,3 +22,4 @@ switch ($page) {
         require_once './app/View/landing.php';
         break;
 }
+    
