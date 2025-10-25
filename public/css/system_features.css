@@ -45,7 +45,7 @@
         left: 0;
         width: 280px;
         height: 100vh;
-        background: radial-gradient(circle, #A68763 0%, transparent 65%);
+        background: rgba(255, 255, 255, 0.4);
         backdrop-filter: blur(20px);
         border-right: 1px solid rgba(255, 255, 255, 0.4);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
