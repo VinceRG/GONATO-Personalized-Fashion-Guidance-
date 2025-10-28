@@ -160,6 +160,7 @@ label:first-of-type {
     margin-top: 0;
 }
 
+/* FIXED: Added margin-bottom to create space between input fields */
 input[type="text"],
 input[type="password"],
 input[type="email"] {
@@ -172,6 +173,7 @@ input[type="email"] {
     background: #FAFAF9;
     color: #2D2D2D;
     transition: all 0.3s ease;
+    margin-bottom: 1.2rem;
 }
 
 input[type="text"]:focus,
@@ -214,6 +216,7 @@ input[type="email"]::placeholder {
     flex: 1;
 }
 
+/* FIXED: Adjusted margin-top for better spacing before button */
 button[type="submit"] {
     width: 100%;
     padding: 1.1rem 2rem;
@@ -227,6 +230,7 @@ button[type="submit"] {
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     letter-spacing: 0.3px;
+    margin-top: 0.5rem;
 }
 
 button[type="submit"]:hover {

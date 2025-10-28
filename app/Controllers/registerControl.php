@@ -10,6 +10,13 @@ class RegisterController {
     }
 
     public function index() {
+        // Handle AJAX requests for checking existence
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+            strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            $this->handleAjaxCheck();
+            return;
+        }
+
         $error = "";
         $success = "";
 
@@ -41,4 +48,40 @@ class RegisterController {
 
         require_once __DIR__ . '/../View/register.php';
     }
+
+    /**
+     * Handle AJAX requests for checking username/email existence
+     */
+    private function handleAjaxCheck() {
+        header('Content-Type: application/json');
+        
+        $response = ['exists' => false];
+
+        try {
+            if (isset($_POST['username'])) {
+                $username = trim($_POST['username']);
+                if (!empty($username)) {
+                    $response['exists'] = $this->userModel->usernameExists($username);
+                }
+            } elseif (isset($_POST['email'])) {
+                $email = trim($_POST['email']);
+                if (!empty($email)) {
+                    $response['exists'] = $this->userModel->emailExists($email);
+                }
+            }
+        } catch (Exception $e) {
+            $response['error'] = 'Error checking availability';
+        }
+
+        echo json_encode($response);
+        exit;
+    }
+
+    /**
+     * Alternative method if you want a separate endpoint
+     */
+    public function checkExists() {
+        $this->handleAjaxCheck();
+    }
 }
+?>
