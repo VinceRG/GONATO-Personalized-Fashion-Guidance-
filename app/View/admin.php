@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css"/>
-  <link rel="stylesheet" href="public/admin.css"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="public/css/admin.css" />
 </head>
+
 <body>
   <div class="admin-container">
     <div class="sidebar">
@@ -145,7 +148,7 @@
           <select id="orderStatusFilter" onchange="filterOrders()">
             <option value="">All Status</option>
             <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>           
+            <option value="cancelled">Cancelled</option>
             <option value="pending">Pending</option>
             <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
@@ -201,7 +204,8 @@
             <select id="colorCategory" required style="flex: 1;">
               <option value="">Select Color</option>
             </select>
-            <button type="button" class="btn" onclick="openAddColorModal()" title="Add New Color" style="padding: 0.75rem 1rem; white-space: nowrap; flex-shrink: 0;">
+            <button type="button" class="btn" onclick="openAddColorModal()" title="Add New Color"
+              style="padding: 0.75rem 1rem; white-space: nowrap; flex-shrink: 0;">
               <i class="bi bi-plus-circle" style="margin-right: 0.25rem;"></i> Add Color
             </button>
           </div>
@@ -271,4 +275,5 @@
     </div>
   </div>
 </body>
+
 </html>
