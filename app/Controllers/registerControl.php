@@ -39,7 +39,6 @@ class RegisterController {
             }
         }
 
-        // ✅ Only include once, after processing
         require_once __DIR__ . '/../View/register.php';
     }
 }

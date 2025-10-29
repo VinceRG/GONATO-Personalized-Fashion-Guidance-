@@ -26,7 +26,7 @@ class User {
     public function register($firstname, $lastname, $username, $email, $address, $contact_num, $password) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
         $stmt = $this->conn->prepare("
-            INSERT INTO users (firstname, lastname, username, email, address, contact_num, password)
+            INSERT INTO users (FIRST_NAME, LAST_NAME, USERNAME , EMAIL , ADDRESS, CONTACTS, PASSWORD)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->bind_param("sssssss", $firstname, $lastname, $username, $email, $address, $contact_num, $hashedPassword);
