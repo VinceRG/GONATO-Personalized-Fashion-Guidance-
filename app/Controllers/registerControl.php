@@ -1,5 +1,5 @@
 <?php
-// GONATO-Personalized-Fashion-Guidance-/Controllers/RegisterController.php
+// GONATO-Personalized-Fashion-Guidance-/Controllers/registerController.php
 require_once __DIR__ . '/../Model/registerfunc.php';
 
 class RegisterController {

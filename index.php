@@ -17,8 +17,21 @@ switch ($page) {
         $controller->index();
         break;
 
+    case 'user_info':
+        require_once './app/Controllers/userControl.php';
+        $controller = new UserController();
+        $controller->index();
+        break;
+
+    case 'features':
+        require_once './app/Controllers/featureControl.php';
+        $controller = new FeaturesController();
+        $controller->index();
+        break;
+
     case 'landing':
     default:
         require_once './app/View/landing.php';
         break;
 }
+    

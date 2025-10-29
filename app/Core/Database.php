@@ -2,7 +2,7 @@
 // GONATO-Personalized-Fashion-Guidance-/Core/Database.php
 class Database {
     private static $host = "localhost";
-    private static $db_name = "Amarelle"; // change if needed
+    private static $db_name = "Amarelle";
     private static $username = "root";
     private static $password = "";
     private static $conn;
