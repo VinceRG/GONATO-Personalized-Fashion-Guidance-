@@ -328,19 +328,19 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             <div class="form-grid">
               <div class="form-group">
                 <label>First Name</label>
-                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>" disabled >
+                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>" disabled required>
               </div>
               <div class="form-group">
                 <label>Last Name</label>
-                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>" disabled >
+                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>" disabled required>
               </div>
               <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>" disabled >
+                <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>" disabled required>
               </div>
               <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled >
+                <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled required>
               </div>
               <div class="form-group">
                 <label>Home Address</label>
