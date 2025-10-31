@@ -1,30 +1,19 @@
 <?php
 // GONATO-Personalized-Fashion-Guidance-/Core/Database.php
 class Database {
-    private $servername = "localhost";
-    private $username = "root";
-    private $password = "root";
-    private $dbname   = "amarelle";
-    private $port     = 3307;
-    private $conn;
+    private static $host = "localhost";
+    private static $db_name = "Amarelle"; // change if needed
+    private static $username = "root";
+    private static $password = "";
+    private static $conn;
 
-    public function __construct() {
-        $this->conn = mysqli_connect(
-            $this->servername,
-            $this->username,
-            $this->password,
-            $this->dbname,
-            $this->port
-        );
-
-        if (!$this->conn) {
-            die("<div class='status error'>Connection failed: " . mysqli_connect_error() . "</div>");
-        } else {
-            echo "<div class='status success'>Database connected successfully!</div>";
+    public static function connect() {
+        if (!self::$conn) {
+            self::$conn = new mysqli(self::$host, self::$username, self::$password, self::$db_name);
+            if (self::$conn->connect_error) {
+                die("Database connection failed: " . self::$conn->connect_error);
+            }
         }
-    }
-
-    public function getConnection() {
-        return $this->conn;
+        return self::$conn;
     }
 }

@@ -1,88 +1,13 @@
 <?php
 session_start();
-require_once __DIR__ . '/../Core/Database.php';
+require_once __DIR__ . '/../Model/features.php'; // ✅ Corrected path
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: index.php?page=login");
     exit();
 }
 
-$conn = Database::connect();
 $user_id = $_SESSION['user_id'];
-
-// ✅ HANDLE PROFILE UPDATE
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
-    $first_name = trim($_POST['first_name']);
-    $last_name = trim($_POST['last_name']);
-    $username = trim($_POST['username']);
-    $email = trim($_POST['email']);
-    $address = trim($_POST['address']);
-    $contacts = trim($_POST['contacts']);
-
-    // Fetch current user data
-    $currentStmt = $conn->prepare("SELECT PROFILE_IMAGE FROM users WHERE USER_ID = ?");
-    $currentStmt->bind_param("i", $user_id);
-    $currentStmt->execute();
-    $currentUser = $currentStmt->get_result()->fetch_assoc();
-    $profile_image = $currentUser['PROFILE_IMAGE'];
-
-    // Check if new image uploaded
-    if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        $maxFileSize = 5 * 1024 * 1024;
-
-        if (!in_array($_FILES['profile_image']['type'], $allowedTypes)) {
-            $_SESSION['error_message'] = "Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.";
-        } elseif ($_FILES['profile_image']['size'] > $maxFileSize) {
-            $_SESSION['error_message'] = "File too large. Maximum size is 5MB.";
-        } else {
-            // ✅ Correct path from View folder
-            $targetDir = __DIR__ . "/../uploads/profile_images/";
-            
-            if (!file_exists($targetDir)) {
-                mkdir($targetDir, 0777, true);
-            }
-
-            $fileExtension = pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION);
-            $fileName = time() . '_' . uniqid() . '.' . $fileExtension;
-            $targetFile = $targetDir . $fileName;
-
-            if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $targetFile)) {
-                // Delete old image
-                if (!empty($currentUser['PROFILE_IMAGE']) && 
-                    $currentUser['PROFILE_IMAGE'] !== 'default-avatar.png' &&
-                    file_exists($targetDir . $currentUser['PROFILE_IMAGE'])) {
-                    unlink($targetDir . $currentUser['PROFILE_IMAGE']);
-                }
-                $profile_image = $fileName;
-                $_SESSION['success_message'] = "Profile picture updated successfully!";
-            } else {
-                $_SESSION['error_message'] = "Failed to upload image.";
-                error_log("Failed to move file to: " . $targetFile);
-            }
-        }
-    }
-
-    // Update user data
-    $update = $conn->prepare("
-        UPDATE users 
-        SET FIRST_NAME=?, LAST_NAME=?, USERNAME=?, EMAIL=?, ADDRESS=?, CONTACTS=?, PROFILE_IMAGE=? 
-        WHERE USER_ID=?
-    ");
-    $update->bind_param("sssssssi", $first_name, $last_name, $username, $email, $address, $contacts, $profile_image, $user_id);
-    
-    if ($update->execute()) {
-        if (!isset($_SESSION['success_message'])) {
-            $_SESSION['success_message'] = "Profile updated successfully!";
-        }
-        header("Location: index.php?page=features");
-        exit();
-    } else {
-        $_SESSION['error_message'] = "Failed to update profile.";
-    }
-}
-
-// Fetch user data
 $query = "SELECT * FROM users WHERE USER_ID = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
@@ -90,21 +15,27 @@ $stmt->execute();
 $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
-// ✅ Helper function - FIXED PATH
+// Helper function to get profile image path
 function getProfileImagePath($user) {
-    if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'NULL') {
-        // Relative path from View folder to uploads
-        $relativePath = "uploads/profile_images/" . $user['PROFILE_IMAGE'];
-        // Absolute path for checking file existence
-        $absolutePath = __DIR__ . "/../uploads/profile_images/" . $user['PROFILE_IMAGE'];
+    if (!empty($user['PROFILE_IMAGE'])) {
+        // Remove any query parameters first for file existence check
+        $imagePath = "uploads/profile_images/" . $user['PROFILE_IMAGE'];
         
-        if (file_exists($absolutePath)) {
-            return $relativePath;
+        // Check if file exists
+        if (file_exists($imagePath)) {
+            return $imagePath;
+        } else {
+            // Try alternative path
+            $altPath = "../uploads/profile_images/" . $user['PROFILE_IMAGE'];
+            if (file_exists($altPath)) {
+                return $altPath;
+            }
         }
     }
-    return "PUBLIC/image/default-avatar.png";
+    return "assets/default-avatar.png";
 }
 
+// Helper function to get initials
 function getInitials($user) {
     $first = !empty($user['FIRST_NAME']) ? substr($user['FIRST_NAME'], 0, 1) : '';
     $last = !empty($user['LAST_NAME']) ? substr($user['LAST_NAME'], 0, 1) : '';
@@ -113,17 +44,14 @@ function getInitials($user) {
 
 $profileImagePath = getProfileImagePath($user);
 $userInitials = getInitials($user);
-$hasProfileImage = !empty($user['PROFILE_IMAGE']) && 
-                   $user['PROFILE_IMAGE'] !== 'NULL' && 
-                   file_exists(__DIR__ . "/../uploads/profile_images/" . $user['PROFILE_IMAGE']);
 
-// Get messages
-$successMessage = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : null;
-$errorMessage = isset($_SESSION['error_message']) ? $_SESSION['error_message'] : null;
-unset($_SESSION['success_message'], $_SESSION['error_message']);
+// Debug: Check what's in the database
+error_log("DEBUG - User PROFILE_IMAGE from DB: " . ($user['PROFILE_IMAGE'] ?? 'EMPTY'));
+error_log("DEBUG - Profile Image Path: " . $profileImagePath);
+error_log("DEBUG - File exists check: " . (file_exists($profileImagePath) ? 'YES' : 'NO'));
 
-// Add cache busting
-if ($hasProfileImage) {
+// Add cache-busting parameter only if it's not the default avatar
+if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar.png') {
     $profileImagePath .= '?v=' . time();
 }
 ?>
@@ -136,18 +64,12 @@ if ($hasProfileImage) {
   <title>Amarelle - Fashion Platform</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css"/>
-<<<<<<< HEAD
   <link rel="stylesheet" href="PUBLIC/css/system_features.css">
-=======
-  <link rel="stylesheet" href="public/css/system_features.css">
-  <script src="https://cdn.tailwindcss.com"></script>
-
->>>>>>> dc8415eae2101f4fee43f56aa689ca2fd3aacdea
 </head>
 
 <body>
   <!-- Notification Messages -->
-  <?php if ($successMessage): ?>
+  <?php if (isset($successMessage) && $successMessage): ?>
     <div class="notification success"><?= htmlspecialchars($successMessage) ?></div>
     <script>
       setTimeout(() => {
@@ -160,7 +82,7 @@ if ($hasProfileImage) {
     </script>
   <?php endif; ?>
 
-  <?php if ($errorMessage): ?>
+  <?php if (isset($errorMessage) && $errorMessage): ?>
     <div class="notification error"><?= htmlspecialchars($errorMessage) ?></div>
     <script>
       setTimeout(() => {
@@ -179,12 +101,10 @@ if ($hasProfileImage) {
       <div>
         <div class="profile" onclick="openUserProfile()">
           <div class="profile-pic" id="sidebar-profile-pic">
-            <?php if ($hasProfileImage): ?>
+            <?php if (!empty($user['PROFILE_IMAGE'])): ?>
               <img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
             <?php else: ?>
-              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #A68763; color: white; font-size: 1.5rem; font-weight: 600; border-radius: 50%;">
-                <?= $userInitials ?>
-              </div>
+              <?= $userInitials ?>
             <?php endif; ?>
           </div>
           <div class="profile-info">
@@ -216,7 +136,6 @@ if ($hasProfileImage) {
           </button>
         </div>
 
-<<<<<<< HEAD
         <div class="subsection">
           <h2 class="section-title" style="font-size:1.6rem; margin:0 0 1rem 0;">Recommendations</h2>
           <p class="section-subtitle" style="margin:0 0 1.25rem 0;">Based on your recent interactions, here are pieces we think you'll love. Tap any item to add it to your cart or view details.</p>
@@ -227,117 +146,6 @@ if ($hasProfileImage) {
               <div class="clothes-caption">
                 <div class="title">Rustic Wrap Dress</div>
                 <div class="price">$79</div>
-=======
-            <div class="subsection">
-              <h2 class="section-title" style="font-size:1.6rem; margin:0 0 1rem 0;">Recommendations</h2>
-              <p class="section-subtitle" style="margin:0 0 1.25rem 0;">Based on your recent interactions, here are pieces we think you'll love. Tap any item to add it to your cart or view details.</p>
-              <div class="clothes-grid">
-                <div class="clothes-item">
-                  <img src="public/source/hourglass/autumn/AIRism Cotton Flare Midi Dress brown.avif" alt="Outfit 1" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Rustic Wrap Dress</div>
-                    <div class="price">$79</div>
-                  </div>
-                </div>
-
-                <div class="clothes-item">
-                  <img src="public/source/hourglass/Autumn/Smart Ankle Pants.avif" alt="Outfit 1" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Rustic Wrap Dress</div>
-                    <div class="price">$79</div>
-                  </div>
-                </div>
-
-                <div class="clothes-item">
-                  <img src="public/source/hourglass/autumn/Souffle Yarn Dress olive.avif" alt="Outfit 1" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Rustic Wrap Dress</div>
-                    <div class="price">$79</div>
-                  </div>
-                </div>
-
-                <div class="clothes-item">
-                  <img src="public/source/hourglass/spring/Cotton Ribbed Long-Sleeve Cropped Cardigan Olive.avif" alt="Outfit 1" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Rustic Wrap Dress</div>
-                    <div class="price">$79</div>
-                  </div>
-                </div>
-
-                <div class="clothes-item">
-                  <img src="public/source/Inverted Triangle/winter/Rayon Long Sleeve Blouse dark brown.avif" alt="Outfit 2" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Sage Linen Blouse</div>
-                    <div class="price">$49</div>
-                  </div>
-                </div>
-
-                <div class="clothes-item">
-                  <img src="public/source/Inverted Triangle/winter/Smart Wide Pants body.webp" alt="Outfit 2" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Sage Linen Blouse</div>
-                    <div class="price">$49</div>
-                  </div>
-                </div>
-
-                <div class="clothes-item">
-                  <img src="public/source/Inverted Triangle/winter/Volume Sleeve Short Sleeve Dress black.jfif" alt="Outfit 2" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Sage Linen Blouse</div>
-                    <div class="price">$49</div>
-                  </div>
-                </div>
-
-                <div class="clothes-item">
-                  <img src="public/source/hourglass/winter/Flare Dress.avif" alt="Outfit 3" />
-                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-                  <div class="clothes-caption">
-                    <div class="title">Midnight Tailored Coat</div>
-                    <div class="price">$129</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-        <section id="features" class="content-section">
-          <div class="section-title"><i>Personalized Fashion Features</i></div>
-          <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
-
-          <div class="options-container">
-            <div class="option-card">
-              <div class="option-icon"><i class="bi bi-palette2"></i></div>
-              <div>
-                <h2 class="option-title">Color Analysis</h2>
-                <p>Choose how you'd like to proceed with your color analysis</p>
-              </div>
-
-              <div class="upload-section">
-                <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
-                <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
-              </div>
-
-              <ul class="feature-list">
-                <li>Real-time guidance and lighting tips</li>
-                <li>Instant capture and analysis</li>
-                <li>Personalized seasonal color palette</li>
-                <li>Complementary color recommendations</li>
-              </ul>
-
-              <!-- Hidden Color Analysis Result -->
-              <div id="colorSeasons" class="color-seasons-container">
-                <h3>Your Color Palette</h3>
-                <p>Your best palette is <strong>Soft Autumn</strong>.</p>
-                <p>Recommended tones: warm beige, muted green, soft coral.</p>
-                <button class="close-btn" onclick="toggleAnalysis('colorSeasons', false)">Close Analysis</button>
->>>>>>> dc8415eae2101f4fee43f56aa689ca2fd3aacdea
               </div>
             </div>
 
@@ -498,15 +306,12 @@ if ($hasProfileImage) {
           <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
             <div class="profile-section">
               <div class="profile-avatar">
-                <img id="avatar-img" 
-                     src="<?= $profileImagePath ?>" 
-                     alt="Profile Picture" 
-                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= $hasProfileImage ? 'block' : 'none' ?>;">
-                <div class="avatar-initials" 
-                     id="avatar-initials"
-                     style="<?= $hasProfileImage ? 'display:none' : 'display:flex' ?>; align-items:center; justify-content:center; width:100%; height:100%; background:#A68763; color:white; font-size:2rem; font-weight:600; border-radius:50%;">
-                  <?= $userInitials ?>
-                </div>
+                <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
+                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <?php else: ?>
+                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
+                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>"><?= $userInitials ?></div>
+                <?php endif; ?>
                 <button type="button" class="edit-avatar-btn" id="edit-avatar-btn" title="Change Profile Picture" style="display:none;">
                   <i class="bi bi-camera"></i>
                 </button>
@@ -523,19 +328,19 @@ if ($hasProfileImage) {
             <div class="form-grid">
               <div class="form-group">
                 <label>First Name</label>
-                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>" disabled>
+                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>" disabled >
               </div>
               <div class="form-group">
                 <label>Last Name</label>
-                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>" disabled>
+                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>" disabled >
               </div>
               <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>" disabled>
+                <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>" disabled >
               </div>
               <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled>
+                <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled >
               </div>
               <div class="form-group">
                 <label>Home Address</label>
@@ -565,7 +370,7 @@ if ($hasProfileImage) {
               <i class="bi bi-palette"></i>
               <h3>Style Profile</h3>
             </div>
-            <?php if (empty($user['BODY_SHAPE_ID']) && empty($user['SEASON_ID'])): ?>
+            <?php if (empty($user['COLOR_SEASON']) && empty($user['BODY_SHAPE'])): ?>
               <div class="info-empty">
                 <p>You haven't completed your style analysis yet.</p>
                 <button class="btn" onclick="goToFeatures()">
@@ -573,17 +378,21 @@ if ($hasProfileImage) {
                 </button>
               </div>
             <?php else: ?>
-              <?php if (!empty($user['SEASON_ID'])): ?>
+              <?php if (!empty($user['COLOR_SEASON'])): ?>
                 <div class="info-item">
                   <span class="info-label">Color Season</span>
-                  <span class="info-value">Season ID: <?php echo htmlspecialchars($user['SEASON_ID']); ?></span>
+                  <span class="info-value">
+                    <?php echo htmlspecialchars($user['COLOR_SEASON']); ?>
+                  </span>
                 </div>
               <?php endif; ?>
 
-              <?php if (!empty($user['BODY_SHAPE_ID'])): ?>
+              <?php if (!empty($user['BODY_SHAPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Body Shape</span>
-                  <span class="info-value">Shape ID: <?php echo htmlspecialchars($user['BODY_SHAPE_ID']); ?></span>
+                  <span class="info-value">
+                    <?php echo htmlspecialchars($user['BODY_SHAPE']); ?>
+                  </span>
                 </div>
               <?php endif; ?>
             <?php endif; ?>
@@ -875,7 +684,6 @@ if ($hasProfileImage) {
     // Profile image upload preview
     const fileInput = document.getElementById('profile_image');
     const avatarImg = document.getElementById('avatar-img');
-    const avatarInitials = document.getElementById('avatar-initials');
     const editAvatarBtn = document.getElementById('edit-avatar-btn');
 
     editAvatarBtn.addEventListener('click', () => fileInput.click());
@@ -883,35 +691,15 @@ if ($hasProfileImage) {
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
       if (file) {
-        // Validate file size
-        if (file.size > 5 * 1024 * 1024) {
-          alert('File size must be less than 5MB');
-          fileInput.value = '';
-          return;
-        }
-
-        // Validate file type
-        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-          alert('Invalid file type. Only JPG, PNG, GIF, and WEBP are allowed.');
-          fileInput.value = '';
-          return;
-        }
-
         const reader = new FileReader();
         reader.onload = e => {
-          // Update modal avatar
           avatarImg.src = e.target.result;
-          avatarImg.style.display = 'block';
-          if (avatarInitials) {
-            avatarInitials.style.display = 'none';
-          }
-          
-          // Update sidebar profile pic
+          // Also update sidebar profile pic if it has an image
           const sidebarPic = document.getElementById('sidebar-profile-pic');
           if (sidebarPic.querySelector('img')) {
             sidebarPic.querySelector('img').src = e.target.result;
           } else {
+            // Replace initials with image
             sidebarPic.innerHTML = `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
           }
         };
@@ -962,15 +750,30 @@ if ($hasProfileImage) {
       // Reset file input
       fileInput.value = '';
 
-      // Reload page to restore original avatar
-      location.reload();
+      // Restore original avatar (reload from server)
+      avatarImg.src = '<?= $profileImagePath ?>';
+      
+      // Restore sidebar pic
+      const sidebarPic = document.getElementById('sidebar-profile-pic');
+      <?php if (!empty($user['PROFILE_IMAGE'])): ?>
+        if (sidebarPic.querySelector('img')) {
+          sidebarPic.querySelector('img').src = '<?= $profileImagePath ?>';
+        } else {
+          sidebarPic.innerHTML = '<img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
+        }
+      <?php else: ?>
+        sidebarPic.innerHTML = '<?= $userInitials ?>';
+      <?php endif; ?>
+
+      // Show/hide buttons
+      editProfileBtn.style.display = 'inline-flex';
+      saveProfileBtn.style.display = 'none';
+      cancelEditBtn.style.display = 'none';
+      editAvatarBtn.style.display = 'none';
     });
 
-    // Form submission handler
+    // Form submission handler to update displayed name
     document.getElementById('profileForm').addEventListener('submit', function(e) {
-      // Validate that file is selected if user clicked camera icon
-      const fileInput = document.getElementById('profile_image');
-      
       // Update display name in modal (for preview before page reload)
       const firstName = document.getElementById('first_name').value;
       const lastName = document.getElementById('last_name').value;
