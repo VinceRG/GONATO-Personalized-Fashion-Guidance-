@@ -52,6 +52,10 @@
             <input type="password" id="password" name="password" placeholder="Enter your password">
 
             <button type="submit">Login</button>
+            <p>
+    <a href="index.php?page=forgot">Forgot your password?</a>
+</p>
+
 
             <p>
                 Don't have an account yet?

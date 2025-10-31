@@ -1,5 +1,4 @@
 <?php
-// app/Controllers/loginControl.php
 require_once __DIR__ . '/../Model/loginfunc.php';
 
 class LoginController {
@@ -10,42 +9,37 @@ class LoginController {
     }
 
     public function index() {
+        session_start();
         $message = '';
-        $messageType = ''; // 'success' or 'error'
+        $messageType = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = trim($_POST['username'] ?? '');
             $password = trim($_POST['password'] ?? '');
 
-            // Validate inputs
             if (empty($username) || empty($password)) {
                 $message = "Please fill in all fields.";
                 $messageType = 'error';
             } else {
-                // Attempt login
                 $loginResult = $this->userModel->login($username, $password);
 
                 if ($loginResult['success']) {
-                    // Login successful - start session
-                    session_start();
+                    // Successful login → store user info in session
                     $_SESSION['user_id'] = $loginResult['user']['USER_ID'];
                     $_SESSION['username'] = $loginResult['user']['USERNAME'];
                     $_SESSION['email'] = $loginResult['user']['EMAIL'];
                     $_SESSION['first_name'] = $loginResult['user']['FIRST_NAME'];
                     $_SESSION['last_name'] = $loginResult['user']['LAST_NAME'];
 
-                    // Redirect to dashboard or home page
-                    header("Location: index.php?page=features"); // Change to your desired page
-                    exit();
+                    header("Location: index.php?page=features");
+                    exit;
                 } else {
-                    // Login failed
                     $message = $loginResult['message'];
                     $messageType = 'error';
                 }
             }
         }
 
-        // Load the login view
         require_once __DIR__ . '/../View/login.php';
     }
 }

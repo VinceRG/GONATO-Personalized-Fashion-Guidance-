@@ -32,7 +32,7 @@ class RegisterController {
 
             // Validation
             if ($password !== $confirmPassword) {
-                $error = "Passwords do not match.";
+                $error = "Passwords do not matc.";
             } elseif ($this->userModel->usernameExists($username)) {
                 $error = "Username already taken.";
             } elseif ($this->userModel->emailExists($email)) {
