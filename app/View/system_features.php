@@ -136,7 +136,13 @@ if ($hasProfileImage) {
   <title>Amarelle - Fashion Platform</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css"/>
+<<<<<<< HEAD
   <link rel="stylesheet" href="PUBLIC/css/system_features.css">
+=======
+  <link rel="stylesheet" href="public/css/system_features.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+
+>>>>>>> dc8415eae2101f4fee43f56aa689ca2fd3aacdea
 </head>
 
 <body>
@@ -210,6 +216,7 @@ if ($hasProfileImage) {
           </button>
         </div>
 
+<<<<<<< HEAD
         <div class="subsection">
           <h2 class="section-title" style="font-size:1.6rem; margin:0 0 1rem 0;">Recommendations</h2>
           <p class="section-subtitle" style="margin:0 0 1.25rem 0;">Based on your recent interactions, here are pieces we think you'll love. Tap any item to add it to your cart or view details.</p>
@@ -220,6 +227,117 @@ if ($hasProfileImage) {
               <div class="clothes-caption">
                 <div class="title">Rustic Wrap Dress</div>
                 <div class="price">$79</div>
+=======
+            <div class="subsection">
+              <h2 class="section-title" style="font-size:1.6rem; margin:0 0 1rem 0;">Recommendations</h2>
+              <p class="section-subtitle" style="margin:0 0 1.25rem 0;">Based on your recent interactions, here are pieces we think you'll love. Tap any item to add it to your cart or view details.</p>
+              <div class="clothes-grid">
+                <div class="clothes-item">
+                  <img src="public/source/hourglass/autumn/AIRism Cotton Flare Midi Dress brown.avif" alt="Outfit 1" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Rustic Wrap Dress</div>
+                    <div class="price">$79</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="public/source/hourglass/Autumn/Smart Ankle Pants.avif" alt="Outfit 1" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Rustic Wrap Dress</div>
+                    <div class="price">$79</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="public/source/hourglass/autumn/Souffle Yarn Dress olive.avif" alt="Outfit 1" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Rustic Wrap Dress</div>
+                    <div class="price">$79</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="public/source/hourglass/spring/Cotton Ribbed Long-Sleeve Cropped Cardigan Olive.avif" alt="Outfit 1" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Rustic Wrap Dress</div>
+                    <div class="price">$79</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="public/source/Inverted Triangle/winter/Rayon Long Sleeve Blouse dark brown.avif" alt="Outfit 2" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Sage Linen Blouse</div>
+                    <div class="price">$49</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="public/source/Inverted Triangle/winter/Smart Wide Pants body.webp" alt="Outfit 2" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Sage Linen Blouse</div>
+                    <div class="price">$49</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="public/source/Inverted Triangle/winter/Volume Sleeve Short Sleeve Dress black.jfif" alt="Outfit 2" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Sage Linen Blouse</div>
+                    <div class="price">$49</div>
+                  </div>
+                </div>
+
+                <div class="clothes-item">
+                  <img src="public/source/hourglass/winter/Flare Dress.avif" alt="Outfit 3" />
+                  <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+                  <div class="clothes-caption">
+                    <div class="title">Midnight Tailored Coat</div>
+                    <div class="price">$129</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        <section id="features" class="content-section">
+          <div class="section-title"><i>Personalized Fashion Features</i></div>
+          <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
+
+          <div class="options-container">
+            <div class="option-card">
+              <div class="option-icon"><i class="bi bi-palette2"></i></div>
+              <div>
+                <h2 class="option-title">Color Analysis</h2>
+                <p>Choose how you'd like to proceed with your color analysis</p>
+              </div>
+
+              <div class="upload-section">
+                <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
+                <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
+              </div>
+
+              <ul class="feature-list">
+                <li>Real-time guidance and lighting tips</li>
+                <li>Instant capture and analysis</li>
+                <li>Personalized seasonal color palette</li>
+                <li>Complementary color recommendations</li>
+              </ul>
+
+              <!-- Hidden Color Analysis Result -->
+              <div id="colorSeasons" class="color-seasons-container">
+                <h3>Your Color Palette</h3>
+                <p>Your best palette is <strong>Soft Autumn</strong>.</p>
+                <p>Recommended tones: warm beige, muted green, soft coral.</p>
+                <button class="close-btn" onclick="toggleAnalysis('colorSeasons', false)">Close Analysis</button>
+>>>>>>> dc8415eae2101f4fee43f56aa689ca2fd3aacdea
               </div>
             </div>
 
