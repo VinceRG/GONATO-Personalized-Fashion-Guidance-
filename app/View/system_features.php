@@ -61,10 +61,12 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Amarelle - Fashion Platform</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css"/>
-  <link rel="stylesheet" href="PUBLIC/css/system_features.css">
+  <title>Amarelle</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="public/css/system_features.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="public/js/system_features.js" defer></script>
 </head>
 
 <body>
@@ -97,7 +99,8 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
 
   <!-- Main Page -->
   <div class="results-container">
-    <div class="sidebar">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="appSidebar" aria-expanded="true">
       <div>
         <div class="profile" onclick="openUserProfile()">
           <div class="profile-pic" id="sidebar-profile-pic">
@@ -115,112 +118,137 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
           </div>
         </div>
 
-        <nav class="nav-links">
-          <a href="#catalog-shop" class="nav-btn active"><i class="bi bi-basket"></i> Shop</a>
-          <a href="#features" class="nav-btn"><i class="bi bi-house"></i> Features</a>
+        <nav class="nav-links" role="navigation" aria-label="Main navigation">
+          <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
+            <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
+            <span class="nav-label">Shop</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
+          <a href="#features" class="nav-btn nav-item" data-label="Features">
+            <img src="public/image/features.png" class="nav-icon" alt="Features icon">
+            <span class="nav-label">Features</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
         </nav>
       </div>
-    </div>
 
+      <div class="sidebar-footer" aria-hidden="true">
+        <div class="logo-section">
+          <div class="logo-img" style="width:40px; height:40px;">
+            <img src="public/image/amarelle.png" alt="Amarelle logo">
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
     <div class="main-content">
-      <!-- Shop Section -->
+      <!-- 🛍️ SHOP SECTION -->
       <section id="catalog-shop" class="content-section active">
         <div class="shop-header">
           <div>
-            <div class="section-title"><i>Welcome to your Style Catalog!</i></div>
-            <div class="section-subtitle">Browse our collection tailored just for you.</div>
+            <h2 class="section-title"><i>Shopping Catalog</i></h2>
+            <p class="section-subtitle">Find your perfect outfit below or explore personalized picks.</p>
           </div>
-          <button class="cart-button">
-            <i class="bi bi-cart3"></i>
-            <span class="cart-count">0</span>
-          </button>
+
+          <div class="shop-controls">
+            <button class="cart-button">
+              <i class="bi bi-bag"></i>
+              <span class="cart-count">0</span>
+            </button>
+          </div>
         </div>
 
-        <div class="subsection">
-          <h2 class="section-title" style="font-size:1.6rem; margin:0 0 1rem 0;">Recommendations</h2>
-          <p class="section-subtitle" style="margin:0 0 1.25rem 0;">Based on your recent interactions, here are pieces we think you'll love. Tap any item to add it to your cart or view details.</p>
+        <!-- Recommendations Section -->
+        <div id="recommendations" class="subsection">
+          <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
+          <p class="section-subtitle">Based on your color and body analysis results.</p>
+
           <div class="clothes-grid">
             <div class="clothes-item">
-              <img src="source/hourglass/autumn/AIRism Cotton Flare Midi Dress brown.avif" alt="Outfit 1" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+              <img src="images/recommend1.jpg" alt="Recommended Outfit 1">
+              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
               <div class="clothes-caption">
-                <div class="title">Rustic Wrap Dress</div>
-                <div class="price">$79</div>
+                <span class="title">Soft Beige Blazer</span>
+                <span class="price">₱1,899</span>
               </div>
             </div>
 
             <div class="clothes-item">
-              <img src="source/hourglass/Autumn/Smart Ankle Pants.avif" alt="Outfit 2" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+              <img src="images/recommend2.jpg" alt="Recommended Outfit 2">
+              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
               <div class="clothes-caption">
-                <div class="title">Smart Ankle Pants</div>
-                <div class="price">$65</div>
+                <span class="title">Classic White Dress</span>
+                <span class="price">₱2,150</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shop Catalog -->
+        <div class="subsection">
+
+         <div class="filter-bar">
+          <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
+          <select id="categoryFilter" onchange="filterProducts()">
+            <option value="">All Categories</option>
+            <option value="Dresses">Dresses</option>
+            <option value="Tops">Tops</option>
+            <option value="Bottoms">Bottoms</option>
+          </select>
+        </div>
+
+          <div class="clothes-grid">
+            <div class="clothes-item catalog-item">
+              <img src="images/item1.jpg" alt="Clothing Item 1">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
+              <div class="clothes-caption">
+                <span class="title">Summer Linen Top</span>
+                <span class="price">₱999</span>
               </div>
             </div>
 
-            <div class="clothes-item">
-              <img src="source/hourglass/autumn/Souffle Yarn Dress olive.avif" alt="Outfit 3" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+            <div class="clothes-item catalog-item">
+              <img src="images/item2.jpg" alt="Clothing Item 2">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
               <div class="clothes-caption">
-                <div class="title">Olive Yarn Dress</div>
-                <div class="price">$89</div>
+                <span class="title">Flowy Midi Skirt</span>
+                <span class="price">₱1,250</span>
               </div>
             </div>
 
-            <div class="clothes-item">
-              <img src="source/hourglass/spring/Cotton Ribbed Long-Sleeve Cropped Cardigan Olive.avif" alt="Outfit 4" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+            <div class="clothes-item catalog-item">
+              <img src="images/item3.jpg" alt="Clothing Item 3">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
               <div class="clothes-caption">
-                <div class="title">Cropped Cardigan</div>
-                <div class="price">$55</div>
+                <span class="title">Tan Trousers</span>
+                <span class="price">₱1,799</span>
               </div>
             </div>
 
-            <div class="clothes-item">
-              <img src="source/Inverted Triangle/winter/Rayon Long Sleeve Blouse dark brown.avif" alt="Outfit 5" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
+            <div class="clothes-grid">
+            <div class="clothes-item catalog-item">
+              <img src="images/item1.jpg" alt="Clothing Item 4">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
               <div class="clothes-caption">
-                <div class="title">Rayon Blouse</div>
-                <div class="price">$49</div>
-              </div>
-            </div>
-
-            <div class="clothes-item">
-              <img src="source/Inverted Triangle/winter/Smart Wide Pants body.webp" alt="Outfit 6" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-              <div class="clothes-caption">
-                <div class="title">Wide Pants</div>
-                <div class="price">$72</div>
-              </div>
-            </div>
-
-            <div class="clothes-item">
-              <img src="source/Inverted Triangle/winter/Volume Sleeve Short Sleeve Dress black.jfif" alt="Outfit 7" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-              <div class="clothes-caption">
-                <div class="title">Volume Sleeve Dress</div>
-                <div class="price">$95</div>
-              </div>
-            </div>
-
-            <div class="clothes-item">
-              <img src="source/hourglass/winter/Flare Dress.avif" alt="Outfit 8" />
-              <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-              <div class="clothes-caption">
-                <div class="title">Flare Dress</div>
-                <div class="price">$129</div>
+                <span class="title">Summer Linen Top</span>
+                <span class="price">₱999</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- Features Section -->
+      <!-- ✨ FEATURES -->
       <section id="features" class="content-section">
         <div class="section-title"><i>Personalized Fashion Features</i></div>
         <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
 
         <div class="options-container">
+          <!-- Color Analysis -->
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-palette2"></i></div>
             <div>
@@ -802,6 +830,22 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
         }, 100);
       }
     });
+
+    function openUserProfile() {
+  const overlay = document.getElementById("userProfileOverlay");
+  if (overlay) {
+    overlay.style.display = "flex";
+    overlay.classList.add("show");
+  }
+}
+
+function closeUserProfile() {
+  const overlay = document.getElementById("userProfileOverlay");
+  if (overlay) {
+    overlay.style.display = "none";
+    overlay.classList.remove("show");
+  }
+}
   </script>
 </body>
 </html>
