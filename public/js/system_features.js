@@ -67,13 +67,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* --- Logout --- */
-  window.logout = function() {
+  window.logout = function () {
     if (confirm('Are you sure you want to logout?')) {
       window.location.href = 'logout.php';
     }
   };
 
-    if (colorDone || bodyDone) {
+  if (colorDone || bodyDone) {
     // show recommendations
     recommendationsSection.style.display = "block";
   } else {
@@ -94,3 +94,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 });
+
+function openUserProfile() {
+  const overlay = document.getElementById("userProfileOverlay");
+  if (overlay) {
+    overlay.style.display = "flex";
+    overlay.classList.add("show");
+  }
+}
+
+function closeUserProfile() {
+  const overlay = document.getElementById("userProfileOverlay");
+  if (overlay) {
+    overlay.style.display = "none";
+    overlay.classList.remove("show");
+  }
+}
