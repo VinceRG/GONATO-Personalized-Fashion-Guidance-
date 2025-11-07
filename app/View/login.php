@@ -25,6 +25,11 @@
             color: #721c24;
             border: 1px solid #f5c6cb;
         }
+        .message.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
     </style>
 </head>
 
@@ -45,17 +50,27 @@
                 </div>
             <?php endif; ?>
 
+            <?php if (isset($remainingAttempts) && $remainingAttempts > 0 && $remainingAttempts < 3): ?>
+                <div class="message warning">
+                    Warning: You have <?php echo $remainingAttempts; ?> attempt(s) remaining before your account is locked.
+                </div>
+            <?php endif; ?>
+
             <label for="username">Username or Email</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username or email" value="<?php echo htmlspecialchars($username ?? ''); ?>">
+            <input type="text" id="username" name="username" placeholder="Enter your username or email" 
+                   value="<?php echo htmlspecialchars($username ?? ''); ?>" 
+                   <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
 
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password">
+            <input type="password" id="password" name="password" placeholder="Enter your password"
+                   <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
 
-            <button type="submit">Login</button>
+            <button type="submit" <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
+                Login
+            </button>
             <p>
-    <a href="index.php?page=forgot">Forgot your password?</a>
-</p>
-
+                <a href="index.php?page=forgot">Forgot your password?</a>
+            </p>
 
             <p>
                 Don't have an account yet?

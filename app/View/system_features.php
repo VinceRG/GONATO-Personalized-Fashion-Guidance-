@@ -98,51 +98,53 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
   <?php endif; ?>
 
   <!-- Main Page -->
-  <div class="results-container">
-    <!-- SIDEBAR -->
-    <aside class="sidebar" id="appSidebar" aria-expanded="true">
-      <div>
-        <div class="profile" onclick="openUserProfile()">
-          <div class="profile-pic" id="sidebar-profile-pic">
-            <?php if (!empty($user['PROFILE_IMAGE'])): ?>
-              <img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-            <?php else: ?>
-              <?= $userInitials ?>
-            <?php endif; ?>
-          </div>
-          <div class="profile-info">
-            <div class="form-group">
-              <?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+    <div class="results-container">
+      <!-- SIDEBAR -->
+      <aside class="sidebar" id="appSidebar" aria-expanded="true">
+        <div>
+          <div class="profile" onclick="openUserProfile()">
+            <div class="profile-pic" id="sidebar-profile-pic">
+              <?php if (!empty($user['PROFILE_IMAGE'])): ?>
+                <img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+              <?php else: ?>
+                <?= $userInitials ?>
+              <?php endif; ?>
             </div>
-            <p>@<?php echo htmlspecialchars($user['USERNAME']); ?></p>
+            <div class="profile-info">
+              <div class="form-group">
+                <?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+              </div>
+              <p>@<?php echo htmlspecialchars($user['USERNAME']); ?></p>
+            </div>
           </div>
+
+          <nav class="nav-links" role="navigation" aria-label="Main navigation">
+            <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
+              <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
+              <span class="nav-label">Shop</span>
+              <span class="label-tooltip" aria-hidden="true"></span>
+            </a>
+            <a href="#features" class="nav-btn nav-item" data-label="Features">
+              <img src="public/image/features.png" class="nav-icon" alt="Features icon">
+              <span class="nav-label">Features</span>
+              <span class="label-tooltip" aria-hidden="true"></span>
+            </a>
+          </nav>
         </div>
 
-        <nav class="nav-links" role="navigation" aria-label="Main navigation">
-          <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
-            <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
-            <span class="nav-label">Shop</span>
-            <span class="label-tooltip" aria-hidden="true"></span>
-          </a>
-          <a href="#features" class="nav-btn nav-item" data-label="Features">
-            <img src="public/image/features.png" class="nav-icon" alt="Features icon">
-            <span class="nav-label">Features</span>
-            <span class="label-tooltip" aria-hidden="true"></span>
-          </a>
-        </nav>
-      </div>
-
-      <div class="sidebar-footer" aria-hidden="true">
-        <div class="logo-section">
-          <div class="logo-img" style="width:40px; height:40px;">
-            <img src="public/image/amarelle.png" alt="Amarelle logo">
+        <div class="sidebar-footer" aria-hidden="true">
+          <div class="logo-section">
+            <div class="logo-img" style="width:40px; height:40px;">
+              <img src="public/image/amarelle.png" alt="Amarelle logo">
+            </div>
           </div>
+          <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
+            <i class="bi bi-box-arrow-right"></i>
+          </button>
+          
         </div>
-        <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
-          <i class="bi bi-box-arrow-right"></i>
-        </button>
-      </div>
-    </aside>
+      </aside>
+
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
@@ -567,285 +569,56 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
       </div>
     </div>
   </div>
+<div class="overlay" id="logoutOverlay" style="display: none;">
+  <div class="modal" style="max-width: 450px;">
+    <div class="modal-header" style="background: #2D2D2D;">
+      <div style="flex: 1;">
+        <h3 style="color: white; font-size: 1.3rem; margin: 0; font-weight: 600;">
+          <i class="bi bi-box-arrow-right" style="margin-right: 0.5rem;"></i>
+          Confirm Logout
+        </h3>
+      </div>
+      <button class="close-btn" onclick="closeLogoutOverlay()" style="color: white;">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
 
-  <script>
-    // Navigation functionality
-    const navLinks = Array.from(document.querySelectorAll('.nav-btn'));
-    const sections = Array.from(document.querySelectorAll('.content-section'));
+    <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
+      <div style="
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #D7C9AE, #A68763);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 20px rgba(166, 135, 99, 0.3);
+      ">
+        <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
+      </div>
 
-    navLinks.forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const targetSelector = link.getAttribute('href');
-        const target = document.querySelector(targetSelector);
-        if (!target) return;
+      <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
+        Are you sure?
+      </h3>
+      <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
+        You will be logged out of your account and redirected to the login page.
+      </p>
 
-        navLinks.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
+      <div style="display: flex; gap: 1rem; justify-content: center;">
+        <button onclick="closeLogoutOverlay()" style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+          <i class="bi bi-x-circle" style="margin-right: 0.5rem;"></i>
+          Cancel
+        </button>
+        <button onclick="confirmLogout()" style="flex:1; padding:0.85rem 1.5rem; border:none; background:#2D2D2D; color:white; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+          <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
+          Yes, Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
-        sections.forEach(s => s.classList.remove('active'));
-        target.classList.add('active');
-
-        const mainContent = document.querySelector('.main-content');
-        const targetTop = target.offsetTop; 
-        mainContent.scrollTo({ top: targetTop, behavior: 'smooth' });
-
-        history.replaceState(null, '', targetSelector);
-      });
-    });
-
-    // Cart functionality
-    let cartCount = 0;
-    const cartCountElement = document.querySelector('.cart-count');
-    const addToCartButtons = document.querySelectorAll('.add-to-cart');
-
-    addToCartButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        cartCount++;
-        cartCountElement.textContent = cartCount;
-        button.classList.add('added');
-        setTimeout(() => button.classList.remove('added'), 1000);
-      });
-    });
-
-    document.querySelector('.cart-button').addEventListener('click', () => {
-      alert('Shopping cart feature coming soon!');
-    });
-
-    // Analysis functionality
-    function toggleAnalysis(targetId, show) {
-      const targetElement = document.getElementById(targetId);
-      if (!targetElement) return;
-      const card = targetElement.closest('.option-card');
-      const uploadSection = card.querySelector('.upload-section');
-      const featureList = card.querySelector('.feature-list');
-      if (show) {
-        targetElement.classList.add('show-results');
-        uploadSection.classList.add('hidden');
-        featureList.classList.add('hidden');
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        targetElement.classList.remove('show-results');
-        uploadSection.classList.remove('hidden');
-        featureList.classList.remove('hidden');
-      }
-    }
-
-    function simulateAnalysis(targetId) {
-      const button = event.target;
-      button.disabled = true;
-      const originalText = button.textContent;
-      button.textContent = "Analyzing...";
-      setTimeout(() => {
-        button.disabled = false;
-        button.textContent = originalText;
-        toggleAnalysis(targetId, true);
-      }, 1500);
-    }
-
-    // User Profile Modal Functions
-    function openUserProfile() {
-      document.getElementById('userProfileOverlay').classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }
-
-    function closeUserProfile() {
-      document.getElementById('userProfileOverlay').classList.remove('show');
-      document.body.style.overflow = '';
-    }
-
-    function goToFeatures() {
-      closeUserProfile();
-      const featuresLink = document.querySelector('a[href="#features"]');
-      if (featuresLink) {
-        featuresLink.click();
-      }
-    }
-
-    // Close modal when clicking outside
-    document.getElementById('userProfileOverlay').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeUserProfile();
-      }
-    });
-
-    // Tab functionality for modal
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    tabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetTab = btn.getAttribute('data-tab');
-        
-        tabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        tabContents.forEach(content => {
-          content.classList.remove('active');
-          if (content.id === targetTab) {
-            content.classList.add('active');
-          }
-        });
-      });
-    });
-
-    // Sub-tab functionality
-    const subTabBtns = document.querySelectorAll('.sub-tab-btn');
-    const subTabContents = document.querySelectorAll('.sub-tab-content');
-
-    subTabBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        const targetSubTab = btn.getAttribute('data-subtab');
-        
-        subTabBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        subTabContents.forEach(content => {
-          content.classList.remove('active');
-          if (content.id === targetSubTab) {
-            content.classList.add('active');
-          }
-        });
-      });
-    });
-
-    // Profile image upload preview
-    const fileInput = document.getElementById('profile_image');
-    const avatarImg = document.getElementById('avatar-img');
-    const editAvatarBtn = document.getElementById('edit-avatar-btn');
-
-    editAvatarBtn.addEventListener('click', () => fileInput.click());
-
-    fileInput.addEventListener('change', (event) => {
-      const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          avatarImg.src = e.target.result;
-          // Also update sidebar profile pic if it has an image
-          const sidebarPic = document.getElementById('sidebar-profile-pic');
-          if (sidebarPic.querySelector('img')) {
-            sidebarPic.querySelector('img').src = e.target.result;
-          } else {
-            // Replace initials with image
-            sidebarPic.innerHTML = `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-
-    // Edit Profile functionality
-    const editProfileBtn = document.getElementById('editProfileBtn');
-    const saveProfileBtn = document.getElementById('saveProfileBtn');
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    const formInputs = document.querySelectorAll('#profileForm input[type="text"], #profileForm input[type="email"]');
-    
-    // Store original values for cancel functionality
-    let originalValues = {};
-
-    editProfileBtn.addEventListener('click', () => {
-      // Store original values
-      formInputs.forEach(input => {
-        originalValues[input.id] = input.value;
-      });
-
-      // Enable all inputs
-      formInputs.forEach(input => {
-        input.disabled = false;
-      });
-
-      // Show/hide buttons
-      editProfileBtn.style.display = 'none';
-      saveProfileBtn.style.display = 'inline-flex';
-      cancelEditBtn.style.display = 'inline-flex';
-      editAvatarBtn.style.display = 'block';
-
-      // Add visual feedback
-      formInputs.forEach(input => {
-        input.style.borderColor = '#A68763';
-      });
-    });
-
-    cancelEditBtn.addEventListener('click', () => {
-      // Restore original values
-      formInputs.forEach(input => {
-        input.value = originalValues[input.id];
-        input.disabled = true;
-        input.style.borderColor = '';
-      });
-
-      // Reset file input
-      fileInput.value = '';
-
-      // Restore original avatar (reload from server)
-      avatarImg.src = '<?= $profileImagePath ?>';
-      
-      // Restore sidebar pic
-      const sidebarPic = document.getElementById('sidebar-profile-pic');
-      <?php if (!empty($user['PROFILE_IMAGE'])): ?>
-        if (sidebarPic.querySelector('img')) {
-          sidebarPic.querySelector('img').src = '<?= $profileImagePath ?>';
-        } else {
-          sidebarPic.innerHTML = '<img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">';
-        }
-      <?php else: ?>
-        sidebarPic.innerHTML = '<?= $userInitials ?>';
-      <?php endif; ?>
-
-      // Show/hide buttons
-      editProfileBtn.style.display = 'inline-flex';
-      saveProfileBtn.style.display = 'none';
-      cancelEditBtn.style.display = 'none';
-      editAvatarBtn.style.display = 'none';
-    });
-
-    // Form submission handler to update displayed name
-    document.getElementById('profileForm').addEventListener('submit', function(e) {
-      // Update display name in modal (for preview before page reload)
-      const firstName = document.getElementById('first_name').value;
-      const lastName = document.getElementById('last_name').value;
-      const username = document.getElementById('username').value;
-      
-      document.getElementById('display-name').textContent = firstName + ' ' + lastName;
-      document.getElementById('display-username').textContent = '@' + username;
-      
-      // Update sidebar name
-      const sidebarName = document.querySelector('.profile-info .form-group');
-      const sidebarUsername = document.querySelector('.profile-info p');
-      if (sidebarName) sidebarName.textContent = firstName + ' ' + lastName;
-      if (sidebarUsername) sidebarUsername.textContent = '@' + username;
-    });
-
-    // On page load, check if notification exists and close modal
-    window.addEventListener('DOMContentLoaded', function() {
-      const notification = document.querySelector('.notification');
-      if (notification) {
-        // Automatically close modal if notification is present
-        setTimeout(() => {
-          const overlay = document.getElementById('userProfileOverlay');
-          if (overlay && overlay.classList.contains('show')) {
-            closeUserProfile();
-          }
-        }, 100);
-      }
-    });
-
-    function openUserProfile() {
-  const overlay = document.getElementById("userProfileOverlay");
-  if (overlay) {
-    overlay.style.display = "flex";
-    overlay.classList.add("show");
-  }
-}
-
-function closeUserProfile() {
-  const overlay = document.getElementById("userProfileOverlay");
-  if (overlay) {
-    overlay.style.display = "none";
-    overlay.classList.remove("show");
-  }
-}
-  </script>
+  
 </body>
 </html>

@@ -1,3 +1,20 @@
+<?php
+session_start();
+
+if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
+    session_unset();
+    session_destroy();
+
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+
+    header("Location: index.php");
+    exit();
+}
+?>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>

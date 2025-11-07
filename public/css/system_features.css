@@ -74,9 +74,11 @@ body {
   gap: 1rem;
   margin-bottom: 2rem;
   cursor: pointer;
-  padding: 0.75rem;
   border-radius: 12px;
   transition: background 0.3s;
+
+
+
 }
 
 .profile:hover {
@@ -140,12 +142,7 @@ body {
 }
 
 /* Profile */
-.profile {
-  display: flex;
-  gap: 0.8rem;
-  align-items: center;
-  margin-top: 0.5rem;
-}
+
 
 .profile-pic {
   width: 44px;
@@ -343,9 +340,7 @@ body {
 }
 
 .sidebar.collapsed .nav-links a {
-  padding-left: 0.6rem;
-  padding-right: 0;
-  justify-content: center;
+  padding: 0.6rem;
 }
 
 .sidebar.collapsed .nav-links a .nav-label {
@@ -448,6 +443,7 @@ body.collapsed-layout .results-container {
   font-size: 0.95rem;
   cursor: pointer;
   transition: 0.3s ease;
+  margin-top: 1rem;
 }
 
 .btn:hover {
@@ -1097,9 +1093,7 @@ body.collapsed-layout .results-container {
     gap: 1rem;
   }
 
-  .section-title {
-    font-size: 2rem;
-  }
+
 
   .modal-header {
     padding: 1rem 1.25rem;
@@ -1296,12 +1290,6 @@ body.collapsed-layout .results-container {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1.5rem;
-}
-
-.section-title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--color-dark);
 }
 
 .edit-btn {
@@ -1798,4 +1786,59 @@ body.collapsed-layout .results-container {
   color: var(--color-accent-dark);
   font-weight: 500;
   font-size: 0.9rem;
+}
+
+.profile-avatar {
+  position: relative;
+  width: 120px;
+  /* adjust as needed */
+  height: 120px;
+  /* adjust as needed */
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
+.avatar-initials {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: #bdbdbd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 32px;
+  color: #fff;
+}
+
+.edit-avatar-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 50%;
+  padding: 8px;
+  color: white;
+  cursor: pointer;
+  z-index: 10;
+  /* ✅ ensures it’s above the image */
+  transition: background-color 0.3s ease;
+}
+
+.edit-avatar-btn:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+
+.bi-camera {
+  font-size: 18px;
 }
