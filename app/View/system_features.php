@@ -43,10 +43,11 @@
                 <div class="section-title"><i>Welcome to your Style Catalog!</i></div>
                 <div class="section-subtitle">Browse our collection tailored just for you.</div>
               </div>
-              <button class="cart-button">
+              <button class="cart-button" onclick="openCart()">
                 <i class="bi bi-cart3"></i>
                 <span class="cart-count">0</span>
               </button>
+
             </div>
 
             <div class="subsection">
@@ -255,9 +256,9 @@
       });
     });
 
-    document.querySelector('.cart-button').addEventListener('click', () => {
-      alert('Shopping cart feature coming soon!');
-    });
+    // document.querySelector('.cart-button').addEventListener('click', () => {
+    //   alert('Shopping cart feature coming soon!');
+    // });
 
     /* ---- NEW ANALYSIS FUNCTIONALITY ---- */
     function toggleAnalysis(targetId, show) {
@@ -292,3 +293,4 @@
   </script>
 </body>
 </html>
+<?php include 'cartModal.php'; ?>
