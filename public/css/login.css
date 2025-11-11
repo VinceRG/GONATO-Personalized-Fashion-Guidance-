@@ -1,9 +1,11 @@
+/* RESET */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
+/* GLOBAL BODY */
 body {
     font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: linear-gradient(180deg, #fff 0%, #D7C9AE 100%);
@@ -15,30 +17,31 @@ body {
     overflow-x: hidden;
 }
 
-body::before {
+body::before,
+body::after {
     content: '';
     position: absolute;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+body::before {
     width: 500px;
     height: 500px;
     background: radial-gradient(circle, rgba(166, 135, 99, 0.15) 0%, transparent 65%);
     top: -100px;
     right: -50px;
-    border-radius: 50%;
-    z-index: 0;
 }
 
 body::after {
-    content: '';
-    position: absolute;
     width: 400px;
     height: 400px;
     background: radial-gradient(circle, rgba(166, 135, 99, 0.12) 0%, transparent 65%);
     bottom: -100px;
     left: -50px;
-    border-radius: 50%;
-    z-index: 0;
 }
 
+/* HEADER */
 .header {
     padding: 1.5rem 3rem;
     position: relative;
@@ -56,13 +59,13 @@ body::after {
     color: #1C1917;
     transition: color 0.3s ease;
     display: inline-block;
-    font-family: 'Lexend', sans-serif;
 }
 
 .logo:hover {
     color: #A68763;
 }
 
+/* CONTENT */
 .content {
     flex: 1;
     display: flex;
@@ -87,6 +90,7 @@ body::after {
     }
 }
 
+/* PAGE TITLE */
 h1 {
     font-family: 'Minion', 'Times New Roman', Times, serif;
     font-size: clamp(2.5rem, 5vw, 3.5rem);
@@ -97,6 +101,7 @@ h1 {
     text-align: center;
 }
 
+/* FORM */
 form {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
@@ -110,31 +115,6 @@ form {
     overflow: hidden;
 }
 
-.register-form {
-    max-width: 750px;
-}
-
-.form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.2rem;
-    padding-bottom: 1rem;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    padding-bottom: 1rem;
-}
-
-.form-group label {
-    margin-top: 0;
-}
-
-.form-group input {
-    margin-bottom: 0;
-}
-
 form::before {
     content: '';
     position: absolute;
@@ -145,6 +125,7 @@ form::before {
     background: linear-gradient(90deg, #A68763, #D7C9AE, #A68763);
 }
 
+/* LABELS */
 label {
     display: block;
     font-size: 0.95rem;
@@ -152,15 +133,10 @@ label {
     color: #2D2D2D;
     margin-bottom: 0.6rem;
     margin-top: 1.2rem;
-    letter-spacing: 0.3px;
     font-family: 'Lexend', sans-serif;
 }
 
-label:first-of-type {
-    margin-top: 0;
-}
-
-/* FIXED: Added margin-bottom to create space between input fields */
+/* INPUT FIELDS */
 input[type="text"],
 input[type="password"],
 input[type="email"] {
@@ -176,60 +152,48 @@ input[type="email"] {
     margin-bottom: 1.2rem;
 }
 
-input[type="text"]:focus,
-input[type="password"]:focus,
-input[type="email"]:focus {
+input:focus {
     outline: none;
     border-color: #A68763;
     background: #fff;
     box-shadow: 0 0 0 4px rgba(166, 135, 99, 0.1);
 }
 
-input[type="text"]::placeholder,
-input[type="password"]::placeholder,
-input[type="email"]::placeholder {
+input::placeholder {
     color: #A8A29E;
     font-size: 0.95rem;
 }
 
+/* CONTACT PREFIX */
 .contact-group {
     display: flex;
-    align-items: stretch;
     padding-bottom: 1rem;
 }
 
 .contact-prefix {
     background: #EAE0D2;
-    padding: 1rem 1rem;
+    padding: 1rem;
     border: 1.5px solid rgba(166, 135, 99, 0.2);
     border-right: none;
     border-radius: 8px 0 0 8px;
-    color: #2D2D2D;
-    font-weight: 500;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
 }
 
 #contact_num {
     border-radius: 0 8px 8px 0;
-    flex: 1;
 }
 
-/* FIXED: Adjusted margin-top for better spacing before button */
+/* SUBMIT BUTTON */
 button[type="submit"] {
     width: 100%;
     padding: 1.1rem 2rem;
     font-size: 1rem;
     font-weight: 500;
-    font-family: 'Lexend', sans-serif;
     background: #2D2D2D;
     color: white;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    letter-spacing: 0.3px;
+    transition: 0.3s;
     margin-top: 0.5rem;
 }
 
@@ -243,19 +207,18 @@ button[type="submit"]:active {
     transform: translateY(0);
 }
 
+/* FORM LINKS */
 form p {
     text-align: center;
     font-size: 0.95rem;
     color: #57534E;
     margin-top: 1.5rem;
-    font-family: 'Lexend', sans-serif;
 }
 
 form a {
     color: #A68763;
     font-weight: 600;
     text-decoration: none;
-    transition: all 0.3s ease;
     position: relative;
 }
 
@@ -270,31 +233,178 @@ form a::after {
     transition: width 0.3s ease;
 }
 
-form a:hover {
-    color: #8B6F47;
-}
-
 form a:hover::after {
     width: 100%;
 }
 
-.footer {
-    padding: 2rem 3rem;
-    text-align: center;
-    color: #78716C;
-    font-size: 0.85rem;
-    font-weight: 300;
-    position: relative;
-    z-index: 10;
-    font-family: 'Lexend', sans-serif;
+form a:hover {
+    color: #8B6F47;
 }
 
-/* Responsive Design */
+/* PASSWORD STRENGTH */
+.password-strength-container {
+    margin: 15px 0;
+    display: none;
+}
+
+.password-strength-container.show {
+    display: block;
+}
+
+.strength-bar {
+    width: 100%;
+    height: 8px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.strength-bar-fill {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+}
+
+.strength-text {
+    font-size: 14px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.strength-weak {
+    background: #ff4444;
+}
+
+.strength-fair {
+    background: #ff8800;
+}
+
+.strength-good {
+    background: #ffbb00;
+}
+
+.strength-strong {
+    background: #00cc00;
+}
+
+/* PASSWORD REQUIREMENTS */
+.password-requirements {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    display: none;
+}
+
+.password-requirements.show {
+    display: block;
+}
+
+.password-requirements div {
+    margin: 0.25rem 0;
+    display: flex;
+    align-items: center;
+    color: #666;
+}
+
+.password-requirements div::before {
+    content: '✗';
+    margin-right: 0.5rem;
+    color: #dc2626;
+    font-weight: bold;
+}
+
+.password-requirements div.valid {
+    color: #16a34a;
+}
+
+.password-requirements div.valid::before {
+    content: '✓';
+    color: #16a34a;
+}
+
+/* ERROR MESSAGES */
+.error-message {
+    color: #dc2626;
+    font-size: 0.85rem;
+    margin-top: -0.5rem;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+}
+
+input.error {
+    border-color: #dc2626 !important;
+    background-color: #fef2f2 !important;
+}
+
+/* MODAL */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+.modal.show {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #00cc00, #00aa00);
+    border-radius: 50%;
+    margin: 0 auto 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+}
+
+/* ALERTS */
+.alert {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.alert.error {
+    background: #ffdddd;
+    color: #a30000;
+}
+
+.alert.success {
+    background: #ddffdd;
+    color: #006600;
+}
+
+/* RESPONSIVE */
 @media (max-width: 768px) {
 
     .header,
     .footer {
-        padding: 1.5rem 1.5rem;
+        padding: 1.5rem;
     }
 
     .content {
@@ -304,15 +414,6 @@ form a:hover::after {
     form {
         padding: 2.5rem 2rem;
         max-width: 100%;
-    }
-
-    .register-form {
-        max-width: 100%;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
     }
 
     h1 {
@@ -326,15 +427,8 @@ form a:hover::after {
         padding: 2rem 1.5rem;
     }
 
-    input[type="text"],
-    input[type="password"],
-    input[type="email"] {
+    input {
         padding: 0.9rem 1rem;
-    }
-
-    .contact-prefix {
-        padding: 0.9rem 0.8rem;
-        font-size: 0.95rem;
     }
 
     button[type="submit"] {

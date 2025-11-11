@@ -6,95 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up - Amarelle</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
+    
+    <link rel="stylesheet" href="public/css/login.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: linear-gradient(180deg, #fff 0%, #D7C9AE 100%);
-            color: #2D2D2D;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(166, 135, 99, 0.15) 0%, transparent 65%);
-            top: -100px;
-            right: -50px;
-            border-radius: 50%;
-            z-index: 0;
-        }
-
-        body::after {
-            content: '';
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(166, 135, 99, 0.12) 0%, transparent 65%);
-            bottom: -100px;
-            left: -50px;
-            border-radius: 50%;
-            z-index: 0;
-        }
-
-        .header {
-            padding: 1.5rem 3rem;
-            position: relative;
-            z-index: 10;
-        }
-
-        .logo-link {
-            text-decoration: none;
-        }
-
-        .logo {
-            font-size: 1.4rem;
-            letter-spacing: 1px;
-            font-weight: 600;
-            color: #1C1917;
-            transition: color 0.3s ease;
-            display: inline-block;
-            font-family: 'Lexend', sans-serif;
-        }
-
-        .logo:hover {
-            color: #A68763;
-        }
-
-        .content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 3rem 2rem;
-            position: relative;
-            z-index: 10;
-            animation: fadeInUp 0.8s ease-out;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+       
 
         h1 {
             font-family: 'Minion', 'Times New Roman', Times, serif;
@@ -347,62 +263,7 @@
             color: #16a34a;
         }
 
-        /* Responsive Design */
-        @media (max-width: 768px) {
-
-            .header,
-            .footer {
-                padding: 1.5rem 1.5rem;
-            }
-
-            .content {
-                padding: 2rem 1.5rem;
-            }
-
-            form {
-                padding: 2.5rem 2rem;
-                max-width: 100%;
-            }
-
-            .register-form {
-                max-width: 100%;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-                gap: 0;
-            }
-
-            h1 {
-                font-size: 2.5rem;
-                margin-bottom: 2rem;
-            }
-        }
-
-        @media (max-width: 480px) {
-            form {
-                padding: 2rem 1.5rem;
-            }
-
-            input[type="text"],
-            input[type="password"],
-            input[type="email"] {
-                padding: 0.9rem 1rem;
-            }
-
-            .contact-prefix {
-                padding: 0.9rem 0.8rem;
-                font-size: 0.95rem;
-            }
-
-            button[type="submit"] {
-                padding: 1rem 1.5rem;
-            }
-
-            label {
-                font-size: 0.9rem;
-            }
-        }
+      
     </style>
 </head>
 
@@ -453,8 +314,7 @@
 
             <label for="contact_num">Contact Number</label>
             <div class="contact-group">
-                <span class="contact-prefix">+63</span>
-                <input type="text" id="contact_num" name="contact_num" maxlength="10" placeholder="XXX XXX XXXX">
+                <input type="text" id="contact_num" name="contact_num" maxlength="11" placeholder="XXX XXXX XXXX">
             </div>
             <span class="error-message" id="contact_num-error"></span>
 

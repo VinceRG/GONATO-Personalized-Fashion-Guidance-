@@ -64,8 +64,8 @@ class ForgotModel {
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
-            $mail->Username = 'aceview18@gmail.com';       // ✅ replace
-            $mail->Password = 'uelmqlulrxbbkikx';         // ✅ replace
+            $mail->Username = 'aceview18@gmail.com';       
+            $mail->Password = 'uelmqlulrxbbkikx';         
             $mail->SMTPSecure = 'tls';
             $mail->Port = 587;
 

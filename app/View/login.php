@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
     <title>Login - Amarelle</title>
     <link rel="stylesheet" href="public/css/login.css">
+
+    <!-- ✅ reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
     <style>
         .message {
             padding: 1rem;
@@ -15,20 +19,14 @@
             text-align: center;
             font-weight: 500;
         }
-        .message.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        .message.warning {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
+        .message.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message.warning { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+
+        .g-recaptcha {
+            margin: 1rem 0;
+            display: flex;
+            justify-content: center;
         }
     </style>
 </head>
@@ -44,6 +42,7 @@
         <h1>Sign In</h1>
 
         <form id="loginForm" action="index.php?page=login" method="POST">
+
             <?php if (!empty($message)): ?>
                 <div class="message <?php echo $messageType; ?>">
                     <?php echo htmlspecialchars($message); ?>
@@ -57,23 +56,27 @@
             <?php endif; ?>
 
             <label for="username">Username or Email</label>
-            <input type="text" id="username" name="username" placeholder="Enter your username or email" 
-                   value="<?php echo htmlspecialchars($username ?? ''); ?>" 
+            <input type="text" id="username" name="username"
+                   placeholder="Enter your username or email"
+                   value="<?php echo htmlspecialchars($username ?? ''); ?>"
                    <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
 
             <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Enter your password"
+            <input type="password" id="password" name="password"
+                   placeholder="Enter your password"
                    <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
 
-            <button type="submit" <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
+            <!-- ✅ RECAPTCHA WIDGET -->
+            <div class="g-recaptcha" data-sitekey="6LeCugUsAAAAAMevrBVqSjs6AG8SsQZ8qrJGvjDZ"></div>
+
+            <button type="submit" 
+                <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
                 Login
             </button>
-            <p>
-                <a href="index.php?page=forgot">Forgot your password?</a>
-            </p>
 
-            <p>
-                Don't have an account yet?
+            <p><a href="index.php?page=forgot">Forgot your password?</a></p>
+
+            <p>Don't have an account yet?
                 <a href="index.php?page=register">Sign Up here</a>
             </p>
         </form>

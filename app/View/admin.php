@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -24,10 +25,11 @@
         </div>
 
         <nav class="nav-links">
-          <a href="#inventory" class="nav-btn active"><i class="bi bi-box-seam"></i> Inventory</a>
-          <a href="#users" class="nav-btn"><i class="bi bi-people"></i> Users</a>
-          <a href="#orders" class="nav-btn"><i class="bi bi-cart-check"></i> Orders</a>
-        </nav>
+  <a href="#products" class="nav-btn active"><i class="bi bi-tags"></i> Products</a>
+  <a href="#inventory" class="nav-btn"><i class="bi bi-box-seam"></i> Inventory</a>
+  <a href="#users" class="nav-btn"><i class="bi bi-people"></i> Users</a>
+  <a href="#orders" class="nav-btn"><i class="bi bi-cart-check"></i> Orders</a>
+</nav>
       </div>
 
       <div class="sidebar-footer">
@@ -47,92 +49,182 @@
     </div>
 
     <div class="main-content">
-      <!-- INVENTORY SECTION -->
-      <section id="inventory" class="content-section active">
-        <div class="section-header">
-          <div>
-            <div class="section-title"><i>Inventory Management</i></div>
-            <div class="section-subtitle">Manage your product catalog</div>
-          </div>
-          <button class="btn" onclick="openProductModal()">
-            <i class="bi bi-plus-circle"></i> Add Product
-          </button>
-        </div>
+      <!-- PRODUCTS SECTION -->
+<section id="products" class="content-section active">
+  <div class="section-header">
+    <div>
+      <div class="section-title"><i>Product Management</i></div>
+      <div class="section-subtitle">Manage base product details</div>
+    </div>
+    <button class="btn" onclick="openProductModal()">
+      <i class="bi bi-plus-circle"></i> Add Product
+    </button>
+  </div>
 
-        <div class="filter-bar">
-          <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
-          <select id="categoryFilter" onchange="filterProducts()">
-            <option value="">All Categories</option>
-            <option value="Tops">Tops</option>
-            <option value="Dresses">Dresses</option>
-            <option value="Bottoms">Bottoms</option>
-            <option value="Outerwear">Outerwear</option>
-          </select>
+  <div class="data-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Product Name</th>
+          <th>Description</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productListBody">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+</section>
+<!-- INVENTORY SECTION -->
+<section id="inventory" class="content-section">
+  <div class="section-header">
+    <div>
+      <div class="section-title" id="inventoryProductTitle">Inventory Management</div>
+      <div class="section-subtitle" id="inventorySubtitle">Select a product to view its stock variants</div>
+    </div>
+    <button class="btn" onclick="openInventoryModal()">
+      <i class="bi bi-plus-circle"></i> Add Variant
+    </button>
+  </div>
 
-          <select id="stockFilter" onchange="filterProducts()">
-            <option value="">All Stock Levels</option>
-            <option value="instock">In Stock</option>
-            <option value="low">Low Stock</option>
-            <option value="out">Out of Stock</option>
-          </select>
-        </div>
-
-        <div class="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Product Name</th>
-                <th>Size</th>
-                <th>Color</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="productTableBody">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </section>
+  <div class="data-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Size</th>
+          <th>Color</th>
+          <th>Quantity</th>
+          <th>Created At</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="inventoryTableBody">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+</section>
 
       <!-- USERS SECTION -->
-      <section id="users" class="content-section">
-        <div class="section-header">
-          <div>
-            <div class="section-title"><i>User Management</i></div>
-            <div class="section-subtitle">View and manage user accounts</div>
-          </div>
-        </div>
+<section id="users" class="content-section">
+  <div class="section-header">
+    <div>
+      <div class="section-title"><i>User Management</i></div>
+      <div class="section-subtitle">View and manage user accounts</div>
+    </div>
+  </div>
 
-        <div class="filter-bar">
-          <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
-          <select id="statusFilter" onchange="filterUsers()">
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="locked">Locked</option>
-          </select>
-        </div>
+  <div class="filter-bar">
+    <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
+    <select id="statusFilter" onchange="filterUsers()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="locked">Locked</option>
+    </select>
+  </div>
 
-        <div class="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Joined Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </section>
+  <div class="data-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Joined Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+let allUsers = [];
+
+// Fetch users from the admin API
+async function loadUsers() {
+  try {
+    const res = await fetch('index.php?api=admin&action=users'); // ensure your API route
+    if (!res.ok) throw new Error('Failed to fetch users');
+    allUsers = await res.json();
+    renderUsers(allUsers);
+  } catch (err) {
+    console.error(err);
+    alert('Error loading users. Make sure you are logged in as admin.');
+  }
+}
+
+// Render users into table
+function renderUsers(users) {
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '';
+
+  users.forEach(user => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${user.USERNAME}</td>
+      <td>${user.EMAIL}</td>
+      <td>${new Date(user.CREATED_AT).toLocaleDateString()}</td>
+      <td>${user.IS_LOCKED ? 'Locked' : 'Active'}</td>
+      <td>
+        <button class="btn btn-sm" onclick="toggleUserStatus(${user.USER_ID}, ${user.IS_LOCKED})">
+          ${user.IS_LOCKED ? 'Unlock' : 'Lock'}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Filter users by search & status
+function filterUsers() {
+  const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+
+  const filtered = allUsers.filter(user => {
+    const matchesSearch = user.USERNAME.toLowerCase().includes(searchTerm) ||
+                          user.EMAIL.toLowerCase().includes(searchTerm);
+    const matchesStatus = !statusFilter || 
+                          (statusFilter === 'active' && !user.IS_LOCKED) ||
+                          (statusFilter === 'locked' && user.IS_LOCKED);
+    return matchesSearch && matchesStatus;
+  });
+
+  renderUsers(filtered);
+}
+
+// Toggle user lock status
+async function toggleUserStatus(userId, isLocked) {
+  try {
+    const res = await fetch(`index.php?api=admin&action=toggleUserLock&userId=${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isLocked: !isLocked })
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      await loadUsers();
+    } else {
+      alert('Failed to update user status');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error updating user status');
+  }
+}
+
+// Load users on page load
+window.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+
 
       <!-- ORDERS SECTION -->
       <section id="orders" class="content-section">
@@ -176,71 +268,91 @@
     </div>
   </div>
 
-  <!-- PRODUCT MODAL -->
-  <div id="productModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title" id="productModalTitle">Add Product</h2>
-        <button class="close-modal" onclick="closeProductModal()">&times;</button>
-      </div>
-      <form id="productForm">
-        <input type="hidden" id="productId">
-        <div class="form-group">
-          <label>Product Name</label>
-          <input type="text" id="productName" required>
-        </div>
-        <div class="form-group">
-          <label>Size</label>
-          <select id="sizeCategory" required>
-            <option value="">Select Size</option>
-            <option value="Small">Small</option>
-            <option value="Medium">Medium</option>
-            <option value="Large">Large</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Color</label>
-          <div style="display: flex; gap: 0.5rem; align-items: center;">
-            <select id="colorCategory" required style="flex: 1;">
-              <option value="">Select Color</option>
-            </select>
-            <button type="button" class="btn" onclick="openAddColorModal()" title="Add New Color"
-              style="padding: 0.75rem 1rem; white-space: nowrap; flex-shrink: 0;">
-              <i class="bi bi-plus-circle" style="margin-right: 0.25rem;"></i> Add Color
-            </button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Category</label>
-          <select id="productCategory" required>
-            <option value="">Select Category</option>
-            <option value="Dresses">Dresses</option>
-            <option value="Tops">Tops</option>
-            <option value="Bottoms">Bottoms</option>
-            <option value="Outerwear">Outerwear</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label>Price ($)</label>
-          <input type="number" id="productPrice" step="0.01" required>
-        </div>
-        <div class="form-group">
-          <label>Stock Quantity</label>
-          <input type="number" id="productStock" required>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea id="productDescription"></textarea>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
-          <button type="submit" class="btn">Save Product</button>
-        </div>
-      </form>
+  <!-- PRODUCT MODAL (Replace your existing one) -->
+<div id="productModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="productModalTitle">Add Product</h2>
+      <button class="close-modal" onclick="closeProductModal()">&times;</button>
     </div>
+    <form id="productForm">
+      <div class="form-group">
+        <label>Product Name *</label>
+        <input type="text" id="productName" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="productDescription" rows="3"></textarea>
+      </div>
+      
+      <div class="form-group">
+        <label>Body Shape *</label>
+        <select id="bodyShapeSelect" required>
+          <option value="">Select Body Shape</option>
+          <!-- Populated by JS -->
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Price ($) *</label>
+        <input type="number" id="productPrice" step="0.01" min="0" required>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+        <button type="submit" class="btn">Save Product</button>
+      </div>
+    </form>
   </div>
+</div>
 
+<!-- INVENTORY MODAL (Replace your existing one) -->
+<div id="inventoryModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="inventoryModalTitle">Add Variant</h2>
+      <button class="close-modal" onclick="closeInventoryModal()">&times;</button>
+    </div>
+    <form id="inventoryForm">
+      <input type="hidden" id="inventoryId">
+      
+      <div class="form-group">
+        <label>Size *</label>
+        <select id="inventorySize" required>
+          <option value="">Select Size</option>
+          <option value="S">Small</option>
+          <option value="M">Medium</option>
+          <option value="L">Large</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Color *</label>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <select id="inventoryColor" required style="flex: 1;">
+            <option value="">Select Color</option>
+            <!-- Populated by JS -->
+          </select>
+          <button type="button" class="btn" onclick="openAddColorModal()" title="Add New Color"
+            style="padding: 0.75rem 1rem; white-space: nowrap; flex-shrink: 0;">
+            <i class="bi bi-plus-circle"></i> Add
+          </button>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label>Quantity *</label>
+        <input type="number" id="inventoryQuantity" min="0" required>
+      </div>
+      
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeInventoryModal()">Cancel</button>
+        <button type="submit" class="btn">Save Variant</button>
+      </div>
+    </form>
+  </div>
+</div>
   <!-- ORDER MODAL -->
   <div id="orderModal" class="modal">
     <div class="modal-content">
@@ -254,6 +366,24 @@
       </div>
     </div>
   </div>
+
+  <!-- DELETE PRODUCT MODAL -->
+<div id="deleteProductModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Confirm Delete</h2>
+      <button class="close-modal" onclick="closeDeleteModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="deleteProductMessage">Are you sure you want to delete this product?</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
 
   <!-- ADD COLOR MODAL -->
   <div id="addColorModal" class="modal">
@@ -274,6 +404,28 @@
       </form>
     </div>
   </div>
+  <script src="public/js/admin.js"></script>
+  <script>
+  window.openInventoryManager = async function(productId, productName) {
+    selectedProductId = productId;
+    selectedProductName = productName;
+document.getElementById('inventoryProductTitle').textContent = `Inventory - ${decodeURIComponent(productName)}`;
+  document.getElementById('inventorySubtitle').textContent = `Managing stock variants for ${decodeURIComponent(productName)}`;
+
+    switchSection('inventory');
+    await loadInventory(productId);
+  };
+
+  window.editProduct = editProduct;
+  window.deleteProduct = deleteProduct;
+  window.toggleUserStatus = toggleUserStatus;
+  window.viewOrder = viewOrder;
+  window.updateOrderStatus = updateOrderStatus;
+  window.openProductModal = openProductModal;
+  window.closeProductModal = closeProductModal;
+  window.openAddColorModal = openAddColorModal;
+  window.closeAddColorModal = closeAddColorModal;
+</script>
 </body>
 
 </html>

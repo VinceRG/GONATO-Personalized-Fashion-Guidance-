@@ -20,7 +20,19 @@ class User {
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
 
+            // 🔒 Check if user is locked
+            if ($user['STATUS'] == 1) {
+                return ['success' => false, 'message' => 'Account is locked due to multiple failed login attempts.'];
+            }
+
+            // ✅ Correct password
             if (password_verify($password, $user['PASSWORD'])) {
+
+                // Reset failed attempts after successful login
+                $reset = $this->conn->prepare("UPDATE users SET FAILED_ATTEMPTS = 0 WHERE USER_ID = ?");
+                $reset->bind_param("i", $user['USER_ID']);
+                $reset->execute();
+
                 // Generate OTP (no email sending)
                 $otp = rand(100000, 999999);
 
@@ -30,10 +42,30 @@ class User {
                     'user' => $user,
                     'otp' => $otp
                 ];
-            } else {
-                return ['success' => false, 'message' => 'Incorrect password.'];
+            } 
+            // ❌ Incorrect password
+            else {
+                $failedAttempts = $user['FAILED_ATTEMPTS'] + 1;
+
+                // Update failed attempts
+                $update = $this->conn->prepare("UPDATE users SET FAILED_ATTEMPTS = ? WHERE USER_ID = ?");
+                $update->bind_param("ii", $failedAttempts, $user['USER_ID']);
+                $update->execute();
+
+                // Lock account after 3 failed attempts
+                if ($failedAttempts >= 3) {
+                    $lock = $this->conn->prepare("UPDATE users SET STATUS = 1 WHERE USER_ID = ?");
+                    $lock->bind_param("i", $user['USER_ID']);
+                    $lock->execute();
+
+                    return ['success' => false, 'message' => 'Account locked after 3 failed login attempts. Please contact support.'];
+                }
+
+                return ['success' => false, 'message' => "Incorrect password. Attempt $failedAttempts of 3."];
             }
-        } else {
+        } 
+        // ❌ Account not found
+        else {
             return ['success' => false, 'message' => 'Account not found.'];
         }
     }

@@ -93,7 +93,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password'])) 
         $message = "Session expired. Please request a new OTP.";
         $messageType = "error";
 
-        require_once __DIR__ . '/../View/forgot.php';
+        require_once __DIR__ . '/../View/login.php';
         return;
     }
 
