@@ -30,40 +30,82 @@ class RegisterController {
             
             if ($result['success']) {
                 $success = $result['message'];
-                // Optionally redirect to login page after successful registration
-                // header('Location: index.php?page=login&registered=1');
-                // exit;
+                header('Location: index.php?page=login&registered=1');
+                exit;
             } else {
                 $error = $result['message'];
-                $formData = $_POST; // Preserve form data on error
+                $formData = $_POST;
             }
         }
 
-        // Load the view
         require_once __DIR__ . '/../View/register.php';
     }
 
     /**
      * Process registration form submission
-     * 
-     * @param array $postData POST data from form
-     * @return array Result with 'success' boolean and 'message' string
      */
     private function processRegistration($postData) {
-        // Sanitize and validate input
+        // Collect input
         $firstname = $this->sanitizeInput($postData['firstname'] ?? '');
         $lastname = $this->sanitizeInput($postData['lastname'] ?? '');
         $username = $this->sanitizeInput($postData['username'] ?? '');
         $email = $this->sanitizeInput($postData['email'] ?? '');
-        $address = $this->sanitizeInput($postData['address'] ?? '');
         $contact_num = $this->sanitizeInput($postData['contact_num'] ?? '');
         $password = $postData['password'] ?? '';
         $confirmPassword = $postData['confirmPassword'] ?? '';
 
-        // Server-side validation
+        // Address fields
+        $street_address = $this->sanitizeInput($postData['street_address'] ?? '');
+        $apartment = $this->sanitizeInput($postData['apartment'] ?? '');
+        $province = $this->sanitizeInput($postData['province'] ?? '');
+        $city = $this->sanitizeInput($postData['city'] ?? '');
+        $barangay = $this->sanitizeInput($postData['barangay'] ?? '');
+        $postal_code = $this->sanitizeInput($postData['postal_code'] ?? '');
+
+        $addressData = [
+            'street_address' => $street_address,
+            'apartment' => $apartment,
+            'province' => $province,
+            'city' => $city,
+            'barangay' => $barangay,
+            'postal_code' => $postal_code
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        |  ADD reCAPTCHA VALIDATION (Same as LoginController)
+        |--------------------------------------------------------------------------
+        */
+        $recaptchaSecret = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC"; 
+        $recaptchaResponse = $postData['g-recaptcha-response'] ?? '';
+
+        if (empty($recaptchaResponse)) {
+            return [
+                'success' => false,
+                'message' => 'Please verify that you are not a robot.'
+            ];
+        }
+
+        $verify = file_get_contents(
+            "https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$recaptchaResponse}"
+        );
+        $captchaSuccess = json_decode($verify);
+
+        if (!$captchaSuccess->success) {
+            return [
+                'success' => false,
+                'message' => 'reCAPTCHA verification failed. Please try again.'
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        |  Continue with existing validation
+        |--------------------------------------------------------------------------
+        */
         $validationResult = $this->validateRegistrationData(
             $firstname, $lastname, $username, $email, 
-            $address, $contact_num, $password, $confirmPassword
+            $addressData, $contact_num, $password, $confirmPassword
         );
 
         if (!$validationResult['valid']) {
@@ -73,26 +115,20 @@ class RegisterController {
             ];
         }
 
-        // Check for existing username/email
+        // Check username/email availability
         if ($this->userModel->usernameExists($username)) {
-            return [
-                'success' => false,
-                'message' => 'Username is already taken.'
-            ];
+            return ['success' => false, 'message' => 'Username is already taken.'];
         }
 
         if ($this->userModel->emailExists($email)) {
-            return [
-                'success' => false,
-                'message' => 'Email is already registered.'
-            ];
+            return ['success' => false, 'message' => 'Email is already registered.'];
         }
 
-        // Attempt registration
+        // Register user
         try {
             $registered = $this->userModel->register(
                 $firstname, $lastname, $username, 
-                $email, $address, $contact_num, $password
+                $email, $addressData, $contact_num, $password
             );
 
             if ($registered) {
@@ -117,12 +153,10 @@ class RegisterController {
 
     /**
      * Validate all registration data server-side
-     * 
-     * @return array Result with 'valid' boolean and 'error' string
      */
     private function validateRegistrationData(
         $firstname, $lastname, $username, $email, 
-        $address, $contact_num, $password, $confirmPassword
+        $addressData, $contact_num, $password, $confirmPassword
     ) {
         // First name validation
         if (empty($firstname) || strlen($firstname) < 2 || strlen($firstname) > 50) {
@@ -157,13 +191,41 @@ class RegisterController {
         }
 
         // Address validation
-        if (empty($address) || strlen($address) < 10 || strlen($address) > 200) {
-            return ['valid' => false, 'error' => 'Address must be 10-200 characters.'];
+        $street_address = $addressData['street_address'];
+        $province = $addressData['province'];
+        $city = $addressData['city'];
+        $barangay = $addressData['barangay'];
+        $postal_code = $addressData['postal_code'];
+        $apartment = $addressData['apartment'];
+
+        if (empty($street_address) || strlen($street_address) < 5 || strlen($street_address) > 150) {
+            return ['valid' => false, 'error' => 'Street address must be 5-150 characters.'];
+        }
+        if (empty($province)) {
+            return ['valid' => false, 'error' => 'Province is required.'];
+        }
+        if (empty($city)) {
+            return ['valid' => false, 'error' => 'City/Town is required.'];
+        }
+        if (empty($barangay)) {
+            return ['valid' => false, 'error' => 'Barangay is required.'];
+        }
+        if (empty($postal_code)) {
+            return ['valid' => false, 'error' => 'Postal code is required.'];
+        }
+        if (!preg_match("/^[0-9]{4,10}$/", $postal_code)) {
+            return ['valid' => false, 'error' => 'Postal code must be 4-10 digits.'];
+        }
+        if (!empty($apartment) && strlen($apartment) > 50) {
+            return ['valid' => false, 'error' => 'Apartment/Suite must not exceed 50 characters.'];
         }
 
-        // Contact number validation (Philippine mobile format)
-        if (!preg_match("/^9[0-9]{9}$/", $contact_num)) {
-            return ['valid' => false, 'error' => 'Invalid Philippine mobile number.'];
+        // Contact number validation
+        if (!preg_match("/^[0-9]{11}$/", $contact_num)) {
+            return ['valid' => false, 'error' => 'Contact number must be exactly 11 digits.'];
+        }
+        if (!preg_match("/^09[0-9]{9}$/", $contact_num)) {
+            return ['valid' => false, 'error' => 'Invalid Philippine mobile number format (must start with 09).'];
         }
 
         // Password validation
@@ -183,7 +245,6 @@ class RegisterController {
             return ['valid' => false, 'error' => 'Password must contain a special character.'];
         }
 
-        // Confirm password
         if ($password !== $confirmPassword) {
             return ['valid' => false, 'error' => 'Passwords do not match.'];
         }
@@ -192,7 +253,7 @@ class RegisterController {
     }
 
     /**
-     * Handle AJAX requests for checking username/email existence
+     * AJAX username/email check
      */
     private function handleAjaxCheck() {
         header('Content-Type: application/json');
@@ -221,22 +282,13 @@ class RegisterController {
         exit;
     }
 
-    /**
-     * Check if request is AJAX
-     * 
-     * @return bool
-     */
+    /** Check if request is AJAX */
     private function isAjaxRequest() {
         return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
-    /**
-     * Sanitize user input
-     * 
-     * @param string $input
-     * @return string
-     */
+    /** Clean input */
     private function sanitizeInput($input) {
         return trim(htmlspecialchars($input, ENT_QUOTES, 'UTF-8'));
     }

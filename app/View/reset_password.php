@@ -125,6 +125,11 @@
     <div class="content">
         <h1>Reset Password</h1>
 
+        <!-- ✅ New Success Message -->
+        <div class="alert success" style="margin-bottom: 15px; background: #d4edda; color: #155724; padding: 10px; border-radius: 5px; text-align:center;">
+            ✅ You can now change your password.
+        </div>
+
         <form method="POST" action="" onsubmit="return handleSubmit(event);">
             <label>New Password</label>
             <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required>

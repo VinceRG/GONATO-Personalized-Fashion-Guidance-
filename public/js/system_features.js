@@ -155,12 +155,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  const cartButton = document.querySelector('.cart-button');
-  if (cartButton) {
-    cartButton.addEventListener('click', () => {
-      alert('Shopping cart feature coming soon!');
-    });
-  }
 
   // ============================================
   // SEARCH BAR FILTER

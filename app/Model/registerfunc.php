@@ -23,13 +23,123 @@ class User {
         return $stmt->get_result()->num_rows > 0;
     }
 
-    public function register($firstname, $lastname, $username, $email, $address, $contact_num, $password) {
+    /**
+     * Register a new user
+     * 
+     * @param string $firstname
+     * @param string $lastname
+     * @param string $username
+     * @param string $email
+     * @param array $addressData Array containing address fields
+     * @param string $contact_num
+     * @param string $password
+     * @return bool
+     */
+    public function register($firstname, $lastname, $username, $email, $addressData, $contact_num, $password) {
+        // Hash the password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        
+        // Convert address array to JSON string
+        $addressJson = json_encode($addressData, JSON_UNESCAPED_UNICODE);
+        
+        // Prepare SQL statement
         $stmt = $this->conn->prepare("
-            INSERT INTO users (FIRST_NAME, LAST_NAME, USERNAME , EMAIL , ADDRESS, CONTACTS, PASSWORD)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO users (FIRST_NAME, LAST_NAME, USERNAME, EMAIL, ADDRESS, CONTACTS, PASSWORD, CREATED_AT)
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
         ");
-        $stmt->bind_param("sssssss", $firstname, $lastname, $username, $email, $address, $contact_num, $hashedPassword);
+        
+        // Bind parameters
+        $stmt->bind_param("sssssss", 
+            $firstname, 
+            $lastname, 
+            $username, 
+            $email, 
+            $addressJson,  // Store as JSON
+            $contact_num, 
+            $hashedPassword
+        );
+        
+        // Execute and return result
         return $stmt->execute();
     }
+
+    /**
+     * Get user address as array
+     * 
+     * @param int $userId
+     * @return array|null
+     */
+    public function getUserAddress($userId) {
+        $stmt = $this->conn->prepare("SELECT ADDRESS FROM users WHERE USER_ID = ?");
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            // Decode JSON address back to array
+            return json_decode($row['ADDRESS'], true);
+        }
+        
+        return null;
+    }
+
+    /**
+     * Update user address
+     * 
+     * @param int $userId
+     * @param array $addressData
+     * @return bool
+     */
+    public function updateAddress($userId, $addressData) {
+        $addressJson = json_encode($addressData, JSON_UNESCAPED_UNICODE);
+        
+        $stmt = $this->conn->prepare("UPDATE users SET ADDRESS = ? WHERE USER_ID = ?");
+        $stmt->bind_param("si", $addressJson, $userId);
+        
+        return $stmt->execute();
+    }
+
+    /**
+     * Get formatted address string for display
+     * 
+     * @param int $userId
+     * @return string
+     */
+    public function getFormattedAddress($userId) {
+        $address = $this->getUserAddress($userId);
+        
+        if (!$address) {
+            return 'No address on file';
+        }
+        
+        // Build formatted address string
+        $parts = [];
+        
+        if (!empty($address['street_address'])) {
+            $parts[] = $address['street_address'];
+        }
+        
+        if (!empty($address['apartment'])) {
+            $parts[] = $address['apartment'];
+        }
+        
+        if (!empty($address['barangay'])) {
+            $parts[] = 'Brgy. ' . $address['barangay'];
+        }
+        
+        if (!empty($address['city'])) {
+            $parts[] = $address['city'];
+        }
+        
+        if (!empty($address['province'])) {
+            $parts[] = $address['province'];
+        }
+        
+        if (!empty($address['postal_code'])) {
+            $parts[] = $address['postal_code'];
+        }
+        
+        return implode(', ', $parts);
+    }
 }
+?>
