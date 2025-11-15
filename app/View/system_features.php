@@ -99,7 +99,7 @@
           </div>
 
           <div class="shop-controls">
-            <button class="cart-button">
+            <button class="cart-button" onclick="openCart()">
               <i class="bi bi-bag"></i>
               <span class="cart-count">0</span>
             </button>

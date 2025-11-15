@@ -361,11 +361,16 @@ body {
   height: 40px;
 }
 
-.sidebar.collapsed #sidebarToggle,
+
 .sidebar.collapsed .logout-btn {
   display: none !important;
 }
 
+.sidebar.collapsed #sidebarToggle {
+  display: none !important;
+}
+
+/* Remove logout-btn from this rule - let it always be visible */
 .sidebar:hover {
   width: 240px;
 }
@@ -1539,6 +1544,8 @@ body.collapsed-layout .results-container {
   font-weight: 600;
   font-size: 1rem;
 }
+
+
 
 @media(max-width: 768px) {
   .modal-header {
