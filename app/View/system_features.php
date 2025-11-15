@@ -56,17 +56,21 @@
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <section id="catalog-shop" class="content-section active">
-            <div class="shop-header">
-              <div>
-                <div class="section-title"><i>Welcome to your Style Catalog!</i></div>
-                <div class="section-subtitle">Browse our collection tailored just for you.</div>
-              </div>
-              <button class="cart-button">
-                <i class="bi bi-cart3"></i>
-                <span class="cart-count">0</span>
-              </button>
-            </div>
+      <!-- 🛍️ SHOP SECTION -->
+      <section id="catalog-shop" class="content-section active">
+        <div class="shop-header">
+          <div>
+            <h2 class="section-title"><i>Shopping Catalog</i></h2>
+            <p class="section-subtitle">Find your perfect outfit below or explore personalized picks.</p>
+          </div>
+
+          <div class="shop-controls">
+            <button class="cart-button">
+              <i class="bi bi-bag"></i>
+              <span class="cart-count">0</span>
+            </button>
+          </div>
+        </div>
 
         <!-- Recommendations Section -->
         <div id="recommendations" class="subsection">
@@ -245,104 +249,6 @@
       </section>
     </div>
   </div>
-
-
-  <script>
-    const navLinks = Array.from(document.querySelectorAll('.nav-btn'));
-    const sections = Array.from(document.querySelectorAll('.content-section'));
-
-    navLinks.forEach(link => {
-      link.addEventListener('click', e => {
-        e.preventDefault();
-        const targetSelector = link.getAttribute('href');
-        const target = document.querySelector(targetSelector);
-        if (!target) return;
-
-        navLinks.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-
-        sections.forEach(s => s.classList.remove('active'));
-        target.classList.add('active');
-
-        const mainContent = document.querySelector('.main-content');
-        const targetTop = target.offsetTop; 
-        mainContent.scrollTo({ top: targetTop, behavior: 'smooth' });
-
-        history.replaceState(null, '', targetSelector);
-      });
-    });
-
-    const mainContent = document.querySelector('.main-content');
-    const observerOptions = {
-      root: mainContent,
-      rootMargin: '0px 0px -60% 0px', 
-      threshold: 0
-    };
-
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        const id = '#' + entry.target.id;
-        const correspondingLink = document.querySelector(`.nav-links a[href="${id}"]`);
-        if (entry.isIntersecting) {
-          navLinks.forEach(l => l.classList.remove('active'));
-          if (correspondingLink) correspondingLink.classList.add('active');
-          sections.forEach(s => s.classList.remove('active'));
-          entry.target.classList.add('active');
-        }
-      });
-    }, observerOptions);
-
-    sections.forEach(s => observer.observe(s));
-
-    // Cart functionality
-    let cartCount = 0;
-    const cartCountElement = document.querySelector('.cart-count');
-    const addToCartButtons = document.querySelectorAll('.add-to-cart');
-
-    addToCartButtons.forEach(button => {
-      button.addEventListener('click', () => {
-        cartCount++;
-        cartCountElement.textContent = cartCount;
-        button.classList.add('added');
-        setTimeout(() => button.classList.remove('added'), 1000);
-      });
-    });
-
-    document.querySelector('.cart-button').addEventListener('click', () => {
-      alert('Shopping cart feature coming soon!');
-    });
-
-    /* ---- NEW ANALYSIS FUNCTIONALITY ---- */
-    function toggleAnalysis(targetId, show) {
-      const targetElement = document.getElementById(targetId);
-      if (!targetElement) return;
-      const card = targetElement.closest('.option-card');
-      const uploadSection = card.querySelector('.upload-section');
-      const featureList = card.querySelector('.feature-list');
-      if (show) {
-        targetElement.classList.add('show-results');
-        uploadSection.classList.add('hidden');
-        featureList.classList.add('hidden');
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } else {
-        targetElement.classList.remove('show-results');
-        uploadSection.classList.remove('hidden');
-        featureList.classList.remove('hidden');
-      }
-    }
-
-    function simulateAnalysis(targetId) {
-      const button = event.target;
-      button.disabled = true;
-      const originalText = button.textContent;
-      button.textContent = "Analyzing...";
-      setTimeout(() => {
-        button.disabled = false;
-        button.textContent = originalText;
-        toggleAnalysis(targetId, true);
-      }, 1500);
-    }
-  </script>
 </body>
 </html>
 <?php include 'cartModal.php'; ?>
