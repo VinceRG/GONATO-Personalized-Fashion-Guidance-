@@ -1,61 +1,3 @@
-<?php
-session_start();
-require_once __DIR__ . '/../Model/features.php'; // ✅ Corrected path
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php?page=login");
-    exit();
-}
-
-$user_id = $_SESSION['user_id'];
-$query = "SELECT * FROM users WHERE USER_ID = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-
-// Helper function to get profile image path
-function getProfileImagePath($user) {
-    if (!empty($user['PROFILE_IMAGE'])) {
-        // Remove any query parameters first for file existence check
-        $imagePath = "uploads/profile_images/" . $user['PROFILE_IMAGE'];
-        
-        // Check if file exists
-        if (file_exists($imagePath)) {
-            return $imagePath;
-        } else {
-            // Try alternative path
-            $altPath = "../uploads/profile_images/" . $user['PROFILE_IMAGE'];
-            if (file_exists($altPath)) {
-                return $altPath;
-            }
-        }
-    }
-    return "assets/default-avatar.png";
-}
-
-// Helper function to get initials
-function getInitials($user) {
-    $first = !empty($user['FIRST_NAME']) ? substr($user['FIRST_NAME'], 0, 1) : '';
-    $last = !empty($user['LAST_NAME']) ? substr($user['LAST_NAME'], 0, 1) : '';
-    return strtoupper($first . $last);
-}
-
-$profileImagePath = getProfileImagePath($user);
-$userInitials = getInitials($user);
-
-// Debug: Check what's in the database
-error_log("DEBUG - User PROFILE_IMAGE from DB: " . ($user['PROFILE_IMAGE'] ?? 'EMPTY'));
-error_log("DEBUG - Profile Image Path: " . $profileImagePath);
-error_log("DEBUG - File exists check: " . (file_exists($profileImagePath) ? 'YES' : 'NO'));
-
-// Add cache-busting parameter only if it's not the default avatar
-if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar.png') {
-    $profileImagePath .= '?v=' . time();
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -105,9 +47,9 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
           <div class="profile" onclick="openUserProfile()">
             <div class="profile-pic" id="sidebar-profile-pic">
               <?php if (!empty($user['PROFILE_IMAGE'])): ?>
-                <img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                <img src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
               <?php else: ?>
-                <?= $userInitials ?>
+                <?= htmlspecialchars($userInitials) ?>
               <?php endif; ?>
             </div>
             <div class="profile-info">
@@ -231,7 +173,6 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
               </div>
             </div>
 
-            <div class="clothes-grid">
             <div class="clothes-item catalog-item">
               <img src="images/item1.jpg" alt="Clothing Item 4">
               <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
@@ -337,10 +278,10 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             <div class="profile-section">
               <div class="profile-avatar">
                 <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
-                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                  <img id="avatar-img" src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                 <?php else: ?>
-                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
-                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>"><?= $userInitials ?></div>
+                  <img id="avatar-img" src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
+                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>"><?= htmlspecialchars($userInitials) ?></div>
                 <?php endif; ?>
                 <button type="button" class="edit-avatar-btn" id="edit-avatar-btn" title="Change Profile Picture" style="display:none;">
                   <i class="bi bi-camera"></i>
@@ -569,56 +510,57 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
       </div>
     </div>
   </div>
-<div class="overlay" id="logoutOverlay" style="display: none;">
-  <div class="modal" style="max-width: 450px;">
-    <div class="modal-header" style="background: #2D2D2D;">
-      <div style="flex: 1;">
-        <h3 style="color: white; font-size: 1.3rem; margin: 0; font-weight: 600;">
-          <i class="bi bi-box-arrow-right" style="margin-right: 0.5rem;"></i>
-          Confirm Logout
+
+  <!-- Logout Confirmation Modal -->
+  <div class="overlay" id="logoutOverlay" style="display: none;">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header" style="background: #2D2D2D;">
+        <div style="flex: 1;">
+          <h3 style="color: white; font-size: 1.3rem; margin: 0; font-weight: 600;">
+            <i class="bi bi-box-arrow-right" style="margin-right: 0.5rem;"></i>
+            Confirm Logout
+          </h3>
+        </div>
+        <button class="close-btn" onclick ="closeLogoutOverlay()" style="color: white;">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
+        <div style="
+          width: 80px;
+          height: 80px;
+          background: linear-gradient(135deg, #D7C9AE, #A68763);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem;
+          box-shadow: 0 8px 20px rgba(166, 135, 99, 0.3);
+        ">
+          <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
+        </div>
+
+        <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
+          Are you sure?
         </h3>
-      </div>
-      <button class="close-btn" onclick="closeLogoutOverlay()" style="color: white;">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
+        <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
+          You will be logged out of your account and redirected to the login page.
+        </p>
 
-    <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
-      <div style="
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #D7C9AE, #A68763);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        box-shadow: 0 8px 20px rgba(166, 135, 99, 0.3);
-      ">
-        <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
-      </div>
-
-      <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
-        Are you sure?
-      </h3>
-      <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
-        You will be logged out of your account and redirected to the login page.
-      </p>
-
-      <div style="display: flex; gap: 1rem; justify-content: center;">
-        <button onclick="closeLogoutOverlay()" style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
-          <i class="bi bi-x-circle" style="margin-right: 0.5rem;"></i>
-          Cancel
-        </button>
-        <button onclick="confirmLogout()" style="flex:1; padding:0.85rem 1.5rem; border:none; background:#2D2D2D; color:white; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
-          <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
-          Yes, Logout
-        </button>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <button onclick="closeLogoutOverlay()" style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+            <i class="bi bi-x-circle" style="margin-right: 0.5rem;"></i>
+            Cancel
+          </button>
+          <button onclick="confirmLogout()" style="flex:1; padding:0.85rem 1.5rem; border:none; background:#2D2D2D; color:white; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+            <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
+            Yes, Logout
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-  
 </body>
 </html>

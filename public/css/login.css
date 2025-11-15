@@ -189,19 +189,20 @@ button[type="submit"]:active {
 
 /* FORM LINKS */
 form p {
-    text-align: right;
+    text-align: center;
     font-size: 0.95rem;
     color: #57534E;
     margin-top: 5px;
 }
 
-/* form a {
+form a {
     color: #A68763;
     font-weight: 600;
     text-decoration: none;
     position: relative;
 }
 
+/*
 form a::after {
     content: '';
     position: absolute;
@@ -223,14 +224,14 @@ form a:hover {
 
 .forgotpass {
     width: 100%;
-    text-align: left;
+    text-align: right;
     /* changed from right to left */
     margin-top: 8px;
     margin-bottom: 15px;
 }
 
 .forgotpass a {
-    color: #007b8f;
+    color: #A68763;
     font-size: 14px;
     text-decoration: none;
 }

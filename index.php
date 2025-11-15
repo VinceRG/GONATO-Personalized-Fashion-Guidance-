@@ -63,6 +63,10 @@ switch ($page) {
         require_once 'app/View/admin.php';
         break;
 
+    case 'policy':
+        require_once 'app/View/policy.php';
+        break;
+
     case 'landing':
     default:
         require_once './app/View/landing.php';

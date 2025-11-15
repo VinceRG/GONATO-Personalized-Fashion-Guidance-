@@ -1,4 +1,5 @@
 <?php
+//Model/features.php
 require_once __DIR__ . '/../Core/Database.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -12,6 +13,30 @@ if (!isset($_SESSION['user_id'])) {
 
 $conn = Database::connect();
 $user_id = $_SESSION['user_id'];
+
+// Helper function to get profile image path
+function getProfileImagePath($user) {
+    if (!empty($user['PROFILE_IMAGE'])) {
+        $imagePath = "uploads/profile_images/" . $user['PROFILE_IMAGE'];
+        
+        if (file_exists($imagePath)) {
+            return $imagePath;
+        } else {
+            $altPath = "../uploads/profile_images/" . $user['PROFILE_IMAGE'];
+            if (file_exists($altPath)) {
+                return $altPath;
+            }
+        }
+    }
+    return "assets/default-avatar.png";
+}
+
+// Helper function to get initials
+function getInitials($user) {
+    $first = !empty($user['FIRST_NAME']) ? substr($user['FIRST_NAME'], 0, 1) : '';
+    $last = !empty($user['LAST_NAME']) ? substr($user['LAST_NAME'], 0, 1) : '';
+    return strtoupper($first . $last);
+}
 
 // Handle Profile Update BEFORE fetching user data
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
@@ -84,11 +109,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
     }
 }
 
+// Fetch user data
 $stmt = $conn->prepare("SELECT * FROM users WHERE USER_ID = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
+$result = $stmt->get_result();
+$user = $result->fetch_assoc();
 
+// Prepare variables for the view
+$profileImagePath = getProfileImagePath($user);
+$userInitials = getInitials($user);
+
+// Debug logging
+error_log("DEBUG - User PROFILE_IMAGE from DB: " . ($user['PROFILE_IMAGE'] ?? 'EMPTY'));
+error_log("DEBUG - Profile Image Path: " . $profileImagePath);
+error_log("DEBUG - File exists check: " . (file_exists($profileImagePath) ? 'YES' : 'NO'));
+
+// Add cache-busting parameter
+if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar.png') {
+    $profileImagePath .= '?v=' . time();
+}
+
+// Get messages
 $successMessage = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : null;
 $errorMessage = isset($_SESSION['error_message']) ? $_SESSION['error_message'] : null;
 unset($_SESSION['success_message'], $_SESSION['error_message']);

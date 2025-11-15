@@ -36,32 +36,41 @@ class User {
      * @return bool
      */
     public function register($firstname, $lastname, $username, $email, $addressData, $contact_num, $password) {
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        
-        // Convert address array to JSON string
-        $addressJson = json_encode($addressData, JSON_UNESCAPED_UNICODE);
-        
-        // Prepare SQL statement
-        $stmt = $this->conn->prepare("
-            INSERT INTO users (FIRST_NAME, LAST_NAME, USERNAME, EMAIL, ADDRESS, CONTACTS, PASSWORD, CREATED_AT)
-            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
-        ");
-        
-        // Bind parameters
-        $stmt->bind_param("sssssss", 
-            $firstname, 
-            $lastname, 
-            $username, 
-            $email, 
-            $addressJson,  // Store as JSON
-            $contact_num, 
-            $hashedPassword
-        );
-        
-        // Execute and return result
-        return $stmt->execute();
-    }
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+    // Extract address fields from array
+    $street_address = $addressData['street_address'] ?? '';
+    $apartment      = $addressData['apartment'] ?? '';
+    $province       = $addressData['province'] ?? '';
+    $city           = $addressData['city'] ?? '';
+    $barangay       = $addressData['barangay'] ?? '';
+    $postal_code    = $addressData['postal_code'] ?? '';
+
+    $stmt = $this->conn->prepare("
+        INSERT INTO users 
+        (FIRST_NAME, LAST_NAME, USERNAME, EMAIL, STREET_ADDRESS, APARTMENT, PROVINCE, CITY, BARANGAY, POSTAL_CODE, CONTACTS, PASSWORD, CREATED_AT)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    ");
+
+    $stmt->bind_param(
+        "ssssssssssss", 
+        $firstname, 
+        $lastname, 
+        $username, 
+        $email, 
+        $street_address,
+        $apartment,
+        $province,
+        $city,
+        $barangay,
+        $postal_code,
+        $contact_num, 
+        $hashedPassword
+    );
+
+    return $stmt->execute();
+}
+
 
     /**
      * Get user address as array

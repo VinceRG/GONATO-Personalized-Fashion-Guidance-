@@ -20,12 +20,10 @@ class User {
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
 
-            // 🔒 Check if user is locked
             if ($user['STATUS'] == 1) {
                 return ['success' => false, 'message' => 'Account is locked due to multiple failed login attempts.'];
             }
 
-            // ✅ Correct password
             if (password_verify($password, $user['PASSWORD'])) {
 
                 // Reset failed attempts after successful login
@@ -43,11 +41,9 @@ class User {
                     'otp' => $otp
                 ];
             } 
-            // ❌ Incorrect password
             else {
                 $failedAttempts = $user['FAILED_ATTEMPTS'] + 1;
 
-                // Update failed attempts
                 $update = $this->conn->prepare("UPDATE users SET FAILED_ATTEMPTS = ? WHERE USER_ID = ?");
                 $update->bind_param("ii", $failedAttempts, $user['USER_ID']);
                 $update->execute();
@@ -64,7 +60,6 @@ class User {
                 return ['success' => false, 'message' => "Incorrect password. Attempt $failedAttempts of 3."];
             }
         } 
-        // ❌ Account not found
         else {
             return ['success' => false, 'message' => 'Account not found.'];
         }

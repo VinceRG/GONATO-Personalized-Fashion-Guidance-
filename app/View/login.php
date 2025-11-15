@@ -88,8 +88,8 @@
             <!-- ✅ TERMS & CONDITIONS TEXT -->
             <p class="terms-text">
                 By creating your account or signing in, you agree to our<br>
-                <a href="index.php?page=terms">Terms and Conditions</a> &
-                <a href="index.php?page=privacy">Privacy Policy</a>
+                <a href="index.php?page=policy">Terms and Conditions</a> &
+                <a href="index.php?page=policy">Privacy Policy</a>
             </p>
 
         </form>
