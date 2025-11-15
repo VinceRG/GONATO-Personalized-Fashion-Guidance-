@@ -92,4 +92,14 @@ $user = $stmt->get_result()->fetch_assoc();
 $successMessage = isset($_SESSION['success_message']) ? $_SESSION['success_message'] : null;
 $errorMessage = isset($_SESSION['error_message']) ? $_SESSION['error_message'] : null;
 unset($_SESSION['success_message'], $_SESSION['error_message']);
+
+
+
+function updateUserBodyShape($user_id, $body_shape) {
+    global $conn;
+    $stmt = $conn->prepare("UPDATE users SET BODY_SHAPE = ? WHERE USER_ID = ?");
+    $stmt->bind_param("si", $body_shape, $user_id);
+    $stmt->execute();
+}
+
 ?>

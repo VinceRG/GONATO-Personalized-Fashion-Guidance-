@@ -45,7 +45,50 @@ class RegisterController {
      * Process registration form submission
      */
     private function processRegistration($postData) {
-        // Collect input
+        /*
+        |--------------------------------------------------------------------------
+        |  STEP 1: Validate Terms and Conditions Acceptance
+        |--------------------------------------------------------------------------
+        */
+        if (!isset($postData['terms']) || $postData['terms'] !== 'on') {
+            return [
+                'success' => false,
+                'message' => 'You must accept the Terms and Conditions to register.'
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        |  STEP 2: Validate reCAPTCHA
+        |--------------------------------------------------------------------------
+        */
+        $recaptchaSecret = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC"; 
+        $recaptchaResponse = $postData['g-recaptcha-response'] ?? '';
+
+        if (empty($recaptchaResponse)) {
+            return [
+                'success' => false,
+                'message' => 'Please complete the reCAPTCHA verification.'
+            ];
+        }
+
+        $verify = file_get_contents(
+            "https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$recaptchaResponse}"
+        );
+        $captchaSuccess = json_decode($verify);
+
+        if (!$captchaSuccess->success) {
+            return [
+                'success' => false,
+                'message' => 'reCAPTCHA verification failed. Please try again.'
+            ];
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        |  STEP 3: Collect and sanitize input data
+        |--------------------------------------------------------------------------
+        */
         $firstname = $this->sanitizeInput($postData['firstname'] ?? '');
         $lastname = $this->sanitizeInput($postData['lastname'] ?? '');
         $username = $this->sanitizeInput($postData['username'] ?? '');
@@ -73,34 +116,7 @@ class RegisterController {
 
         /*
         |--------------------------------------------------------------------------
-        |  ADD reCAPTCHA VALIDATION (Same as LoginController)
-        |--------------------------------------------------------------------------
-        */
-        $recaptchaSecret = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC"; 
-        $recaptchaResponse = $postData['g-recaptcha-response'] ?? '';
-
-        if (empty($recaptchaResponse)) {
-            return [
-                'success' => false,
-                'message' => 'Please verify that you are not a robot.'
-            ];
-        }
-
-        $verify = file_get_contents(
-            "https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$recaptchaResponse}"
-        );
-        $captchaSuccess = json_decode($verify);
-
-        if (!$captchaSuccess->success) {
-            return [
-                'success' => false,
-                'message' => 'reCAPTCHA verification failed. Please try again.'
-            ];
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        |  Continue with existing validation
+        |  STEP 4: Validate all registration data
         |--------------------------------------------------------------------------
         */
         $validationResult = $this->validateRegistrationData(
@@ -115,7 +131,11 @@ class RegisterController {
             ];
         }
 
-        // Check username/email availability
+        /*
+        |--------------------------------------------------------------------------
+        |  STEP 5: Check username/email availability
+        |--------------------------------------------------------------------------
+        */
         if ($this->userModel->usernameExists($username)) {
             return ['success' => false, 'message' => 'Username is already taken.'];
         }
@@ -124,7 +144,11 @@ class RegisterController {
             return ['success' => false, 'message' => 'Email is already registered.'];
         }
 
-        // Register user
+        /*
+        |--------------------------------------------------------------------------
+        |  STEP 6: Register user
+        |--------------------------------------------------------------------------
+        */
         try {
             $registered = $this->userModel->register(
                 $firstname, $lastname, $username, 
@@ -229,6 +253,12 @@ class RegisterController {
         }
 
         // Password validation
+        if (empty($password)) {
+            return ['valid' => false, 'error' => 'Password is required.'];
+        }
+        if (empty($confirmPassword)) {
+            return ['valid' => false, 'error' => 'Please confirm your password.'];
+        }
         if (strlen($password) < 8) {
             return ['valid' => false, 'error' => 'Password must be at least 8 characters.'];
         }

@@ -286,9 +286,33 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             </div>
 
             <div class="upload-section">
-              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-camera"></i> Use Camera</button>
-              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-upload"></i> Upload Image</button>
-            </div>
+  <form id="bodyShapeForm" method="POST" action="process_body_shape.php" enctype="multipart/form-data">
+    <label>Front Image:</label>
+    <input type="file" name="front_image" accept="image/*" required>
+
+    <label>Side Image:</label>
+    <input type="file" name="side_image" accept="image/*" required>
+
+    <label>Height (cm):</label>
+    <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
+
+    <button type="submit" class="btn"><i class="bi bi-upload"></i> Analyze Body Shape</button>
+  </form>
+
+</div>
+<div id="bodyShapes" class="body-shapes-container">
+  <h3>Your Body Shape</h3>
+  <?php if (isset($_SESSION['bodyShapeResult'])): 
+        $result = $_SESSION['bodyShapeResult']; ?>
+      <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
+      <p>Measurements (cm): Shoulder <?= $result['measurements']['ShoulderWidth'] ?>, Waist <?= $result['measurements']['Waist'] ?>, Hips <?= $result['measurements']['Hips'] ?>.</p>
+      <?php unset($_SESSION['bodyShapeResult']); ?>
+  <?php else: ?>
+      <p>Upload front and side images to analyze your body shape.</p>
+  <?php endif; ?>
+  <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)">Close Analysis</button>
+</div>
+
 
             <ul class="feature-list">
               <li>AI-assisted body recognition</li>
