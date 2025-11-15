@@ -3,8 +3,8 @@ session_start();
 require_once __DIR__ . '/../Model/features.php'; // ✅ Corrected path
 
 if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php?page=login");
-    exit();
+  header("Location: index.php?page=login");
+  exit();
 }
 
 $user_id = $_SESSION['user_id'];
@@ -16,30 +16,32 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 
 // Helper function to get profile image path
-function getProfileImagePath($user) {
-    if (!empty($user['PROFILE_IMAGE'])) {
-        // Remove any query parameters first for file existence check
-        $imagePath = "uploads/profile_images/" . $user['PROFILE_IMAGE'];
-        
-        // Check if file exists
-        if (file_exists($imagePath)) {
-            return $imagePath;
-        } else {
-            // Try alternative path
-            $altPath = "../uploads/profile_images/" . $user['PROFILE_IMAGE'];
-            if (file_exists($altPath)) {
-                return $altPath;
-            }
-        }
+function getProfileImagePath($user)
+{
+  if (!empty($user['PROFILE_IMAGE'])) {
+    // Remove any query parameters first for file existence check
+    $imagePath = "uploads/profile_images/" . $user['PROFILE_IMAGE'];
+
+    // Check if file exists
+    if (file_exists($imagePath)) {
+      return $imagePath;
+    } else {
+      // Try alternative path
+      $altPath = "../uploads/profile_images/" . $user['PROFILE_IMAGE'];
+      if (file_exists($altPath)) {
+        return $altPath;
+      }
     }
-    return "assets/default-avatar.png";
+  }
+  return "assets/default-avatar.png";
 }
 
 // Helper function to get initials
-function getInitials($user) {
-    $first = !empty($user['FIRST_NAME']) ? substr($user['FIRST_NAME'], 0, 1) : '';
-    $last = !empty($user['LAST_NAME']) ? substr($user['LAST_NAME'], 0, 1) : '';
-    return strtoupper($first . $last);
+function getInitials($user)
+{
+  $first = !empty($user['FIRST_NAME']) ? substr($user['FIRST_NAME'], 0, 1) : '';
+  $last = !empty($user['LAST_NAME']) ? substr($user['LAST_NAME'], 0, 1) : '';
+  return strtoupper($first . $last);
 }
 
 $profileImagePath = getProfileImagePath($user);
@@ -52,18 +54,20 @@ error_log("DEBUG - File exists check: " . (file_exists($profileImagePath) ? 'YES
 
 // Add cache-busting parameter only if it's not the default avatar
 if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar.png') {
-    $profileImagePath .= '?v=' . time();
+  $profileImagePath .= '?v=' . time();
 }
 ?>
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Amarelle</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="public/css/system_features.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="public/js/system_features.js" defer></script>
@@ -98,52 +102,53 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
   <?php endif; ?>
 
   <!-- Main Page -->
-    <div class="results-container">
-      <!-- SIDEBAR -->
-      <aside class="sidebar" id="appSidebar" aria-expanded="true">
-        <div>
-          <div class="profile" onclick="openUserProfile()">
-            <div class="profile-pic" id="sidebar-profile-pic">
-              <?php if (!empty($user['PROFILE_IMAGE'])): ?>
-                <img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-              <?php else: ?>
-                <?= $userInitials ?>
-              <?php endif; ?>
-            </div>
-            <div class="profile-info">
-              <div class="form-group">
-                <?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
-              </div>
-              <p>@<?php echo htmlspecialchars($user['USERNAME']); ?></p>
-            </div>
+  <div class="results-container">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="appSidebar" aria-expanded="true">
+      <div>
+        <div class="profile" onclick="openUserProfile()">
+          <div class="profile-pic" id="sidebar-profile-pic">
+            <?php if (!empty($user['PROFILE_IMAGE'])): ?>
+              <img src="<?= $profileImagePath ?>" alt="Profile"
+                style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <?php else: ?>
+              <?= $userInitials ?>
+            <?php endif; ?>
           </div>
-
-          <nav class="nav-links" role="navigation" aria-label="Main navigation">
-            <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
-              <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
-              <span class="nav-label">Shop</span>
-              <span class="label-tooltip" aria-hidden="true"></span>
-            </a>
-            <a href="#features" class="nav-btn nav-item" data-label="Features">
-              <img src="public/image/features.png" class="nav-icon" alt="Features icon">
-              <span class="nav-label">Features</span>
-              <span class="label-tooltip" aria-hidden="true"></span>
-            </a>
-          </nav>
+          <div class="profile-info">
+            <div class="form-group">
+              <?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+            </div>
+            <p>@<?php echo htmlspecialchars($user['USERNAME']); ?></p>
+          </div>
         </div>
 
-        <div class="sidebar-footer" aria-hidden="true">
-          <div class="logo-section">
-            <div class="logo-img" style="width:40px; height:40px;">
-              <img src="public/image/amarelle.png" alt="Amarelle logo">
-            </div>
+        <nav class="nav-links" role="navigation" aria-label="Main navigation">
+          <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
+            <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
+            <span class="nav-label">Shop</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
+          <a href="#features" class="nav-btn nav-item" data-label="Features">
+            <img src="public/image/features.png" class="nav-icon" alt="Features icon">
+            <span class="nav-label">Features</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer" aria-hidden="true">
+        <div class="logo-section">
+          <div class="logo-img" style="width:40px; height:40px;">
+            <img src="public/image/amarelle.png" alt="Amarelle logo">
           </div>
-          <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
-            <i class="bi bi-box-arrow-right"></i>
-          </button>
-          
         </div>
-      </aside>
+        <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+
+      </div>
+    </aside>
 
 
     <!-- MAIN CONTENT -->
@@ -193,15 +198,15 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
         <!-- Shop Catalog -->
         <div class="subsection">
 
-         <div class="filter-bar">
-          <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
-          <select id="categoryFilter" onchange="filterProducts()">
-            <option value="">All Categories</option>
-            <option value="Dresses">Dresses</option>
-            <option value="Tops">Tops</option>
-            <option value="Bottoms">Bottoms</option>
-          </select>
-        </div>
+          <div class="filter-bar">
+            <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
+            <select id="categoryFilter" onchange="filterProducts()">
+              <option value="">All Categories</option>
+              <option value="Dresses">Dresses</option>
+              <option value="Tops">Tops</option>
+              <option value="Bottoms">Bottoms</option>
+            </select>
+          </div>
 
           <div class="clothes-grid">
             <div class="clothes-item catalog-item">
@@ -232,16 +237,16 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             </div>
 
             <div class="clothes-grid">
-            <div class="clothes-item catalog-item">
-              <img src="images/item1.jpg" alt="Clothing Item 4">
-              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Summer Linen Top</span>
-                <span class="price">₱999</span>
+              <div class="clothes-item catalog-item">
+                <img src="images/item1.jpg" alt="Clothing Item 4">
+                <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
+                <div class="clothes-caption">
+                  <span class="title">Summer Linen Top</span>
+                  <span class="price">₱999</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
       </section>
 
       <!-- ✨ FEATURES -->
@@ -259,8 +264,10 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             </div>
 
             <div class="upload-section">
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
+              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use
+                Camera</button>
+              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload
+                Image</button>
             </div>
 
             <ul class="feature-list">
@@ -286,8 +293,10 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             </div>
 
             <div class="upload-section">
-              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-camera"></i> Use Camera</button>
-              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-upload"></i> Upload Image</button>
+              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-camera"></i> Use
+                Camera</button>
+              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-upload"></i> Upload
+                Image</button>
             </div>
 
             <ul class="feature-list">
@@ -311,89 +320,87 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
 
   <!-- 👤 User Profile Modal -->
   <div class="overlay" id="userProfileOverlay">
-    <div class="modal">
+    <div class="modal" role="dialog" aria-label="User profile">
       <div class="modal-header">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="account">
-            <i class="bi bi-person"></i> Account
-          </button>
-          <button class="tab-btn" data-tab="purchases">
-            <i class="bi bi-bag"></i> Purchases
-          </button>
-        </div>
-        <button class="close-btn" onclick="closeUserProfile()">
+
+        <button class="header-back" id="headerBackBtn" aria-label="Back">
+          <i class="bi bi-arrow-left"></i> Back
+        </button>
+
+        <button class="close-btn" aria-label="Close">
           <i class="bi bi-x"></i>
         </button>
       </div>
 
       <div class="modal-body">
-        <!-- Account Tab -->
-        <div class="tab-content active" id="account">
-          <div class="section-header">
-            <p class="section-title">Account Information</p>
-          </div>
-
-          <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
-            <div class="profile-section">
-              <div class="profile-avatar">
-                <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
-                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                <?php else: ?>
-                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
-                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>"><?= $userInitials ?></div>
-                <?php endif; ?>
-                <button type="button" class="edit-avatar-btn" id="edit-avatar-btn" title="Change Profile Picture" style="display:none;">
-                  <i class="bi bi-camera"></i>
-                </button>
-                <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;">
+        <div class="view-container active" id="accountView">
+          <div class="profile-top">
+            <div class="profile-left-column">
+              <div class="profile-section">
+                <div class="profile-avatar">
+                  <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
+                    <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture"
+                      style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                  <?php else: ?>
+                    <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture"
+                      style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
+                    <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>">
+                      <?= $userInitials ?>
+                    </div>
+                  <?php endif; ?>
+                  <button type="button" class="edit-avatar-btn" id="edit-avatar-btn" title="Change Profile Picture"
+                    style="display:none;">
+                    <i class="bi bi-camera"></i>
+                  </button>
+                  <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;">
+                </div>
               </div>
 
-              <div class="profile-details">
+              <div class="profile-meta-below">
                 <h2 id="display-name"><?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?></h2>
                 <div class="username" id="display-username">@<?= htmlspecialchars($user['USERNAME']); ?></div>
-                <p class="profile-tagline">Welcome to Amarelle — your personal style space.</p>
               </div>
             </div>
 
-            <div class="form-grid">
-              <div class="form-group">
-                <label>First Name</label>
-                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Last Name</label>
-                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Home Address</label>
-                <input type="text" name="address" id="address" value="<?= htmlspecialchars($user['ADDRESS']); ?>" disabled>
-              </div>
-              <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text" name="contacts" id="contacts" value="<?= htmlspecialchars($user['CONTACTS']); ?>" disabled>
-              </div>
+            <div class="section-header">
+              <button class="view-orders-btn" id="viewOrdersBtn">
+                <i class="bi bi-box-seam"></i> View orders
+              </button>
             </div>
+          </div>
 
-            <div class="form-actions">
-              <button type="button" id="editProfileBtn" class="btn btn-secondary">
-                <i class="bi bi-pencil-square"></i> Edit Profile
-              </button>
-              <button type="submit" name="update_profile" id="saveProfileBtn" class="btn btn-primary" style="display:none;">
-                <i class="bi bi-save"></i> Save Changes
-              </button>
-              <button type="button" id="cancelEditBtn" class="btn btn-outline" style="display:none;">
-                <i class="bi bi-x-circle"></i> Cancel
-              </button>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>"
+                disabled required>
             </div>
-          </form>
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>"
+                disabled required>
+            </div>
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>"
+                disabled required>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled
+                required>
+            </div>
+            <div class="form-group">
+              <label>Home Address</label>
+              <input type="text" name="address" id="address" value="<?= htmlspecialchars($user['ADDRESS']); ?>"
+                disabled>
+            </div>
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text" name="contacts" id="contacts" value="<?= htmlspecialchars($user['CONTACTS']); ?>"
+                disabled>
+            </div>
+          </div>
 
           <div class="info-card">
             <div class="info-card-header">
@@ -401,190 +408,197 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
               <h3>Style Profile</h3>
             </div>
             <?php if (empty($user['COLOR_SEASON']) && empty($user['BODY_SHAPE'])): ?>
+
               <div class="info-empty">
                 <p>You haven't completed your style analysis yet.</p>
                 <button class="btn" onclick="goToFeatures()">
                   <i class="bi bi-magic"></i> Start Style Analysis
                 </button>
               </div>
+
             <?php else: ?>
               <?php if (!empty($user['COLOR_SEASON'])): ?>
+
                 <div class="info-item">
                   <span class="info-label">Color Season</span>
                   <span class="info-value">
                     <?php echo htmlspecialchars($user['COLOR_SEASON']); ?>
                   </span>
                 </div>
+
               <?php endif; ?>
 
               <?php if (!empty($user['BODY_SHAPE'])): ?>
+
                 <div class="info-item">
                   <span class="info-label">Body Shape</span>
                   <span class="info-value">
                     <?php echo htmlspecialchars($user['BODY_SHAPE']); ?>
                   </span>
                 </div>
+
               <?php endif; ?>
             <?php endif; ?>
           </div>
+          </form>
         </div>
 
-        <!-- Purchases Tab -->
-        <div class="tab-content" id="purchases">
-          <div class="sub-tabs">
-            <button class="sub-tab-btn active" data-subtab="orders">
-              <i class="bi bi-box-seam"></i> Orders
-            </button>
-            <button class="sub-tab-btn" data-subtab="to-receive">
-              <i class="bi bi-truck"></i> To Receive
-            </button>
-            <button class="sub-tab-btn" data-subtab="history">
-              <i class="bi bi-clock-history"></i> Order History
-            </button>
-          </div>
-          
-          <!-- Orders Sub Tab -->
-          <div class="sub-tab-content active" id="orders">
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001234</span>
-                <span class="order-status status-processing">Processing</span>
+        <!-- Orders View -->
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" data-subtab="orders">
+            <i class="bi bi-box-seam"></i> Orders
+          </button>
+          <button class="sub-tab-btn" data-subtab="to-receive">
+            <i class="bi bi-truck"></i> To Receive
+          </button>
+          <button class="sub-tab-btn" data-subtab="history">
+            <i class="bi bi-clock-history"></i> Order History
+          </button>
+        </div>
+
+        <!-- Orders Sub Tab -->
+        <div class="sub-tab-content active" id="orders">
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-number">#001234</span>
+              <span class="order-status status-processing">Processing</span>
+            </div>
+            <div class="order-body">
+              <div class="order-item">
+                <span class="item-name">Elegant Silk Blouse</span>
+                <span class="item-price">₱2,500</span>
               </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Elegant Silk Blouse</span>
-                  <span class="item-price">₱2,500</span>
-                </div>
-                <div class="order-item">
-                  <span class="item-name">Classic Denim Jeans</span>
-                  <span class="item-price">₱1,800</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Ordered: Oct 20, 2025</span>
-                <span class="order-total">Total: ₱4,300</span>
+              <div class="order-item">
+                <span class="item-name">Classic Denim Jeans</span>
+                <span class="item-price">₱1,800</span>
               </div>
             </div>
-            
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001235</span>
-                <span class="order-status status-processing">Processing</span>
-              </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Summer Dress</span>
-                  <span class="item-price">₱3,200</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Ordered: Oct 22, 2025</span>
-                <span class="order-total">Total: ₱3,200</span>
-              </div>
+            <div class="order-footer">
+              <span class="order-date">Ordered: Oct 20, 2025</span>
+              <span class="order-total">Total: ₱4,300</span>
             </div>
           </div>
-          
-          <!-- To Receive Sub Tab -->
-          <div class="sub-tab-content" id="to-receive">
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001230</span>
-                <span class="order-status status-shipping">Shipping</span>
-              </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Leather Handbag</span>
-                  <span class="item-price">₱4,500</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Est. Arrival: Oct 26, 2025</span>
-                <span class="order-total">Total: ₱4,500</span>
+
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-number">#001235</span>
+              <span class="order-status status-processing">Processing</span>
+            </div>
+            <div class="order-body">
+              <div class="order-item">
+                <span class="item-name">Summer Dress</span>
+                <span class="item-price">₱3,200</span>
               </div>
             </div>
-            
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001228</span>
-                <span class="order-status status-shipping">Shipping</span>
-              </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Casual Sneakers</span>
-                  <span class="item-price">₱2,800</span>
-                </div>
-                <div class="order-item">
-                  <span class="item-name">Cotton T-Shirt</span>
-                  <span class="item-price">₱890</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Est. Arrival: Oct 28, 2025</span>
-                <span class="order-total">Total: ₱3,690</span>
-              </div>
+            <div class="order-footer">
+              <span class="order-date">Ordered: Oct 22, 2025</span>
+              <span class="order-total">Total: ₱3,200</span>
             </div>
           </div>
-          
-          <!-- Order History Sub Tab -->
-          <div class="sub-tab-content" id="history">
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001220</span>
-                <span class="order-status status-completed">Completed</span>
-              </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Designer Sunglasses</span>
-                  <span class="item-price">₱1,500</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Delivered: Oct 15, 2025</span>
-                <span class="order-total">Total: ₱1,500</span>
+        </div>
+
+        <!-- To Receive Sub Tab -->
+        <div class="sub-tab-content" id="to-receive">
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-number">#001230</span>
+              <span class="order-status status-shipping">Shipping</span>
+            </div>
+            <div class="order-body">
+              <div class="order-item">
+                <span class="item-name">Leather Handbag</span>
+                <span class="item-price">₱4,500</span>
               </div>
             </div>
-            
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001215</span>
-                <span class="order-status status-completed">Completed</span>
+            <div class="order-footer">
+              <span class="order-date">Est. Arrival: Oct 26, 2025</span>
+              <span class="order-total">Total: ₱4,500</span>
+            </div>
+          </div>
+
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-number">#001228</span>
+              <span class="order-status status-shipping">Shipping</span>
+            </div>
+            <div class="order-body">
+              <div class="order-item">
+                <span class="item-name">Casual Sneakers</span>
+                <span class="item-price">₱2,800</span>
               </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Wool Scarf</span>
-                  <span class="item-price">₱1,200</span>
-                </div>
-                <div class="order-item">
-                  <span class="item-name">Winter Coat</span>
-                  <span class="item-price">₱5,500</span>
-                </div>
+              <div class="order-item">
+                <span class="item-name">Cotton T-Shirt</span>
+                <span class="item-price">₱890</span>
               </div>
-              <div class="order-footer">
-                <span class="order-date">Delivered: Oct 10, 2025</span>
-                <span class="order-total">Total: ₱6,700</span>
+            </div>
+            <div class="order-footer">
+              <span class="order-date">Est. Arrival: Oct 28, 2025</span>
+              <span class="order-total">Total: ₱3,690</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order History Sub Tab -->
+        <div class="sub-tab-content" id="history">
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-number">#001220</span>
+              <span class="order-status status-completed">Completed</span>
+            </div>
+            <div class="order-body">
+              <div class="order-item">
+                <span class="item-name">Designer Sunglasses</span>
+                <span class="item-price">₱1,500</span>
               </div>
+            </div>
+            <div class="order-footer">
+              <span class="order-date">Delivered: Oct 15, 2025</span>
+              <span class="order-total">Total: ₱1,500</span>
+            </div>
+          </div>
+
+          <div class="order-card">
+            <div class="order-header">
+              <span class="order-number">#001215</span>
+              <span class="order-status status-completed">Completed</span>
+            </div>
+            <div class="order-body">
+              <div class="order-item">
+                <span class="item-name">Wool Scarf</span>
+                <span class="item-price">₱1,200</span>
+              </div>
+              <div class="order-item">
+                <span class="item-name">Winter Coat</span>
+                <span class="item-price">₱5,500</span>
+              </div>
+            </div>
+            <div class="order-footer">
+              <span class="order-date">Delivered: Oct 10, 2025</span>
+              <span class="order-total">Total: ₱6,700</span>
             </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-<div class="overlay" id="logoutOverlay" style="display: none;">
-  <div class="modal" style="max-width: 450px;">
-    <div class="modal-header" style="background: #2D2D2D;">
-      <div style="flex: 1;">
-        <h3 style="color: white; font-size: 1.3rem; margin: 0; font-weight: 600;">
-          <i class="bi bi-box-arrow-right" style="margin-right: 0.5rem;"></i>
-          Confirm Logout
-        </h3>
-      </div>
-      <button class="close-btn" onclick="closeLogoutOverlay()" style="color: white;">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
+  </div>
 
-    <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
-      <div style="
+  <div class="overlay" id="logoutOverlay" style="display: none;">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header" style="background: #2D2D2D;">
+        <div style="flex: 1;">
+          <h3 style="color: white; font-size: 1.3rem; margin: 0; font-weight: 600;">
+            <i class="bi bi-box-arrow-right" style="margin-right: 0.5rem;"></i>
+            Confirm Logout
+          </h3>
+        </div>
+        <button class="close-btn" onclick="closeLogoutOverlay()" style="color: white;">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
+        <div style="
         width: 80px;
         height: 80px;
         background: linear-gradient(135deg, #D7C9AE, #A68763);
@@ -595,30 +609,33 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
         margin: 0 auto 1.5rem;
         box-shadow: 0 8px 20px rgba(166, 135, 99, 0.3);
       ">
-        <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
-      </div>
+          <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
+        </div>
 
-      <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
-        Are you sure?
-      </h3>
-      <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
-        You will be logged out of your account and redirected to the login page.
-      </p>
+        <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
+          Are you sure?
+        </h3>
+        <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
+          You will be logged out of your account and redirected to the login page.
+        </p>
 
-      <div style="display: flex; gap: 1rem; justify-content: center;">
-        <button onclick="closeLogoutOverlay()" style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
-          <i class="bi bi-x-circle" style="margin-right: 0.5rem;"></i>
-          Cancel
-        </button>
-        <button onclick="confirmLogout()" style="flex:1; padding:0.85rem 1.5rem; border:none; background:#2D2D2D; color:white; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
-          <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
-          Yes, Logout
-        </button>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <button onclick="closeLogoutOverlay()"
+            style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+            <i class="bi bi-x-circle" style="margin-right: 0.5rem;"></i>
+            Cancel
+          </button>
+          <button onclick="confirmLogout()"
+            style="flex:1; padding:0.85rem 1.5rem; border:none; background:#2D2D2D; color:white; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+            <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
+            Yes, Logout
+          </button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-  
+
 </body>
+
 </html>
