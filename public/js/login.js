@@ -12,7 +12,7 @@ const inputs = {
 
 let submitClicked = false;
 
-// ✅ Validation Functions
+// Validation Functions
 function validateFirstName(value) {
     if (!value) return "First name is required.";
     if (value.length < 2) return "First name must be at least 2 characters.";
@@ -105,7 +105,7 @@ function showError(field, message) {
     }
 }
 
-// ✅ Real-time validation (after submit or user input)
+// Real-time validation (after submit or user input)
 Object.keys(inputs).forEach(field => {
     inputs[field].addEventListener('blur', () => {
         if (submitClicked || inputs[field].value) {
@@ -132,12 +132,12 @@ function validateField(field) {
     showError(field, message);
 }
 
-// ✅ Auto-format contact number
+// Auto-format contact number
 inputs.contact_num.addEventListener('input', function () {
     this.value = this.value.replace(/[^0-9]/g, '');
 });
 
-// ✅ On Submit
+// On Submit
 form.addEventListener('submit', function (e) {
     e.preventDefault();
     submitClicked = true;
