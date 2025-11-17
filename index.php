@@ -1,6 +1,6 @@
 <?php
 // index.php (root of GONATO-Personalized-Fashion-Guidance-)
-
+session_start();
 require_once __DIR__ . '/vendor/autoload.php';
 
 use Dotenv\Dotenv;
@@ -14,11 +14,13 @@ $dotenv->load();
 // Handle API requests FIRST (before page routing)
 if (isset($_GET['api'])) {
     if ($_GET['api'] === 'admin') {
-        require_once './public/admin-api.php';
+        require_once __DIR__ . '/app/Controllers/AdminApiController.php';
+        $apiController = new AdminApiController();
+        $apiController->handle();
         exit; // Stop execution after API response
     } elseif ($_GET['api'] === 'paymongo') {
-        require_once './public/paymongo_create_intent.php';
-        exit; // Stop execution after API response
+        require_once __DIR__ . '/public/paymongo_create_intent.php';
+        exit;
     }
 }
 
