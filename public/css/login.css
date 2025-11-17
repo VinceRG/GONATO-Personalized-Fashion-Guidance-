@@ -7,7 +7,7 @@
 
 /* GLOBAL BODY */
 body {
-    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Lexend', 'Segoe UI', sans-serif;
     background: linear-gradient(180deg, #fff 0%, #D7C9AE 100%);
     color: #2D2D2D;
     min-height: 100vh;
@@ -226,7 +226,6 @@ form a:hover {
     width: 100%;
     text-align: right;
     /* changed from right to left */
-    margin-top: 8px;
     margin-bottom: 15px;
 }
 

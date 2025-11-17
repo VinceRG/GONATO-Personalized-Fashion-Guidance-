@@ -278,7 +278,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         console.log('🔵 Redirecting to login page...');
         // Change this URL to your actual login/landing page
-        window.location.href = "index.html"; // or "login.html" or "landing.php"
+        window.location.href = "?logout=true"; // or "login.html" or "landing.php"
       }, 800);
     }
   }

@@ -7,7 +7,7 @@
 
 /* GLOBAL BODY */
 body {
-    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Lexend', 'Segoe UI', sans-serif;
     background: linear-gradient(180deg, #fff 0%, #D7C9AE 100%);
     color: #2D2D2D;
     min-height: 100vh;
@@ -134,6 +134,7 @@ label {
     margin-bottom: 0.6rem;
     margin-top: 1.2rem;
     font-family: 'Lexend', sans-serif;
+
 }
 
 /* INPUT FIELDS */
@@ -690,4 +691,140 @@ form a:hover::after {
     .form-buttons {
         flex-direction: column-reverse;
     }
+}
+
+/* === MODAL STYLES === */
+.modal-overlay {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    /* Stay in place */
+    z-index: 1000;
+    /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    /* Enable scroll if needed */
+    background-color: rgba(0, 0, 0, 0.6);
+    /* Black w/ opacity */
+    backdrop-filter: blur(5px);
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    /* 10% from top and centered */
+    padding: 2rem;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 700px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: slideIn 0.3s ease-out;
+    max-height: 80vh;
+    /* Limit height */
+    overflow-y: auto;
+    /* Add scroll for long content */
+}
+
+.modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #1C1917;
+    font-family: 'Lexend', sans-serif;
+    font-weight: 600;
+}
+
+.modal-content p,
+.modal-content li {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+    color: #2D2D2D;
+}
+
+/* Modal Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* === MODIFIED TERMS STYLES === */
+.terms-text {
+
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 1.5rem;
+    display: flex;
+    /* Aligns checkbox and label */
+    align-items: flex-start;
+    justify-content: center;
+
+
+}
+
+.terms-text input[type="checkbox"] {
+    margin-right: 8px;
+    margin-top: 3px;
+    /* Align with first line of text */
+    flex-shrink: 0;
+}
+
+.terms-text label {
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.terms-text a {
+    color: #A68763;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.terms-text a:hover {
+    color: #1C1917;
+}
+
+/* Error message for checkbox */
+#terms-error {
+    text-align: center;
+    margin-bottom: 10px;
+    width: 100%;
 }

@@ -45,6 +45,7 @@ body::after {
 .content {
     flex: 1;
     display: flex;
+    max-height: 10000px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -95,6 +96,7 @@ li {
     letter-spacing: -0.02em;
     margin: 1rem 0;
 
+
 }
 
 /* CARD */
@@ -103,8 +105,9 @@ form {
     backdrop-filter: blur(10px);
     border-radius: 16px;
     padding: 3rem 2.5rem;
-    width: 100%;
-    max-width: 5000px;
+    height: 50%;
+
+    width: 50%;
     border: 1px solid rgba(166, 135, 99, 0.15);
     box-shadow: 0 20px 60px rgba(166, 135, 99, 0.1);
     position: relative;
@@ -177,7 +180,9 @@ form::before {
 
 /* BACK LINK */
 .back-link {
-    color: #007b8f;
+    text-align: center;
+    margin-bottom: 5rem;
+    color: #A68763;
     text-decoration: none;
     font-weight: 500;
     transition: color 0.3s ease;

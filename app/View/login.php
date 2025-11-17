@@ -69,6 +69,9 @@
                 <input type="password" id="password" name="password" placeholder="Enter your password">
                     
             </div>
+            <p class="forgotpass">
+                <a class="forgotpass" href="index.php?page=forgot">Forgot your password?</a>
+            </p>
 
             <div class="g-recaptcha" data-sitekey="6LeCugUsAAAAAMevrBVqSjs6AG8SsQZ8qrJGvjDZ"></div>
 
@@ -77,9 +80,7 @@
                 Login
             </button>
 
-            <p class="forgotpass">
-                <a class="forgotpass" href="index.php?page=forgot">Forgot your password?</a>
-            </p>
+            
 
             <p class="sigup">Don't have an account yet?
                 <a href="index.php?page=register">Sign Up here</a>
