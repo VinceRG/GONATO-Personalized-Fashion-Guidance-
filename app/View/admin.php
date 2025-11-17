@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -109,40 +110,121 @@
 </section>
 
       <!-- USERS SECTION -->
-      <section id="users" class="content-section">
-        <div class="section-header">
-          <div>
-            <div class="section-title"><i>User Management</i></div>
-            <div class="section-subtitle">View and manage user accounts</div>
-          </div>
-        </div>
+<section id="users" class="content-section">
+  <div class="section-header">
+    <div>
+      <div class="section-title"><i>User Management</i></div>
+      <div class="section-subtitle">View and manage user accounts</div>
+    </div>
+  </div>
 
-        <div class="filter-bar">
-          <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
-          <select id="statusFilter" onchange="filterUsers()">
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="locked">Locked</option>
-          </select>
-        </div>
+  <div class="filter-bar">
+    <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
+    <select id="statusFilter" onchange="filterUsers()">
+      <option value="">All Status</option>
+      <option value="active">Active</option>
+      <option value="locked">Locked</option>
+    </select>
+  </div>
 
-        <div class="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Joined Date</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-      </section>
+  <div class="data-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Joined Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <!-- Populated by JS -->
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<script>
+let allUsers = [];
+
+// Fetch users from the admin API
+async function loadUsers() {
+  try {
+    const res = await fetch('index.php?api=admin&action=users'); // ensure your API route
+    if (!res.ok) throw new Error('Failed to fetch users');
+    allUsers = await res.json();
+    renderUsers(allUsers);
+  } catch (err) {
+    console.error(err);
+    alert('Error loading users. Make sure you are logged in as admin.');
+  }
+}
+
+// Render users into table
+function renderUsers(users) {
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '';
+
+  users.forEach(user => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${user.USERNAME}</td>
+      <td>${user.EMAIL}</td>
+      <td>${new Date(user.CREATED_AT).toLocaleDateString()}</td>
+      <td>${user.IS_LOCKED ? 'Locked' : 'Active'}</td>
+      <td>
+        <button class="btn btn-sm" onclick="toggleUserStatus(${user.USER_ID}, ${user.IS_LOCKED})">
+          ${user.IS_LOCKED ? 'Unlock' : 'Lock'}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Filter users by search & status
+function filterUsers() {
+  const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value;
+
+  const filtered = allUsers.filter(user => {
+    const matchesSearch = user.USERNAME.toLowerCase().includes(searchTerm) ||
+                          user.EMAIL.toLowerCase().includes(searchTerm);
+    const matchesStatus = !statusFilter || 
+                          (statusFilter === 'active' && !user.IS_LOCKED) ||
+                          (statusFilter === 'locked' && user.IS_LOCKED);
+    return matchesSearch && matchesStatus;
+  });
+
+  renderUsers(filtered);
+}
+
+// Toggle user lock status
+async function toggleUserStatus(userId, isLocked) {
+  try {
+    const res = await fetch(`index.php?api=admin&action=toggleUserLock&userId=${userId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isLocked: !isLocked })
+    });
+
+    const result = await res.json();
+    if (result.success) {
+      await loadUsers();
+    } else {
+      alert('Failed to update user status');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error updating user status');
+  }
+}
+
+// Load users on page load
+window.addEventListener('DOMContentLoaded', loadUsers);
+</script>
+
 
       <!-- ORDERS SECTION -->
       <section id="orders" class="content-section">

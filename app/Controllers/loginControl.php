@@ -1,70 +1,66 @@
 <?php
-// app/Controllers/loginControl.php
-require_once __DIR__ . '/../Core/Database.php';
+require_once __DIR__ . '/../Model/loginfunc.php';
 
 class LoginController {
+    private $userModel;
+
+    public function __construct() {
+        $this->userModel = new User();
+    }
+
     public function index() {
         session_start();
         $message = '';
+        $messageType = '';
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = trim($_POST['username'] ?? '');
             $password = trim($_POST['password'] ?? '');
+            // validatioon for recaptcha
+            $recaptchaSecret = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC"; 
+            $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
-            if (!empty($username) && !empty($password)) {
-                $conn = Database::connect();
+            if (empty($recaptchaResponse)) {
+                $message = "Please verify that you are not a robot.";
+                $messageType = 'error';
+                require_once __DIR__ . '/../View/login.php';
+                return;
+            }
 
-                // 1️⃣ Check if admin first
-                $stmt = $conn->prepare("SELECT * FROM admin WHERE USERNAME = ?");
-                $stmt->bind_param("s", $username);
-                $stmt->execute();
-                $adminResult = $stmt->get_result();
+            $verify = file_get_contents(
+                "https://www.google.com/recaptcha/api/siteverify?secret={$recaptchaSecret}&response={$recaptchaResponse}"
+            );
+            $captchaSuccess = json_decode($verify);
 
-                if ($adminResult->num_rows > 0) {
-                    $admin = $adminResult->fetch_assoc();
+            if (!$captchaSuccess->success) {
+                $message = "reCAPTCHA verification failed. Please try again.";
+                $messageType = 'error';
+                require_once __DIR__ . '/../View/login.php';
+                return;
+            }
 
-                    if ($password === $admin['PASSWORD']) {
-                        $_SESSION['user'] = [
-                            'id' => $admin['ADMIN_ID'],
-                            'username' => $admin['USERNAME'],
-                            'role' => 'admin'
-                        ];
-                        header("Location: /AMARELLE/GONATO-Personalized-Fashion-Guidance-/?page=admin");
-                        exit();
-                    } else {
-                        $message = "Invalid admin password.";
-                    }
-                } else {
-                    // 2️⃣ Check regular user
-                    $stmt = $conn->prepare("SELECT * FROM users WHERE USERNAME = ?");
-                    $stmt->bind_param("s", $username);
-                    $stmt->execute();
-                    $userResult = $stmt->get_result();
-
-                    if ($userResult->num_rows > 0) {
-                        $user = $userResult->fetch_assoc();
-
-                        if (password_verify($password, $user['PASSWORD'])) {
-                            $_SESSION['user'] = [
-                                'id' => $user['USER_ID'],
-                                'username' => $user['USERNAME'],
-                                'role' => 'user'
-                            ];
-                            header("Location: /AMARELLE/GONATO-Personalized-Fashion-Guidance-/?page=features");
-                            exit();
-                        } else {
-                            $message = "Invalid password.";
-                        }
-                    } else {
-                        $message = "Account not found.";
-                    }
-                }
-            } else {
+            if (empty($username) || empty($password)) {
                 $message = "Please fill in all fields.";
+                $messageType = 'error';
+            } else {
+                $loginResult = $this->userModel->login($username, $password);
+
+                if ($loginResult['success']) {
+                    $_SESSION['user_id'] = $loginResult['user']['USER_ID'];
+                    $_SESSION['username'] = $loginResult['user']['USERNAME'];
+                    $_SESSION['email'] = $loginResult['user']['EMAIL'];
+                    $_SESSION['first_name'] = $loginResult['user']['FIRST_NAME'];
+                    $_SESSION['last_name'] = $loginResult['user']['LAST_NAME'];
+
+                    header("Location: index.php?page=features");
+                    exit;
+                } else {
+                    $message = $loginResult['message'];
+                    $messageType = 'error';
+                }
             }
         }
 
-        // Load login view
         require_once __DIR__ . '/../View/login.php';
     }
 }

@@ -5,7 +5,7 @@ session_start();
 
 // Check if user is admin
 function checkAdminAuth() {
-    if (!isset($_SESSION['user']) || ($_SESSION['user']['role'] ?? '') !== 'admin') {
+    if (!isset($_SESSION['admin_id']) || empty($_SESSION['admin_username'])) {
         http_response_code(401);
         echo json_encode(['error' => 'Unauthorized']);
         exit;

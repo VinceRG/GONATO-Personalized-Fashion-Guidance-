@@ -312,15 +312,25 @@ class AdminController {
      */
 public function toggleUserLock($userId, $data) {
     try {
-        $stmt = $this->db->prepare("UPDATE USERS SET STATUS = ? WHERE USER_ID = ?");
-        $stmt->execute([$data['isLocked'] ? 1 : 0, $userId]); // 1 = locked, 0 = active
-        
-        echo json_encode(['success' => true]);
+        $isLocked = isset($data['isLocked']) ? (bool)$data['isLocked'] : false;
+        $newStatus = $isLocked ? 1 : 0;
+
+        // Update status AND reset failed attempts when unlocking
+        $stmt = $this->db->prepare("
+            UPDATE USERS 
+            SET STATUS = ?, FAILED_ATTEMPTS = CASE WHEN ? = 0 THEN 0 ELSE FAILED_ATTEMPTS END
+            WHERE USER_ID = ?
+        ");
+        $stmt->execute([$newStatus, $newStatus, $userId]);
+
+        $message = $newStatus ? 'User account locked successfully.' : 'User account unlocked successfully.';
+        echo json_encode(['success' => true, 'message' => $message]);
     } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to update user status: ' . $e->getMessage()]);
     }
 }
+
 
     
     // ==================== ORDERS ====================

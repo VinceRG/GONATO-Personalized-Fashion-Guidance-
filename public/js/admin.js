@@ -108,7 +108,7 @@ function openProductModal(productId = null) {
   const modal = document.getElementById('productModal');
   const form = document.getElementById('productForm');
   const title = document.getElementById('productModalTitle');
-  
+
   form.reset();
   currentEditId = productId;
 
@@ -147,7 +147,7 @@ async function saveProduct() {
 
   try {
     let url, method;
-    
+
     if (currentEditId) {
       url = `${API_BASE}&action=updateProduct&id=${currentEditId}`;
       method = 'PUT';
@@ -183,7 +183,7 @@ async function editProduct(productId) {
 }
 
 async function deleteProduct(productId) {
-openDeleteModal(productId);
+  openDeleteModal(productId);
 }
 
 let productToDeleteId = null;
@@ -224,13 +224,32 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
     showNotification('Failed to delete product', 'error');
   }
 });
+async function toggleUserStatus(userId, isLocked) {
+  try {
+    const res = await fetch(`index.php?api=admin&action=users&id=${userId}&toggle-lock`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ isLocked: !isLocked })
+    });
 
+    const result = await res.json();
+    if (result.success) {
+      alert(result.message); // shows "User account unlocked successfully."
+      await loadUsers();
+    } else {
+      alert('Failed to update user status: ' + result.message);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Error updating user status');
+  }
+}
 
 // ==================== INVENTORY TAB ====================
 async function openInventoryManager(productId, productName) {
   selectedProductId = productId;
   selectedProductName = productName;
-document.getElementById('inventoryProductTitle').textContent = `Inventory - ${decodeURIComponent(productName)}`;
+  document.getElementById('inventoryProductTitle').textContent = `Inventory - ${decodeURIComponent(productName)}`;
   document.getElementById('inventorySubtitle').textContent = `Managing stock variants for ${productName}`;
   switchSection('inventory');
   await loadInventory(productId);
@@ -259,9 +278,9 @@ async function loadInventory(productId) {
     }
 
     data.forEach(v => {
-  const row = document.createElement('tr');
-  const stockClass = v.QUANTITY === 0 ? 'out-of-stock' : v.QUANTITY < 10 ? 'low-stock' : 'in-stock';
-  row.innerHTML = `
+      const row = document.createElement('tr');
+      const stockClass = v.QUANTITY === 0 ? 'out-of-stock' : v.QUANTITY < 10 ? 'low-stock' : 'in-stock';
+      row.innerHTML = `
     <td>${v.SIZE}</td>
     <td>${v.COLOR_VALUE}</td>
     <td><span class="badge ${stockClass}">${v.QUANTITY}</span></td>
@@ -275,8 +294,8 @@ async function loadInventory(productId) {
       </button>
     </td>
   `;
-  tbody.appendChild(row);
-});
+      tbody.appendChild(row);
+    });
 
   } catch (err) {
     console.error('Error loading inventory:', err);
@@ -478,68 +497,6 @@ function initFormHandlers() {
   };
 }
 
-// ==================== USERS ====================
-async function loadUsers() {
-  try {
-    const response = await fetch(`${API_BASE}&action=users`);
-    if (!response.ok) throw new Error('Failed to load users');
-    users = await response.json();
-    renderUsers();
-  } catch (error) {
-    console.error('Error loading users:', error);
-  }
-}
-
-function renderUsers() {
-  const tbody = document.getElementById('userTableBody');
-  tbody.innerHTML = '';
-
-  if (users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No users found</td></tr>';
-    return;
-  }
-
-  users.forEach(user => {
-    const row = document.createElement('tr');
-    const statusClass = user.IS_LOCKED ? 'cancelled' : 'confirmed';
-    const statusText = user.IS_LOCKED ? 'Locked' : 'Active';
-    
-    row.innerHTML = `
-      <td>${user.USERNAME}</td>
-      <td>${user.EMAIL}</td>
-      <td>${new Date(user.CREATED_AT).toLocaleDateString()}</td>
-      <td><span class="badge ${statusClass}">${statusText}</span></td>
-      <td>
-        <button class="btn-icon" onclick="toggleUserStatus(${user.USER_ID}, ${user.IS_LOCKED})">
-          <i class="bi bi-${user.IS_LOCKED ? 'unlock' : 'lock'}"></i>
-        </button>
-      </td>
-    `;
-    tbody.appendChild(row);
-  });
-}
-
-async function toggleUserStatus(userId, currentStatus) {
-  const action = currentStatus ? 'unlock' : 'lock';
-  if (!confirm(`Are you sure you want to ${action} this user?`)) return;
-
-  try {
-    const response = await fetch(`${API_BASE}&action=toggleUserLock&id=${userId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isLocked: !currentStatus }),
-      credentials: 'include'
-    });
-
-    if (!response.ok) throw new Error(`Failed to ${action} user`);
-
-    showNotification(`User ${action}ed successfully`, 'success');
-    await loadUsers();
-  } catch (error) {
-    console.error(`Error ${action}ing user:`, error);
-    showNotification(`Failed to ${action} user`, 'error');
-  }
-}
 
 // ==================== ORDERS ====================
 async function loadOrders() {
@@ -565,7 +522,7 @@ function renderOrders() {
   orders.forEach(order => {
     const row = document.createElement('tr');
     const statusClass = order.STATUS.toLowerCase();
-    
+
     row.innerHTML = `
       <td>#${order.ORDER_ID}</td>
       <td>${order.USERNAME || 'N/A'}</td>
@@ -588,10 +545,10 @@ async function viewOrder(orderId) {
     const response = await fetch(`${API_BASE}&action=orderDetails&id=${orderId}`);
     if (!response.ok) throw new Error('Failed to load order details');
     const orderDetails = await response.json();
-    
+
     const modal = document.getElementById('orderModal');
     const detailsDiv = document.getElementById('orderDetails');
-    
+
     detailsDiv.innerHTML = `
       <div class="order-details">
         <div class="detail-row"><strong>Order ID:</strong> #${orderDetails.ORDER_ID}</div>
@@ -621,7 +578,7 @@ async function viewOrder(orderId) {
         </table>
       </div>
     `;
-    
+
     modal.style.display = 'block';
   } catch (error) {
     console.error('Error viewing order:', error);
@@ -641,7 +598,7 @@ function showNotification(message, type = 'info') {
     <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'x-circle' : 'info-circle'}"></i>
     <span>${message}</span>
   `;
-  
+
   document.body.appendChild(notification);
   setTimeout(() => notification.classList.add('show'), 100);
   setTimeout(() => {
