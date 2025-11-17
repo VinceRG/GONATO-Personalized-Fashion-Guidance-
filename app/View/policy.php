@@ -186,7 +186,8 @@ $privacy = "
                 <?php echo $privacy; ?>
             </div>
 
-            <p style="text-align:center; margin-top:2rem;">
+            <p style="text-align:center; margin-top:2rem;
+            ">
                 <a href="index.php?page=register" class="back-link">Back to Sign Up</a>
             </p>
         </form>
