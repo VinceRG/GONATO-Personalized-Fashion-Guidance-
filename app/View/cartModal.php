@@ -161,39 +161,40 @@
     </div>
 
     <!-- Payment Method Section -->
-    <div class="section-divider">
-      <div class="section-header">
-        <div class="section-header-left">
-          <div class="section-icon">
-            <i class="bi bi-credit-card-fill"></i>
-          </div>
-          <h3 class="section-title">Payment Method</h3>
-        </div>
+<div class="section-divider">
+  <div class="section-header">
+    <div class="section-header-left">
+      <div class="section-icon">
+        <i class="bi bi-credit-card-fill"></i>
       </div>
-      <div class="payment-methods">
-        <label class="payment-option">
-          <input type="radio" name="payment" value="cod" checked>
-          <div class="payment-option-content">
-            <i class="bi bi-cash"></i>
-            <span>Cash on Delivery</span>
-          </div>
-        </label>
-        <label class="payment-option">
-          <input type="radio" name="payment" value="card">
-          <div class="payment-option-content">
-            <i class="bi bi-credit-card"></i>
-            <span>Credit/Debit Card</span>
-          </div>
-        </label>
-        <label class="payment-option">
-          <input type="radio" name="payment" value="gcash">
-          <div class="payment-option-content">
-            <i class="bi bi-wallet2"></i>
-            <span>GCash</span>
-          </div>
-        </label>
-      </div>
+      <h3 class="section-title">Payment Method</h3>
     </div>
+  </div>
+  <div class="payment-methods">
+    <label class="payment-option">
+      <input type="radio" name="payment" value="card" checked>
+      <div class="payment-option-content">
+        <i class="bi bi-credit-card"></i>
+        <span>Credit/Debit Card</span>
+      </div>
+    </label>
+    <label class="payment-option">
+      <input type="radio" name="payment" value="gcash">
+      <div class="payment-option-content">
+        <i class="bi bi-wallet2"></i>
+        <span>GCash</span>
+      </div>
+    </label>
+  </div>
+    <!-- Card Input Fields -->
+  <div id="card-fields" style="margin-top: 1rem;">
+    <input type="text" id="card-number" placeholder="Card Number" maxlength="19" />
+    <input type="text" id="card-exp-month" placeholder="MM" maxlength="2" style="width: 50px;" />
+    <input type="text" id="card-exp-year" placeholder="YYYY" maxlength="4" style="width: 70px;" />
+    <input type="text" id="card-cvc" placeholder="CVC" maxlength="4" style="width: 50px;" />
+  </div>
+</div>
+
 
     <!-- Order Summary -->
     <div class="order-summary">
@@ -217,72 +218,5 @@
   </div>
 </div>
 
-<script>
-  const overlay = document.getElementById('overlay');
-  const cartModal = document.getElementById('cartModal');
-  const checkoutModal = document.getElementById('checkoutModal');
-
-  // Function to update total selected items and price
-function updateCartSummary() {
-  const items = document.querySelectorAll('.cart-item');
-  let total = 0;
-  let count = 0;
-
-  items.forEach(item => {
-    const checkbox = item.querySelector('.item-select');
-    if (checkbox && checkbox.checked) {
-      const priceText = item.querySelector('.item-price').textContent.replace('$', '');
-      const quantity = parseInt(item.querySelector('.quantity-value').textContent);
-      const itemTotal = parseFloat(priceText) * quantity;
-      total += itemTotal;
-      count += quantity;
-    }
-  });
-
-  document.getElementById('selectedCount').textContent = count;
-  document.getElementById('selectedTotal').textContent = `$${total.toFixed(2)}`;
-}
-
-// Listen for changes on all checkboxes
-document.addEventListener('change', (e) => {
-  if (e.target.classList.contains('item-select')) {
-    updateCartSummary();
-  }
-});
-
-
-  function openCart() {
-    overlay.classList.add('show');
-    cartModal.classList.add('show');
-    checkoutModal.classList.remove('show');
-  }
-
-  function openCheckout() {
-    overlay.classList.add('show');
-    checkoutModal.classList.add('show');
-    cartModal.classList.remove('show');
-  }
-
-  function closeModals() {
-    overlay.classList.remove('show');
-    cartModal.classList.remove('show');
-    checkoutModal.classList.remove('show');
-  }
-
-  function proceedToCheckout() {
-    cartModal.classList.remove('show');
-    checkoutModal.classList.add('show');
-  }
-
-  function placeOrder() {
-    alert('Order placed successfully!');
-    closeModals();
-  }
-
-  // Close modal on ESC key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModals();
-    }
-  });
-</script>
+<script src="public/js/cartModal.js"></script>
+<script src="https://js.paymongo.com/v1/paymongo.js"></script>

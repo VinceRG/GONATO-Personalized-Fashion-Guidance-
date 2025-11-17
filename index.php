@@ -1,11 +1,25 @@
 <?php
 // index.php (root of GONATO-Personalized-Fashion-Guidance-)
 
+require_once __DIR__ . '/vendor/autoload.php';
+
+use Dotenv\Dotenv;
+
+$dotenv = Dotenv::createImmutable(__DIR__);
+$dotenv->load();
+
+// Test
+// var_dump($_ENV['PAYMONGO_SECRET_KEY'] ?? 'Not set'); exit;
 // Get requested page, default to 'landing'
 // Handle API requests FIRST (before page routing)
-if (isset($_GET['api']) && $_GET['api'] === 'admin') {
-    require_once './public/admin-api.php';
-    exit; // Stop execution after API response
+if (isset($_GET['api'])) {
+    if ($_GET['api'] === 'admin') {
+        require_once './public/admin-api.php';
+        exit; // Stop execution after API response
+    } elseif ($_GET['api'] === 'paymongo') {
+        require_once './public/paymongo_create_intent.php';
+        exit; // Stop execution after API response
+    }
 }
 
 // Get the requested page from the URL, default to 'landing'
