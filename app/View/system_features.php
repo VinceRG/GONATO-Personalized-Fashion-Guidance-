@@ -9,12 +9,13 @@
   <link rel="stylesheet" href="public/css/system_features.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="public/js/system_features.js" defer></script>
-
-  
+  <style>
+    /* Ensure hidden utility class exists for the toggling logic */
+    .hidden { display: none !important; }
+  </style>
 </head>
 
 <body>
-  <!-- Notification Messages -->
   <?php if (isset($successMessage) && $successMessage): ?>
     <div class="notification success"><?= htmlspecialchars($successMessage) ?></div>
     <script>
@@ -41,9 +42,7 @@
     </script>
   <?php endif; ?>
 
-  <!-- Main Page -->
-    <div class="results-container">
-      <!-- SIDEBAR -->
+  <div class="results-container">
       <aside class="sidebar" id="appSidebar" aria-expanded="true">
         <div>
           <div class="profile" onclick="openUserProfile()">
@@ -90,9 +89,7 @@
       </aside>
 
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
-      <!-- 🛍️ SHOP SECTION -->
       <section id="catalog-shop" class="content-section active">
         <div class="shop-header">
           <div>
@@ -108,7 +105,6 @@
           </div>
         </div>
 
-        <!-- Recommendations Section -->
         <div id="recommendations" class="subsection">
           <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
           <p class="section-subtitle">Based on your color and body analysis results.</p>
@@ -134,7 +130,6 @@
           </div>
         </div>
 
-        <!-- Shop Catalog -->
         <div class="subsection">
 
          <div class="filter-bar">
@@ -187,13 +182,11 @@
         </div>
       </section>
 
-      <!-- ✨ FEATURES -->
       <section id="features" class="content-section">
         <div class="section-title"><i>Personalized Fashion Features</i></div>
         <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
 
         <div class="options-container">
-          <!-- Color Analysis -->
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-palette2"></i></div>
             <div>
@@ -228,47 +221,68 @@
               <p>Get accurate measurements for personalized style recommendations</p>
             </div>
 
-            <div class="upload-section">
-  <form id="bodyShapeForm" method="POST" action="process_body_shape.php" enctype="multipart/form-data">
-    <label>Front Image:</label>
-    <input type="file" name="front_image" accept="image/*" required>
+            <?php 
+              // Determine if user has results (either just analyzed in Session, or saved in DB)
+              $hasSessionResult = isset($_SESSION['bodyShapeResult']);
+              $hasDbResult = !empty($user['BODY_SHAPE']);
+              $showResultsByDefault = ($hasSessionResult || $hasDbResult);
+            ?>
 
-    <label>Side Image:</label>
-    <input type="file" name="side_image" accept="image/*" required>
+            <div class="upload-section <?= $showResultsByDefault ? 'hidden' : '' ?>">
+              <form id="bodyShapeForm" method="POST" action="index.php?page=process_body_shape" enctype="multipart/form-data">
+                <label>Front Image:</label>
+                <input type="file" name="front_image" accept="image/*" required>
 
-    <label>Height (cm):</label>
-    <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
+                <label>Side Image:</label>
+                <input type="file" name="side_image" accept="image/*" required>
 
-    <button type="submit" class="btn"><i class="bi bi-upload"></i> Analyze Body Shape</button>
-  </form>
+                <label>Height (cm):</label>
+                <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
 
-</div>
-<div id="bodyShapes" class="body-shapes-container">
-  <h3>Your Body Shape</h3>
-  <?php if (isset($_SESSION['bodyShapeResult'])): 
-        $result = $_SESSION['bodyShapeResult']; ?>
-      <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
-      <p>Measurements (cm): Shoulder <?= $result['measurements']['ShoulderWidth'] ?>, Waist <?= $result['measurements']['Waist'] ?>, Hips <?= $result['measurements']['Hips'] ?>.</p>
-      <?php unset($_SESSION['bodyShapeResult']); ?>
-  <?php else: ?>
-      <p>Upload front and side images to analyze your body shape.</p>
-  <?php endif; ?>
-  <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)">Close Analysis</button>
-</div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn" style="flex: 1;">
+                    <i class="bi bi-upload"></i> Analyze
+                  </button>
+                  
+                  <?php if ($showResultsByDefault): ?>
+                    <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleAnalysis('bodyShapes', true)">
+                      Cancel
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </form>
+            </div>
 
-
-            <ul class="feature-list">
+            <ul class="feature-list <?= $showResultsByDefault ? 'hidden' : '' ?>">
               <li>AI-assisted body recognition</li>
               <li>Measurement-based style insights</li>
               <li>Shape-specific outfit recommendations</li>
               <li>Personalized fit suggestions</li>
             </ul>
 
-            <div id="bodyShapes" class="body-shapes-container">
+            <div id="bodyShapes" class="body-shapes-container <?= $showResultsByDefault ? 'show-results' : '' ?>">
               <h3>Your Body Shape</h3>
-              <p>Your shape appears to be <strong>Hourglass</strong>.</p>
-              <p>Suggested styles: wrap dresses, high-waist skirts, fitted tops.</p>
-              <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)">Close Analysis</button>
+              
+              <?php if ($hasSessionResult): ?>
+                  <?php $result = $_SESSION['bodyShapeResult']; ?>
+                  <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
+                  <p class="measurements-text" style="font-size: 0.9em; color: #666;">
+                    
+                  </p>
+                  <?php elseif ($hasDbResult): ?>
+                  <p>Your saved shape is <strong><?= htmlspecialchars($user['BODY_SHAPE']) ?></strong>.</p>
+                  <p>We have your measurements saved.</p>
+              <?php endif; ?>
+
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" onclick="toggleAnalysis('bodyShapes', false)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
+                  <i class="bi bi-arrow-repeat"></i> Try Again
+                </button>
+                
+                <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)" style="flex: 1;">
+                    Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -276,7 +290,6 @@
     </div>
   </div>
 
-  <!-- 👤 User Profile Modal -->
   <div class="overlay" id="userProfileOverlay">
     <div class="modal">
       <div class="modal-header">
@@ -294,7 +307,6 @@
       </div>
 
       <div class="modal-body">
-        <!-- Account Tab -->
         <div class="tab-content active" id="account">
           <div class="section-header">
             <p class="section-title">Account Information</p>
@@ -396,7 +408,6 @@
           </div>
         </div>
 
-        <!-- Purchases Tab -->
         <div class="tab-content" id="purchases">
           <div class="sub-tabs">
             <button class="sub-tab-btn active" data-subtab="orders">
@@ -410,7 +421,6 @@
             </button>
           </div>
           
-          <!-- Orders Sub Tab -->
           <div class="sub-tab-content active" id="orders">
             <div class="order-card">
               <div class="order-header">
@@ -451,7 +461,6 @@
             </div>
           </div>
           
-          <!-- To Receive Sub Tab -->
           <div class="sub-tab-content" id="to-receive">
             <div class="order-card">
               <div class="order-header">
@@ -492,7 +501,6 @@
             </div>
           </div>
           
-          <!-- Order History Sub Tab -->
           <div class="sub-tab-content" id="history">
             <div class="order-card">
               <div class="order-header">
@@ -537,7 +545,6 @@
     </div>
   </div>
 
-  <!-- Logout Confirmation Modal -->
   <div class="overlay" id="logoutOverlay" style="display: none;">
     <div class="modal" style="max-width: 450px;">
       <div class="modal-header" style="background: #2D2D2D;">

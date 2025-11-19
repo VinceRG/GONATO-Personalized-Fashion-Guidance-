@@ -40,6 +40,12 @@ switch ($page) {
         $controller->index();
         break;
 
+    case 'process_body_shape':
+        require_once './app/Controllers/BodyShapeController.php';
+        $controller = new BodyShapeController();
+        $controller->process();
+        break;
+
     // ===== OTP VERIFICATION (handled by LoginController internally) =====
     case 'otp_verification':
         require_once './app/View/otp_verification.php';
@@ -71,5 +77,5 @@ switch ($page) {
     default:
         require_once './app/View/landing.php';
         break;
-}
+}   
 ?>
