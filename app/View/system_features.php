@@ -9,12 +9,13 @@
   <link rel="stylesheet" href="public/css/system_features.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="public/js/system_features.js" defer></script>
-
-  
+  <style>
+    /* Ensure hidden utility class exists for the toggling logic */
+    .hidden { display: none !important; }
+  </style>
 </head>
 
 <body>
-  <!-- Notification Messages -->
   <?php if (isset($successMessage) && $successMessage): ?>
     <div class="notification success"><?= htmlspecialchars($successMessage) ?></div>
     <script>
@@ -41,9 +42,7 @@
     </script>
   <?php endif; ?>
 
-  <!-- Main Page -->
-    <div class="results-container">
-      <!-- SIDEBAR -->
+  <div class="results-container">
       <aside class="sidebar" id="appSidebar" aria-expanded="true">
         <div>
           <div class="profile" onclick="openUserProfile()">
@@ -90,9 +89,7 @@
       </aside>
 
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
-      <!-- 🛍️ SHOP SECTION -->
       <section id="catalog-shop" class="content-section active">
         <div class="shop-header">
           <div>
@@ -108,7 +105,6 @@
           </div>
         </div>
 
-        <!-- Recommendations Section -->
         <div id="recommendations" class="subsection">
           <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
           <p class="section-subtitle">Based on your color and body analysis results.</p>
@@ -134,7 +130,6 @@
           </div>
         </div>
 
-        <!-- Shop Catalog -->
         <div class="subsection">
 
          <div class="filter-bar">
@@ -187,40 +182,60 @@
         </div>
       </section>
 
-      <!-- ✨ FEATURES -->
       <section id="features" class="content-section">
         <div class="section-title"><i>Personalized Fashion Features</i></div>
         <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
 
         <div class="options-container">
-          <!-- Color Analysis -->
+          
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-palette2"></i></div>
             <div>
               <h2 class="option-title">Color Analysis</h2>
-              <p>Choose how you'd like to proceed with your color analysis</p>
+              <p>Upload a selfie with good lighting to find your season.</p>
             </div>
 
-            <div class="upload-section">
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
+            <?php 
+              $hasColorSession = isset($_SESSION['colorAnalysisResult']);
+              $hasColorDb = !empty($user['SEASON_TYPE']); 
+              $showColorResults = ($hasColorSession || $hasColorDb);
+            ?>
+
+            <div id="colorUploadSection" class="upload-section <?= $showColorResults ? 'hidden' : '' ?>">
+              <form id="colorForm" method="POST" action="index.php?page=process_color_analysis" enctype="multipart/form-data">
+                <label>Face Image (Selfie):</label>
+                <input type="file" name="face_image" accept="image/*" required>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn" style="flex: 1;">
+                    <i class="bi bi-magic"></i> Analyze Color
+                  </button>
+                  
+                  <?php if ($showColorResults): ?>
+                    <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleColorAnalysis(false)">
+                      Cancel
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </form>
             </div>
 
-            <ul class="feature-list">
-              <li>Real-time guidance and lighting tips</li>
-              <li>Instant capture and analysis</li>
-              <li>Personalized seasonal color palette</li>
-              <li>Complementary color recommendations</li>
-            </ul>
-
-            <div id="colorSeasons" class="color-seasons-container">
+            <div id="colorSeasons" class="color-seasons-container <?= $showColorResults ? 'show-results' : '' ?>">
               <h3>Your Color Palette</h3>
-              <p>Your best palette is <strong>Soft Autumn</strong>.</p>
-              <p>Recommended tones: warm beige, muted green, soft coral.</p>
-              <button class="close-btn-analysis" onclick="toggleAnalysis('colorSeasons', false)">Close Analysis</button>
+              <?php if ($hasColorSession): ?>
+                  <p>Your season is <strong><?= htmlspecialchars($_SESSION['colorAnalysisResult']['season']) ?></strong>.</p>
+                  <p>Recommended tones: <?= implode(", ", $_SESSION['colorAnalysisResult']['palette']) ?></p>
+              <?php elseif ($hasColorDb): ?>
+                  <p>Your saved season is <strong><?= htmlspecialchars($user['SEASON_TYPE']) ?></strong>.</p>
+              <?php endif; ?>
+              
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" onclick="toggleColorAnalysis(true)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
+                    <i class="bi bi-arrow-repeat"></i> Try Again
+                </button>
+              </div>
             </div>
           </div>
-
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-person-standing"></i></div>
             <div>
@@ -228,47 +243,62 @@
               <p>Get accurate measurements for personalized style recommendations</p>
             </div>
 
-            <div class="upload-section">
-  <form id="bodyShapeForm" method="POST" action="process_body_shape.php" enctype="multipart/form-data">
-    <label>Front Image:</label>
-    <input type="file" name="front_image" accept="image/*" required>
+            <?php 
+              $hasSessionResult = isset($_SESSION['bodyShapeResult']);
+              $hasDbResult = !empty($user['BODY_TYPE']); 
+              $showResultsByDefault = ($hasSessionResult || $hasDbResult);
+            ?>
 
-    <label>Side Image:</label>
-    <input type="file" name="side_image" accept="image/*" required>
+            <div class="upload-section <?= $showResultsByDefault ? 'hidden' : '' ?>">
+              <form id="bodyShapeForm" method="POST" action="index.php?page=process_body_shape" enctype="multipart/form-data">
+                <label>Front Image:</label>
+                <input type="file" name="front_image" accept="image/*" required>
 
-    <label>Height (cm):</label>
-    <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
+                <label>Side Image:</label>
+                <input type="file" name="side_image" accept="image/*" required>
 
-    <button type="submit" class="btn"><i class="bi bi-upload"></i> Analyze Body Shape</button>
-  </form>
+                <label>Height (cm):</label>
+                <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
 
-</div>
-<div id="bodyShapes" class="body-shapes-container">
-  <h3>Your Body Shape</h3>
-  <?php if (isset($_SESSION['bodyShapeResult'])): 
-        $result = $_SESSION['bodyShapeResult']; ?>
-      <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
-      <p>Measurements (cm): Shoulder <?= $result['measurements']['ShoulderWidth'] ?>, Waist <?= $result['measurements']['Waist'] ?>, Hips <?= $result['measurements']['Hips'] ?>.</p>
-      <?php unset($_SESSION['bodyShapeResult']); ?>
-  <?php else: ?>
-      <p>Upload front and side images to analyze your body shape.</p>
-  <?php endif; ?>
-  <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)">Close Analysis</button>
-</div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn" style="flex: 1;">
+                    <i class="bi bi-upload"></i> Analyze
+                  </button>
+                  
+                  <?php if ($showResultsByDefault): ?>
+                    <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleAnalysis('bodyShapes', true)">
+                      Cancel
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </form>
+            </div>
 
-
-            <ul class="feature-list">
+            <ul class="feature-list <?= $showResultsByDefault ? 'hidden' : '' ?>">
               <li>AI-assisted body recognition</li>
               <li>Measurement-based style insights</li>
               <li>Shape-specific outfit recommendations</li>
               <li>Personalized fit suggestions</li>
             </ul>
 
-            <div id="bodyShapes" class="body-shapes-container">
+            <div id="bodyShapes" class="body-shapes-container <?= $showResultsByDefault ? 'show-results' : '' ?>">
               <h3>Your Body Shape</h3>
-              <p>Your shape appears to be <strong>Hourglass</strong>.</p>
-              <p>Suggested styles: wrap dresses, high-waist skirts, fitted tops.</p>
-              <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)">Close Analysis</button>
+              
+              <?php if ($hasSessionResult): ?>
+                  <?php $result = $_SESSION['bodyShapeResult']; ?>
+                  <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
+                  <?php elseif ($hasDbResult): ?>
+                  <p>Your saved shape is <strong><?= htmlspecialchars($user['BODY_TYPE']) ?></strong>.</p>
+                  <p>We have your measurements saved.</p>
+              <?php endif; ?>
+
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" onclick="toggleAnalysis('bodyShapes', false)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
+                  <i class="bi bi-arrow-repeat"></i> Try Again
+                </button>
+                
+               
+              </div>
             </div>
           </div>
         </div>
@@ -276,7 +306,6 @@
     </div>
   </div>
 
-  <!-- 👤 User Profile Modal -->
   <div class="overlay" id="userProfileOverlay">
     <div class="modal">
       <div class="modal-header">
@@ -294,7 +323,6 @@
       </div>
 
       <div class="modal-body">
-        <!-- Account Tab -->
         <div class="tab-content active" id="account">
           <div class="section-header">
             <p class="section-title">Account Information</p>
@@ -367,7 +395,7 @@
               <i class="bi bi-palette"></i>
               <h3>Style Profile</h3>
             </div>
-            <?php if (empty($user['COLOR_SEASON']) && empty($user['BODY_SHAPE'])): ?>
+            <?php if (empty($user['SEASON_TYPE']) && empty($user['BODY_TYPE'])): ?>
               <div class="info-empty">
                 <p>You haven't completed your style analysis yet.</p>
                 <button class="btn" onclick="goToFeatures()">
@@ -375,20 +403,20 @@
                 </button>
               </div>
             <?php else: ?>
-              <?php if (!empty($user['COLOR_SEASON'])): ?>
+              <?php if (!empty($user['SEASON_TYPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Color Season</span>
                   <span class="info-value">
-                    <?php echo htmlspecialchars($user['COLOR_SEASON']); ?>
+                    <?php echo htmlspecialchars($user['SEASON_TYPE']); ?>
                   </span>
                 </div>
               <?php endif; ?>
 
-              <?php if (!empty($user['BODY_SHAPE'])): ?>
+              <?php if (!empty($user['BODY_TYPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Body Shape</span>
                   <span class="info-value">
-                    <?php echo htmlspecialchars($user['BODY_SHAPE']); ?>
+                    <?php echo htmlspecialchars($user['BODY_TYPE']); ?>
                   </span>
                 </div>
               <?php endif; ?>
@@ -396,7 +424,6 @@
           </div>
         </div>
 
-        <!-- Purchases Tab -->
         <div class="tab-content" id="purchases">
           <div class="sub-tabs">
             <button class="sub-tab-btn active" data-subtab="orders">
@@ -410,7 +437,6 @@
             </button>
           </div>
           
-          <!-- Orders Sub Tab -->
           <div class="sub-tab-content active" id="orders">
             <div class="order-card">
               <div class="order-header">
@@ -451,7 +477,6 @@
             </div>
           </div>
           
-          <!-- To Receive Sub Tab -->
           <div class="sub-tab-content" id="to-receive">
             <div class="order-card">
               <div class="order-header">
@@ -492,7 +517,6 @@
             </div>
           </div>
           
-          <!-- Order History Sub Tab -->
           <div class="sub-tab-content" id="history">
             <div class="order-card">
               <div class="order-header">
@@ -537,7 +561,6 @@
     </div>
   </div>
 
-  <!-- Logout Confirmation Modal -->
   <div class="overlay" id="logoutOverlay" style="display: none;">
     <div class="modal" style="max-width: 450px;">
       <div class="modal-header" style="background: #2D2D2D;">
@@ -587,6 +610,26 @@
       </div>
     </div>
   </div>
+
+  <script>
+    function toggleColorAnalysis(showUpload) {
+        const results = document.getElementById('colorSeasons');
+        const uploadSection = document.getElementById('colorUploadSection');
+        
+        if (showUpload) {
+            // User clicked "Try Again"
+            if (results) results.classList.remove('show-results');
+            if (uploadSection) uploadSection.classList.remove('hidden');
+            // Optional: Clear form
+            const form = document.getElementById('colorForm');
+            if (form) form.reset();
+        } else {
+            // User clicked "Cancel"
+            if (results) results.classList.add('show-results');
+            if (uploadSection) uploadSection.classList.add('hidden');
+        }
+    }
+  </script>
 
 </body>
 </html>
