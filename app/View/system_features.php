@@ -187,33 +187,55 @@
         <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
 
         <div class="options-container">
+          
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-palette2"></i></div>
             <div>
               <h2 class="option-title">Color Analysis</h2>
-              <p>Choose how you'd like to proceed with your color analysis</p>
+              <p>Upload a selfie with good lighting to find your season.</p>
             </div>
 
-            <div class="upload-section">
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
+            <?php 
+              $hasColorSession = isset($_SESSION['colorAnalysisResult']);
+              $hasColorDb = !empty($user['SEASON_TYPE']); 
+              $showColorResults = ($hasColorSession || $hasColorDb);
+            ?>
+
+            <div id="colorUploadSection" class="upload-section <?= $showColorResults ? 'hidden' : '' ?>">
+              <form id="colorForm" method="POST" action="index.php?page=process_color_analysis" enctype="multipart/form-data">
+                <label>Face Image (Selfie):</label>
+                <input type="file" name="face_image" accept="image/*" required>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn" style="flex: 1;">
+                    <i class="bi bi-magic"></i> Analyze Color
+                  </button>
+                  
+                  <?php if ($showColorResults): ?>
+                    <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleColorAnalysis(false)">
+                      Cancel
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </form>
             </div>
 
-            <ul class="feature-list">
-              <li>Real-time guidance and lighting tips</li>
-              <li>Instant capture and analysis</li>
-              <li>Personalized seasonal color palette</li>
-              <li>Complementary color recommendations</li>
-            </ul>
-
-            <div id="colorSeasons" class="color-seasons-container">
+            <div id="colorSeasons" class="color-seasons-container <?= $showColorResults ? 'show-results' : '' ?>">
               <h3>Your Color Palette</h3>
-              <p>Your best palette is <strong>Soft Autumn</strong>.</p>
-              <p>Recommended tones: warm beige, muted green, soft coral.</p>
-              <button class="close-btn-analysis" onclick="toggleAnalysis('colorSeasons', false)">Close Analysis</button>
+              <?php if ($hasColorSession): ?>
+                  <p>Your season is <strong><?= htmlspecialchars($_SESSION['colorAnalysisResult']['season']) ?></strong>.</p>
+                  <p>Recommended tones: <?= implode(", ", $_SESSION['colorAnalysisResult']['palette']) ?></p>
+              <?php elseif ($hasColorDb): ?>
+                  <p>Your saved season is <strong><?= htmlspecialchars($user['SEASON_TYPE']) ?></strong>.</p>
+              <?php endif; ?>
+              
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" onclick="toggleColorAnalysis(true)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
+                    <i class="bi bi-arrow-repeat"></i> Try Again
+                </button>
+              </div>
             </div>
           </div>
-
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-person-standing"></i></div>
             <div>
@@ -222,9 +244,8 @@
             </div>
 
             <?php 
-              // Determine if user has results (either just analyzed in Session, or saved in DB)
               $hasSessionResult = isset($_SESSION['bodyShapeResult']);
-              $hasDbResult = !empty($user['BODY_SHAPE']);
+              $hasDbResult = !empty($user['BODY_TYPE']); 
               $showResultsByDefault = ($hasSessionResult || $hasDbResult);
             ?>
 
@@ -266,11 +287,8 @@
               <?php if ($hasSessionResult): ?>
                   <?php $result = $_SESSION['bodyShapeResult']; ?>
                   <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
-                  <p class="measurements-text" style="font-size: 0.9em; color: #666;">
-                    
-                  </p>
                   <?php elseif ($hasDbResult): ?>
-                  <p>Your saved shape is <strong><?= htmlspecialchars($user['BODY_SHAPE']) ?></strong>.</p>
+                  <p>Your saved shape is <strong><?= htmlspecialchars($user['BODY_TYPE']) ?></strong>.</p>
                   <p>We have your measurements saved.</p>
               <?php endif; ?>
 
@@ -279,9 +297,7 @@
                   <i class="bi bi-arrow-repeat"></i> Try Again
                 </button>
                 
-                <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)" style="flex: 1;">
-                    Close
-                </button>
+               
               </div>
             </div>
           </div>
@@ -379,7 +395,7 @@
               <i class="bi bi-palette"></i>
               <h3>Style Profile</h3>
             </div>
-            <?php if (empty($user['COLOR_SEASON']) && empty($user['BODY_SHAPE'])): ?>
+            <?php if (empty($user['SEASON_TYPE']) && empty($user['BODY_TYPE'])): ?>
               <div class="info-empty">
                 <p>You haven't completed your style analysis yet.</p>
                 <button class="btn" onclick="goToFeatures()">
@@ -387,20 +403,20 @@
                 </button>
               </div>
             <?php else: ?>
-              <?php if (!empty($user['COLOR_SEASON'])): ?>
+              <?php if (!empty($user['SEASON_TYPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Color Season</span>
                   <span class="info-value">
-                    <?php echo htmlspecialchars($user['COLOR_SEASON']); ?>
+                    <?php echo htmlspecialchars($user['SEASON_TYPE']); ?>
                   </span>
                 </div>
               <?php endif; ?>
 
-              <?php if (!empty($user['BODY_SHAPE'])): ?>
+              <?php if (!empty($user['BODY_TYPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Body Shape</span>
                   <span class="info-value">
-                    <?php echo htmlspecialchars($user['BODY_SHAPE']); ?>
+                    <?php echo htmlspecialchars($user['BODY_TYPE']); ?>
                   </span>
                 </div>
               <?php endif; ?>
@@ -594,6 +610,26 @@
       </div>
     </div>
   </div>
+
+  <script>
+    function toggleColorAnalysis(showUpload) {
+        const results = document.getElementById('colorSeasons');
+        const uploadSection = document.getElementById('colorUploadSection');
+        
+        if (showUpload) {
+            // User clicked "Try Again"
+            if (results) results.classList.remove('show-results');
+            if (uploadSection) uploadSection.classList.remove('hidden');
+            // Optional: Clear form
+            const form = document.getElementById('colorForm');
+            if (form) form.reset();
+        } else {
+            // User clicked "Cancel"
+            if (results) results.classList.add('show-results');
+            if (uploadSection) uploadSection.classList.add('hidden');
+        }
+    }
+  </script>
 
 </body>
 </html>
