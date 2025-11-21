@@ -12,6 +12,14 @@
   <style>
     /* Ensure hidden utility class exists for the toggling logic */
     .hidden { display: none !important; }
+
+    /* Small helper text for upload rules */
+    .upload-rules {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
   </style>
 </head>
 
@@ -43,51 +51,49 @@
   <?php endif; ?>
 
   <div class="results-container">
-      <aside class="sidebar" id="appSidebar" aria-expanded="true">
-        <div>
-          <div class="profile" onclick="openUserProfile()">
-            <div class="profile-pic" id="sidebar-profile-pic">
-              <?php if (!empty($user['PROFILE_IMAGE'])): ?>
-                <img src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-              <?php else: ?>
-                <?= htmlspecialchars($userInitials) ?>
-              <?php endif; ?>
-            </div>
-            <div class="profile-info">
-              <div class="form-group">
-                <?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
-              </div>
-              <p>@<?php echo htmlspecialchars($user['USERNAME']); ?></p>
-            </div>
+    <aside class="sidebar" id="appSidebar" aria-expanded="true">
+      <div>
+        <div class="profile" onclick="openUserProfile()">
+          <div class="profile-pic" id="sidebar-profile-pic">
+            <?php if (!empty($user['PROFILE_IMAGE'])): ?>
+              <img src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <?php else: ?>
+              <?= htmlspecialchars($userInitials) ?>
+            <?php endif; ?>
           </div>
-
-          <nav class="nav-links" role="navigation" aria-label="Main navigation">
-            <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
-              <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
-              <span class="nav-label">Shop</span>
-              <span class="label-tooltip" aria-hidden="true"></span>
-            </a>
-            <a href="#features" class="nav-btn nav-item" data-label="Features">
-              <img src="public/image/features.png" class="nav-icon" alt="Features icon">
-              <span class="nav-label">Features</span>
-              <span class="label-tooltip" aria-hidden="true"></span>
-            </a>
-          </nav>
+          <div class="profile-info">
+            <div class="form-group">
+              <?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+            </div>
+            <p>@<?php echo htmlspecialchars($user['USERNAME']); ?></p>
+          </div>
         </div>
 
-        <div class="sidebar-footer" aria-hidden="true">
-          <div class="logo-section">
-            <div class="logo-img" style="width:40px; height:40px;">
-              <img src="public/image/amarelle.png" alt="Amarelle logo">
-            </div>
-          </div>
-          <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
-            <i class="bi bi-box-arrow-right"></i>
-          </button>
-          
-        </div>
-      </aside>
+        <nav class="nav-links" role="navigation" aria-label="Main navigation">
+          <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
+            <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
+            <span class="nav-label">Shop</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
+          <a href="#features" class="nav-btn nav-item" data-label="Features">
+            <img src="public/image/features.png" class="nav-icon" alt="Features icon">
+            <span class="nav-label">Features</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
+        </nav>
+      </div>
 
+      <div class="sidebar-footer" aria-hidden="true">
+        <div class="logo-section">
+          <div class="logo-img" style="width:40px; height:40px;">
+            <img src="public/image/amarelle.png" alt="Amarelle logo">
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
+          <i class="bi bi-box-arrow-right"></i>
+        </button>
+      </div>
+    </aside>
 
     <div class="main-content">
       <section id="catalog-shop" class="content-section active">
@@ -131,16 +137,15 @@
         </div>
 
         <div class="subsection">
-
-         <div class="filter-bar">
-          <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
-          <select id="categoryFilter" onchange="filterProducts()">
-            <option value="">All Categories</option>
-            <option value="Dresses">Dresses</option>
-            <option value="Tops">Tops</option>
-            <option value="Bottoms">Bottoms</option>
-          </select>
-        </div>
+          <div class="filter-bar">
+            <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
+            <select id="categoryFilter" onchange="filterProducts()">
+              <option value="">All Categories</option>
+              <option value="Dresses">Dresses</option>
+              <option value="Tops">Tops</option>
+              <option value="Bottoms">Bottoms</option>
+            </select>
+          </div>
 
           <div class="clothes-grid">
             <div class="clothes-item catalog-item">
@@ -187,12 +192,19 @@
         <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
 
         <div class="options-container">
-          
+          <!-- COLOR ANALYSIS CARD -->
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-palette2"></i></div>
             <div>
               <h2 class="option-title">Color Analysis</h2>
-              <p>Upload a selfie with good lighting to find your season.</p>
+              <p>
+                Upload a selfie with good lighting to find your season.<br>
+                <span class="upload-rules">
+                  • Max file size: 5 MB<br>
+                  • Allowed formats: JPG, PNG, WEBP<br>
+                  • For your safety, images are scanned for viruses before analysis.
+                </span>
+              </p>
             </div>
 
             <?php 
@@ -236,11 +248,21 @@
               </div>
             </div>
           </div>
+
+          <!-- BODY SHAPE ANALYSIS CARD -->
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-person-standing"></i></div>
             <div>
               <h2 class="option-title">Body Shape Analysis</h2>
-              <p>Get accurate measurements for personalized style recommendations</p>
+              <p>
+                Get accurate measurements for personalized style recommendations.<br>
+                
+                <span class="upload-rules">
+                  • Max file size per image: 5 MB<br>
+                  • Allowed formats: JPG, PNG, WEBP<br>
+                  • Both images are scanned for viruses before we analyze your body shape.
+                </span>
+              </p>
             </div>
 
             <?php 
@@ -253,10 +275,11 @@
               <form id="bodyShapeForm" method="POST" action="index.php?page=process_body_shape" enctype="multipart/form-data">
                 <label>Front Image:</label>
                 <input type="file" name="front_image" accept="image/*" required>
-
+                <br>
                 <label>Side Image:</label>
                 <input type="file" name="side_image" accept="image/*" required>
-
+              
+                <br>
                 <label>Height (cm):</label>
                 <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
 
@@ -274,12 +297,6 @@
               </form>
             </div>
 
-            <ul class="feature-list <?= $showResultsByDefault ? 'hidden' : '' ?>">
-              <li>AI-assisted body recognition</li>
-              <li>Measurement-based style insights</li>
-              <li>Shape-specific outfit recommendations</li>
-              <li>Personalized fit suggestions</li>
-            </ul>
 
             <div id="bodyShapes" class="body-shapes-container <?= $showResultsByDefault ? 'show-results' : '' ?>">
               <h3>Your Body Shape</h3>
@@ -287,7 +304,7 @@
               <?php if ($hasSessionResult): ?>
                   <?php $result = $_SESSION['bodyShapeResult']; ?>
                   <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
-                  <?php elseif ($hasDbResult): ?>
+              <?php elseif ($hasDbResult): ?>
                   <p>Your saved shape is <strong><?= htmlspecialchars($user['BODY_TYPE']) ?></strong>.</p>
                   <p>We have your measurements saved.</p>
               <?php endif; ?>
@@ -296,8 +313,6 @@
                 <button class="btn" onclick="toggleAnalysis('bodyShapes', false)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
                   <i class="bi bi-arrow-repeat"></i> Try Again
                 </button>
-                
-               
               </div>
             </div>
           </div>
