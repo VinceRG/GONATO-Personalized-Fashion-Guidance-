@@ -1,5 +1,7 @@
 <?php
 
+require_once './app/Helpers/UploadSecurity.php';
+
 class ColorAnalysisController {
     
     public function process() {
@@ -31,8 +33,22 @@ class ColorAnalysisController {
                 header("Location: index.php?page=features");
                 exit;
             }
+
+            // 🔐 Secure upload validation (type/size/virus)
+            try {
+                $mime = UploadSecurity::validateImageAndGetMime('face_image', 5_000_000); // 5 MB
+            } catch (RuntimeException $e) {
+                $_SESSION['errorMessage'] = $e->getMessage();
+                header("Location: index.php?page=features");
+                exit;
+            }
             
-            $faceFile = new CURLFile($_FILES['face_image']['tmp_name'], $_FILES['face_image']['type'], 'face_image');
+            // Use the trusted MIME from validation instead of $_FILES['...']['type']
+            $faceFile = new CURLFile(
+                $_FILES['face_image']['tmp_name'],
+                $mime,
+                'face_image'
+            );
 
             // 3. Send to Flask API
             $ch = curl_init();
@@ -68,7 +84,7 @@ class ColorAnalysisController {
                     $db = new Database();
                     $conn = $db->connect(); 
 
-                    // *** CRITICAL FIX: Use 'season_id' (lowercase) ***
+                    // Use 'season_id' (lowercase)
                     $query = "UPDATE users SET season_id = ? WHERE USER_ID = ?";
                     
                     $stmt = $conn->prepare($query);

@@ -1,5 +1,7 @@
 <?php
 
+require_once './app/Helpers/UploadSecurity.php';
+
 class BodyShapeController {
     
     public function process() {
@@ -17,28 +19,52 @@ class BodyShapeController {
         // Include your Database Connection
         require_once './app/Core/Database.php';
 
-        // 2. Define Body Shape ID Mapping (UPDATED based on your DB)
-        // This maps the "String" from Python to the "ID" in your MySQL table
+        // 2. Define Body Shape ID Mapping (based on your DB)
         $shapeMapping = [
-            'Hourglass' => 1,
-            'Rectangle' => 2,         // Corrected from your DB
-            'Pear' => 3,              // Corrected from your DB
-            'Inverted Triangle' => 4  // Corrected from your DB
+            'Hourglass'         => 1,
+            'Rectangle'         => 2,
+            'Pear'              => 3,
+            'Inverted Triangle' => 4
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $height = $_POST['height_cm'];
+            $height = $_POST['height_cm'] ?? null;
 
-            // Validate files exist
+            // Basic height presence check (optional but harmless)
+            if ($height === null || $height === '') {
+                $_SESSION['errorMessage'] = "Please provide your height.";
+                header("Location: index.php?page=features");
+                exit;
+            }
+
+            // Validate files exist (user-friendly message)
             if (empty($_FILES['front_image']['tmp_name']) || empty($_FILES['side_image']['tmp_name'])) {
                 $_SESSION['errorMessage'] = "Please upload both front and side images.";
                 header("Location: index.php?page=features");
                 exit;
             }
+
+            // 🔐 Secure upload validation (type/size/virus)
+            try {
+                $frontMime = UploadSecurity::validateImageAndGetMime('front_image', 5_000_000); // 5 MB
+                $sideMime  = UploadSecurity::validateImageAndGetMime('side_image',  5_000_000);
+            } catch (RuntimeException $e) {
+                $_SESSION['errorMessage'] = $e->getMessage();
+                header("Location: index.php?page=features");
+                exit;
+            }
             
-            // Prepare files for cURL
-            $frontFile = new CURLFile($_FILES['front_image']['tmp_name'], $_FILES['front_image']['type'], 'front_image');
-            $sideFile = new CURLFile($_FILES['side_image']['tmp_name'], $_FILES['side_image']['type'], 'side_image');
+            // Prepare files for cURL using trusted MIME types
+            $frontFile = new CURLFile(
+                $_FILES['front_image']['tmp_name'],
+                $frontMime,
+                'front_image'
+            );
+            $sideFile = new CURLFile(
+                $_FILES['side_image']['tmp_name'],
+                $sideMime,
+                'side_image'
+            );
 
             // 3. Send to Flask API
             $ch = curl_init();
@@ -46,8 +72,8 @@ class BodyShapeController {
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, [
                 'front_image' => $frontFile,
-                'side_image' => $sideFile,
-                'height_cm' => $height
+                'side_image'  => $sideFile,
+                'height_cm'   => $height
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             
@@ -69,28 +95,22 @@ class BodyShapeController {
                 $bodyShapeName = $result['body_shape'];
                 $measurements = $result['measurements'];
                 
-                // Get the Integer ID from our mapping
-                // We use ucwords/strtolower to ensure case-insensitive matching (e.g. "rectangle" matches "Rectangle")
-                // But your Python key usually sends Title Case.
                 $bodyShapeId = isset($shapeMapping[$bodyShapeName]) ? $shapeMapping[$bodyShapeName] : null;
 
                 if ($bodyShapeId) {
-                    // 5. Update Database (MySQLi Syntax)
                     $db = new Database();
                     $conn = $db->connect(); 
 
-                    // Query using '?' placeholders
                     $query = "UPDATE users SET BODY_SHAPE_ID = ? WHERE USER_ID = ?";
                     
                     $stmt = $conn->prepare($query);
                     
                     if ($stmt) {
-                        // Bind parameters: "ii" means (Integer, Integer)
                         $stmt->bind_param("ii", $bodyShapeId, $_SESSION['user_id']);
                         
                         if ($stmt->execute()) {
                             $_SESSION['bodyShapeResult'] = [
-                                'prediction' => ['body_shape' => $bodyShapeName],
+                                'prediction'   => ['body_shape' => $bodyShapeName],
                                 'measurements' => $measurements
                             ];
                             $_SESSION['successMessage'] = "Body shape analyzed successfully: " . $bodyShapeName;
