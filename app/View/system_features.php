@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -322,122 +323,244 @@
   </div>
 
   <div class="overlay" id="userProfileOverlay">
-    <div class="modal">
-      <div class="modal-header">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="account">
-            <i class="bi bi-person"></i> Account
-          </button>
-          <button class="tab-btn" data-tab="purchases">
-            <i class="bi bi-bag"></i> Purchases
-          </button>
-        </div>
-        <button class="close-btn" onclick="closeUserProfile()">
-          <i class="bi bi-x"></i>
+  <div class="modal">
+    <div class="modal-header">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="account">
+          <i class="bi bi-person"></i> Account
+        </button>
+        <button class="tab-btn" data-tab="purchases">
+          <i class="bi bi-bag"></i> Purchases
         </button>
       </div>
+      <button class="close-btn" onclick="closeUserProfile()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
 
-      <div class="modal-body">
-        <div class="tab-content active" id="account">
-          <div class="section-header">
-            <p class="section-title">Account Information</p>
-          </div>
-
-          <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
-            <div class="profile-section">
-              <div class="profile-avatar">
-                <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
-                  <img id="avatar-img" src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                <?php else: ?>
-                  <img id="avatar-img" src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
-                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>"><?= htmlspecialchars($userInitials) ?></div>
-                <?php endif; ?>
-                <button type="button" class="edit-avatar-btn" id="edit-avatar-btn" title="Change Profile Picture" style="display:none;">
-                  <i class="bi bi-camera"></i>
-                </button>
-                <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;">
-              </div>
-
-              <div class="profile-details">
-                <h2 id="display-name"><?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?></h2>
-                <div class="username" id="display-username">@<?= htmlspecialchars($user['USERNAME']); ?></div>
-                <p class="profile-tagline">Welcome to Amarelle — your personal style space.</p>
-              </div>
-            </div>
-
-            <div class="form-grid">
-              <div class="form-group">
-                <label>First Name</label>
-                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Last Name</label>
-                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Username</label>
-                <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Email</label>
-                <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled required>
-              </div>
-              <div class="form-group">
-                <label>Home Address</label>
-                <input type="text" name="address" id="address" value="<?= htmlspecialchars($user['ADDRESS']); ?>" disabled>
-              </div>
-              <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text" name="contacts" id="contacts" value="<?= htmlspecialchars($user['CONTACTS']); ?>" disabled>
-              </div>
-            </div>
-
-            <div class="form-actions">
-              <button type="button" id="editProfileBtn" class="btn btn-secondary">
-                <i class="bi bi-pencil-square"></i> Edit Profile
-              </button>
-              <button type="submit" name="update_profile" id="saveProfileBtn" class="btn btn-primary" style="display:none;">
-                <i class="bi bi-save"></i> Save Changes
-              </button>
-              <button type="button" id="cancelEditBtn" class="btn btn-outline" style="display:none;">
-                <i class="bi bi-x-circle"></i> Cancel
-              </button>
-            </div>
-          </form>
-
-          <div class="info-card">
-            <div class="info-card-header">
-              <i class="bi bi-palette"></i>
-              <h3>Style Profile</h3>
-            </div>
-            <?php if (empty($user['SEASON_TYPE']) && empty($user['BODY_TYPE'])): ?>
-              <div class="info-empty">
-                <p>You haven't completed your style analysis yet.</p>
-                <button class="btn" onclick="goToFeatures()">
-                  <i class="bi bi-magic"></i> Start Style Analysis
-                </button>
-              </div>
-            <?php else: ?>
-              <?php if (!empty($user['SEASON_TYPE'])): ?>
-                <div class="info-item">
-                  <span class="info-label">Color Season</span>
-                  <span class="info-value">
-                    <?php echo htmlspecialchars($user['SEASON_TYPE']); ?>
-                  </span>
-                </div>
-              <?php endif; ?>
-
-              <?php if (!empty($user['BODY_TYPE'])): ?>
-                <div class="info-item">
-                  <span class="info-label">Body Shape</span>
-                  <span class="info-value">
-                    <?php echo htmlspecialchars($user['BODY_TYPE']); ?>
-                  </span>
-                </div>
-              <?php endif; ?>
-            <?php endif; ?>
-          </div>
+    <div class="modal-body">
+      <!-- ========== ACCOUNT TAB ========== -->
+      <div class="tab-content active" id="account">
+        <div class="section-header">
+          <p class="section-title">Account Information</p>
         </div>
+
+        <!-- IMPORTANT: method POST + enctype for image upload -->
+        <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
+          <div class="profile-section">
+            <div class="profile-avatar">
+              <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
+                <img id="avatar-img"
+                     src="<?= htmlspecialchars($profileImagePath) ?>"
+                     alt="Profile Picture"
+                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+              <?php else: ?>
+                <img id="avatar-img"
+                     src="<?= htmlspecialchars($profileImagePath) ?>"
+                     alt="Profile Picture"
+                     style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
+                <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>">
+                  <?= htmlspecialchars($userInitials) ?>
+                </div>
+              <?php endif; ?>
+
+              <!-- camera button shown when editing (handled in JS) -->
+              <button type="button"
+                      class="edit-avatar-btn"
+                      id="edit-avatar-btn"
+                      title="Change Profile Picture"
+                      style="display:none;">
+                <i class="bi bi-camera"></i>
+              </button>
+
+              <!-- hidden file input for profile image -->
+              <input type="file"
+                     id="profile_image"
+                     name="profile_image"
+                     accept="image/*"
+                     style="display:none;">
+            </div>
+
+            <div class="profile-details">
+              <h2 id="display-name">
+                <?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+              </h2>
+              <div class="username" id="display-username">
+                @<?= htmlspecialchars($user['USERNAME']); ?>
+              </div>
+              <p class="profile-tagline">
+                Welcome to Amarelle — your personal style space.
+              </p>
+            </div>
+          </div>
+
+          <!-- ========== FORM FIELDS ========== -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label>First Name</label>
+              <input type="text"
+                     name="first_name"
+                     id="first_name"
+                     value="<?= htmlspecialchars($user['FIRST_NAME']); ?>"
+                     disabled
+                     required>
+            </div>
+
+            <div class="form-group">
+              <label>Last Name</label>
+              <input type="text"
+                     name="last_name"
+                     id="last_name"
+                     value="<?= htmlspecialchars($user['LAST_NAME']); ?>"
+                     disabled
+                     required>
+            </div>
+
+            <div class="form-group">
+              <label>Username</label>
+              <input type="text"
+                     name="username"
+                     id="username"
+                     value="<?= htmlspecialchars($user['USERNAME']); ?>"
+                     disabled
+                     required>
+            </div>
+
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email"
+                     name="email"
+                     id="email"
+                     value="<?= htmlspecialchars($user['EMAIL']); ?>"
+                     disabled
+                     required>
+            </div>
+
+            <!-- NEW: split address fields based on your users table -->
+
+            <div class="form-group">
+              <label>Street Address</label>
+              <input type="text"
+                     name="street_address"
+                     id="street_address"
+                     value="<?= htmlspecialchars($user['STREET_ADDRESS'] ?? ''); ?>"
+                     disabled>
+            </div>
+
+            <div class="form-group">
+              <label>Apartment / Unit (optional)</label>
+              <input type="text"
+                     name="apartment"
+                     id="apartment"
+                     value="<?= htmlspecialchars($user['APARTMENT'] ?? ''); ?>"
+                     disabled>
+            </div>
+
+            <div class="form-group">
+              <label>Province</label>
+              <input type="text"
+                     name="province"
+                     id="province"
+                     value="<?= htmlspecialchars($user['PROVINCE'] ?? ''); ?>"
+                     disabled>
+            </div>
+
+            <div class="form-group">
+              <label>City / Municipality</label>
+              <input type="text"
+                     name="city"
+                     id="city"
+                     value="<?= htmlspecialchars($user['CITY'] ?? ''); ?>"
+                     disabled>
+            </div>
+
+            <div class="form-group">
+              <label>Barangay</label>
+              <input type="text"
+                     name="barangay"
+                     id="barangay"
+                     value="<?= htmlspecialchars($user['BARANGAY'] ?? ''); ?>"
+                     disabled>
+            </div>
+
+            <div class="form-group">
+              <label>Postal Code</label>
+              <input type="text"
+                     name="postal_code"
+                     id="postal_code"
+                     value="<?= htmlspecialchars($user['POSTAL_CODE'] ?? ''); ?>"
+                     disabled>
+            </div>
+
+            <div class="form-group">
+              <label>Phone Number</label>
+              <input type="text"
+                     name="contacts"
+                     id="contacts"
+                     value="<?= htmlspecialchars($user['CONTACTS']); ?>"
+                     disabled>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="editProfileBtn" class="btn btn-secondary">
+              <i class="bi bi-pencil-square"></i> Edit Profile
+            </button>
+
+            <button type="submit"
+                    name="update_profile"
+                    id="saveProfileBtn"
+                    class="btn btn-primary"
+                    style="display:none;">
+              <i class="bi bi-save"></i> Save Changes
+            </button>
+
+            <button type="button"
+                    id="cancelEditBtn"
+                    class="btn btn-outline"
+                    style="display:none;">
+              <i class="bi bi-x-circle"></i> Cancel
+            </button>
+          </div>
+        </form>
+
+        <!-- ========== STYLE PROFILE CARD ========== -->
+        <div class="info-card">
+          <div class="info-card-header">
+            <i class="bi bi-palette"></i>
+            <h3>Style Profile</h3>
+          </div>
+
+          <?php if (empty($user['SEASON_TYPE']) && empty($user['BODY_TYPE'])): ?>
+            <div class="info-empty">
+              <p>You haven't completed your style analysis yet.</p>
+              <button class="btn" onclick="goToFeatures()">
+                <i class="bi bi-magic"></i> Start Style Analysis
+              </button>
+            </div>
+          <?php else: ?>
+            <?php if (!empty($user['SEASON_TYPE'])): ?>
+              <div class="info-item">
+                <span class="info-label">Color Season</span>
+                <span class="info-value">
+                  <?= htmlspecialchars($user['SEASON_TYPE']); ?>
+                </span>
+              </div>
+            <?php endif; ?>
+
+            <?php if (!empty($user['BODY_TYPE'])): ?>
+              <div class="info-item">
+                <span class="info-label">Body Shape</span>
+                <span class="info-value">
+                  <?= htmlspecialchars($user['BODY_TYPE']); ?>
+                </span>
+              </div>
+            <?php endif; ?>
+          <?php endif; ?>
+        </div>
+      </div>
+
+      
 
         <div class="tab-content" id="purchases">
           <div class="sub-tabs">
