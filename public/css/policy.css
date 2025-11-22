@@ -5,7 +5,7 @@
     box-sizing: border-box;
 }
 
-/* GLOBAL BODY */
+/* GLOBAL TYPO SCALE */
 body {
     font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: linear-gradient(180deg, #fff 0%, #D7C9AE 100%);
@@ -15,8 +15,10 @@ body {
     flex-direction: column;
     position: relative;
     overflow-x: hidden;
+    font-size: 13px; /* base smaller size for entire page */
 }
 
+/* Glow background */
 body::before,
 body::after {
     content: '';
@@ -41,7 +43,7 @@ body::after {
     left: -50px;
 }
 
-/* CONTENT CARD */
+/* CONTENT WRAPPER */
 .content {
     flex: 1;
     display: flex;
@@ -49,7 +51,7 @@ body::after {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 3rem 2rem;
+    padding: 2rem 1.5rem;
     position: relative;
     z-index: 10;
     animation: fadeInUp 0.8s ease-out;
@@ -70,46 +72,46 @@ body::after {
 /* PAGE TITLE */
 h1 {
     font-family: 'Minion', 'Times New Roman', Times, serif;
-    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-size: clamp(1.6rem, 3vw, 2.1rem); /* smaller & scalable */
     font-weight: 300;
     color: #1a1a1a;
-    margin-bottom: 2.5rem;
+    margin-bottom: 1.25rem; /* reduced spacing */
     letter-spacing: -0.02em;
     text-align: center;
 }
 
-h2 {
+/* POLICY HEADING INSIDE TEXT */
+.terms-text h2,
+.terms-text h3,
+.terms-text h4 {
     font-family: 'Minion', 'Times New Roman', Times, serif;
-    font-size: 30px;
-    font-weight: 310;
-    color: #1a1a1a;
-    letter-spacing: -0.02em;
-    margin: 1rem 0;
-}
-
-form p,
-li {
-    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 20px;
     font-weight: 400;
     color: #1a1a1a;
     letter-spacing: -0.02em;
-    margin: 1rem 0;
-
-
+    margin: 0.6rem 0 0.3rem; /* tighter spacing */
 }
 
-/* CARD */
+.terms-text h2 {
+    font-size: 1.1rem; /* smaller */
+}
+
+.terms-text h3 {
+    font-size: 1rem;
+}
+
+.terms-text h4 {
+    font-size: 0.95rem;
+}
+
+/* MAIN CARD */
 form {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 16px;
-    padding: 3rem 2.5rem;
-    height: 50%;
-
-    width: 50%;
+    padding: 1.8rem 1.5rem; /* reduced padding */
+    width: min(800px, 90vw); /* more usable width for text */
     border: 1px solid rgba(166, 135, 99, 0.15);
-    box-shadow: 0 20px 60px rgba(166, 135, 99, 0.1);
+    box-shadow: 0 16px 50px rgba(166, 135, 99, 0.12);
     position: relative;
     overflow: hidden;
 }
@@ -124,16 +126,65 @@ form::before {
     background: linear-gradient(90deg, #A68763, #D7C9AE, #A68763);
 }
 
-/* TAB CONTAINER */
+/* TEXT INSIDE FORM (OUTSIDE SCROLL AREA) */
+form p,
+form li {
+    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.85rem; /* smaller, tied to base */
+    font-weight: 400;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+    margin: 0.4rem 0; /* less spacing */
+}
+
+/* SCROLLABLE TERMS / PRIVACY AREA */
+.terms-text {
+    font-size: 0.8rem;          /* smaller policy text */
+    line-height: 1.4;           /* tighter but readable */
+    max-height: 360px;          /* fits nicely but still scrollable */
+    overflow-y: auto;
+    padding-right: 8px;         /* small padding for scrollbar */
+}
+
+/* Reduce spacing inside policy text */
+.terms-text p {
+    margin: 0.35rem 0;
+}
+
+.terms-text ul {
+    margin: 0.25rem 0 0.4rem 1rem;
+    padding-left: 0.4rem;
+}
+
+.terms-text li {
+    margin: 0.25rem 0;
+}
+
+/* BACK LINK */
+.back-link {
+    text-align: center;
+    color: #A68763;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    font-size: 0.8rem; /* smaller */
+}
+
+.back-link:hover {
+    color: #8B6F47;
+    text-decoration: underline;
+}
+
+/* If you use tabs later, keep them tiny & tidy */
 .tabs {
     display: flex;
     justify-content: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
 }
 
 .tab {
-    padding: 0.6rem 1.2rem;
+    padding: 0.35rem 0.8rem;
     border-radius: 12px;
     cursor: pointer;
     background: rgba(166, 135, 99, 0.1);
@@ -142,6 +193,7 @@ form::before {
     color: #2D2D2D;
     text-align: center;
     flex: 1;
+    font-size: 0.75rem; /* smaller */
 }
 
 .tab.active {
@@ -150,77 +202,52 @@ form::before {
     box-shadow: 0 4px 12px rgba(166, 135, 99, 0.2);
 }
 
-/* TAB CONTENT */
 .tab-content {
     max-height: 350px;
     overflow-y: auto;
-    padding-right: 10px;
-    font-size: 14px;
-    line-height: 1.6;
+    padding-right: 8px;
+    font-size: 0.8rem;
+    line-height: 1.45;
     color: #2D2D2D;
     transition: opacity 0.3s ease;
 }
 
-.tab-content h2 {
-    margin-top: 0;
-    font-size: 1.6rem;
-    font-weight: 500;
-    text-align: center;
-    margin-bottom: 1rem;
-}
-
-.tab-content ul {
-    margin-left: 1rem;
-    padding-left: 0;
-}
-
-.tab-content li {
-    margin-bottom: 0.8rem;
-}
-
-/* BACK LINK */
-.back-link {
-    text-align: center;
-    margin-bottom: 5rem;
-    color: #A68763;
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-.back-link:hover {
-    color: #8B6F47;
-    text-decoration: underline;
-}
-
-/* SCROLLBAR STYLING */
+/* SCROLLBAR STYLING (for terms box) */
+.terms-text::-webkit-scrollbar,
 .tab-content::-webkit-scrollbar {
-    width: 8px;
+    width: 6px;
 }
 
+.terms-text::-webkit-scrollbar-track,
 .tab-content::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0, 0, 0, 0.04);
     border-radius: 8px;
 }
 
+.terms-text::-webkit-scrollbar-thumb,
 .tab-content::-webkit-scrollbar-thumb {
-    background: rgba(166, 135, 99, 0.3);
+    background: rgba(166, 135, 99, 0.35);
     border-radius: 8px;
 }
 
+.terms-text::-webkit-scrollbar-thumb:hover,
 .tab-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(166, 135, 99, 0.5);
+    background: rgba(166, 135, 99, 0.55);
 }
 
-/* RESPONSIVE ADJUSTMENTS */
+/* RESPONSIVE */
 @media (max-width: 480px) {
-    .tab {
-        padding: 0.5rem;
-        font-size: 0.9rem;
+    form {
+        padding: 1.4rem 1.1rem;
     }
 
-    .tab-content {
-        max-height: 300px;
-        font-size: 13px;
+    .terms-text {
+        max-height: 320px;
+        font-size: 0.78rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
     }
 }

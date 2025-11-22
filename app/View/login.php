@@ -367,8 +367,8 @@ button[disabled]:hover {
 
             <p class="terms-text">
                 By creating your account or signing in, you agree to our<br>
-                <a href="index.php?page=policy">Terms and Conditions</a> &
-                <a href="index.php?page=policy">Privacy Policy</a>
+                <a href="index.php?page=policy">Privacy Policy & Cookies and Consent</a> 
+                
             </p>
 
         </form>
