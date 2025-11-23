@@ -1848,4 +1848,31 @@ body.collapsed-layout .results-container {
 
 .bi-camera {
   font-size: 18px;
+}/* === Analysis modals – specific tweaks === */
+#analysisErrorOverlay .analysis-modal {
+  max-width: 520px;        /* a bit narrower, easier to read */
+  width: 100%;
+  margin: 0 1rem;
+}
+
+#analysisErrorOverlay .modal-header {
+  align-items: center;
+  justify-content: space-between;
+}
+
+#analysisErrorOverlay .modal-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#analysisErrorOverlay .modal-body p {
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+#analysisErrorOverlay .modal-footer .btn {
+  margin-top: 0;
 }

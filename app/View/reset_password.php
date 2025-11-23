@@ -5,140 +5,161 @@
     <title>Forgot Password - Reset Password</title>
 
     <!-- ✅ Link external CSS -->
-    <link rel="stylesheet" href="public/css/login.css">
+    <link rel="stylesheet" href="public/css/forgot.css">
+    <link rel="stylesheet" href="public/css/register.css">
 
     <script>
-        function validateNewPassword() {
-            const newPassword = document.getElementById('new_password').value;
-            const requirements = document.getElementById('password-requirements');
-            const strengthContainer = document.getElementById('strength-container');
-            
-            if (newPassword.length > 0) {
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('resetForm');
+
+        const newPasswordInput = document.getElementById('new_password');
+        const confirmPasswordInput = document.getElementById('confirm_password');
+
+        const newPasswordError = document.getElementById('new-password-error');
+        const confirmPasswordError = document.getElementById('confirm-password-error');
+
+        const requirements = document.getElementById('password-requirements');
+        const strengthContainer = document.getElementById('strength-container');
+        const strengthBarFill = document.getElementById('strength-bar-fill');
+        const strengthText = document.getElementById('strength-text');
+
+        const reqLength   = document.getElementById('req-length');
+        const reqUpper    = document.getElementById('req-uppercase');
+        const reqLower    = document.getElementById('req-lowercase');
+        const reqNumber   = document.getElementById('req-number');
+        const reqSpecial  = document.getElementById('req-special');
+        const reqMatch    = document.getElementById('req-match');
+
+        // --- Update requirements + strength bar (same behaviour as registration, but with special char) ---
+        function updatePasswordRequirements() {
+            const pwd = newPasswordInput.value;
+
+            if (pwd.length > 0) {
                 requirements.classList.add('show');
                 strengthContainer.classList.add('show');
             } else {
                 requirements.classList.remove('show');
                 strengthContainer.classList.remove('show');
             }
-            
+
             const checks = {
-                length: newPassword.length >= 8,
-                upper: /[A-Z]/.test(newPassword),
-                lower: /[a-z]/.test(newPassword),
-                number: /[0-9]/.test(newPassword),
-                special: /[!@#$%^&*(),.?":{}|<>]/.test(newPassword)
+                length:  pwd.length >= 8,
+                upper:   /[A-Z]/.test(pwd),
+                lower:   /[a-z]/.test(pwd),
+                number:  /[0-9]/.test(pwd),
+                special: /[!@#$%^&*(),.?":{}|<>]/.test(pwd)
             };
 
-            document.getElementById('req-length').className = checks.length ? 'valid' : '';
-            document.getElementById('req-uppercase').className = checks.upper ? 'valid' : '';
-            document.getElementById('req-lowercase').className = checks.lower ? 'valid' : '';
-            document.getElementById('req-number').className = checks.number ? 'valid' : '';
-            document.getElementById('req-special').className = checks.special ? 'valid' : '';
+            reqLength.classList.toggle('valid',  checks.length);
+            reqUpper.classList.toggle('valid',   checks.upper);
+            reqLower.classList.toggle('valid',   checks.lower);
+            reqNumber.classList.toggle('valid',  checks.number);
+            reqSpecial.classList.toggle('valid', checks.special);
 
             const metCount = Object.values(checks).filter(Boolean).length;
             const percentage = (metCount / 5) * 100;
-            
-            const strengthBar = document.getElementById('strength-bar-fill');
-            const strengthText = document.getElementById('strength-text');
-            
-            strengthBar.style.width = percentage + '%';
-            strengthBar.className = 'strength-bar-fill';
-            
-            if (percentage === 0) {
-                strengthText.textContent = '';
-            } else if (percentage <= 40) {
-                strengthBar.classList.add('strength-weak');
+
+            // reset bar + text
+            strengthBarFill.style.width = percentage + '%';
+            strengthBarFill.className = 'strength-bar-fill';
+            strengthText.textContent = '';
+
+            if (percentage === 0) return;
+
+            if (percentage <= 40) {
+                strengthBarFill.classList.add('strength-weak');
                 strengthText.textContent = 'Weak (' + Math.round(percentage) + '%)';
-                strengthText.style.color = '#ff4444';
+                strengthText.style.color = '#F97373';
             } else if (percentage <= 60) {
-                strengthBar.classList.add('strength-fair');
+                strengthBarFill.classList.add('strength-fair');
                 strengthText.textContent = 'Fair (' + Math.round(percentage) + '%)';
-                strengthText.style.color = '#ff8800';
+                strengthText.style.color = '#FDBA74';
             } else if (percentage < 100) {
-                strengthBar.classList.add('strength-good');
+                strengthBarFill.classList.add('strength-good');
                 strengthText.textContent = 'Good (' + Math.round(percentage) + '%)';
-                strengthText.style.color = '#ffbb00';
+                strengthText.style.color = '#FACC15';
             } else {
-                strengthBar.classList.add('strength-strong');
+                strengthBarFill.classList.add('strength-strong');
                 strengthText.textContent = 'Strong (100%)';
-                strengthText.style.color = '#00cc00';
-            }
-
-            return Object.values(checks).every(Boolean);
-        }
-
-        function validatePasswordMatch() {
-            const newPassword = document.getElementById('new_password').value;
-            const confirmPassword = document.getElementById('confirm_password').value;
-
-            const matchValid = newPassword === confirmPassword && newPassword.length > 0;
-            document.getElementById('req-match').className = matchValid ? 'valid' : '';
-            
-            return matchValid;
-        }
-
-        function handleSubmit(event) {
-            event.preventDefault();
-            
-            const newPassword = document.getElementById('new_password');
-            const confirmPassword = document.getElementById('confirm_password');
-            const newPasswordError = document.getElementById('new-password-error');
-            const confirmPasswordError = document.getElementById('confirm-password-error');
-            
-            newPassword.classList.remove('error');
-            confirmPassword.classList.remove('error');
-            newPasswordError.classList.remove('show');
-            confirmPasswordError.classList.remove('show');
-            
-            let isValid = true;
-
-            if (!validateNewPassword()) {
-                newPassword.classList.add('error');
-                newPasswordError.textContent = 'Password must meet all requirements.';
-                newPasswordError.classList.add('show');
-                isValid = false;
-            }
-            
-            if (!validatePasswordMatch()) {
-                confirmPassword.classList.add('error');
-                confirmPasswordError.textContent = 'Passwords do not match.';
-                confirmPasswordError.classList.add('show');
-                isValid = false;
-            }
-            
-            if (isValid) {
-                event.target.submit();
+                strengthText.style.color = '#22C55E';
             }
         }
 
-        window.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('new_password').addEventListener('input', function() {
-                validateNewPassword();
-                validatePasswordMatch();
-            });
+        // --- Validate password rules (same rules you use in register) ---
+        const passwordRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
 
-            document.getElementById('confirm_password').addEventListener('input', validatePasswordMatch);
+        function validatePasswordField() {
+            const pwd = newPasswordInput.value;
+            const valid = passwordRegex.test(pwd);
+
+            newPasswordInput.classList.toggle('error', !valid);
+            newPasswordError.textContent = valid ? '' : 'Password must meet all requirements.';
+            newPasswordError.classList.toggle('show', !valid);
+
+            return valid;
+        }
+
+        function validateMatchField() {
+            const pwd = newPasswordInput.value;
+            const confirm = confirmPasswordInput.value;
+
+            const match = pwd.length > 0 && pwd === confirm;
+
+            confirmPasswordInput.classList.toggle('error', !match);
+            confirmPasswordError.textContent = match ? '' : 'Passwords do not match.';
+            confirmPasswordError.classList.toggle('show', !match);
+
+            reqMatch.classList.toggle('valid', match);
+
+            return match;
+        }
+
+        // --- Live updates ---
+        newPasswordInput.addEventListener('input', function () {
+            updatePasswordRequirements();
+            validatePasswordField();
+            validateMatchField();
         });
+
+        confirmPasswordInput.addEventListener('input', validateMatchField);
+
+        // --- Submit handler (similar behaviour to your register form) ---
+        form.addEventListener('submit', function (e) {
+            let hasError = false;
+
+            updatePasswordRequirements();
+
+            if (!validatePasswordField()) hasError = true;
+            if (!validateMatchField()) hasError = true;
+
+            if (hasError) {
+                e.preventDefault();
+            }
+            // else: let the form submit normally (PHP will handle the reset)
+        });
+    });
     </script>
 </head>
 <body>
     <div class="content">
         <h1>Reset Password</h1>
 
-        <!-- ✅ New Success Message -->
-        <div class="alert success" style="margin-bottom: 15px; background: #d4edda; color: #155724; padding: 10px; border-radius: 5px; text-align:center;">
-            ✅ You can now change your password.
+        <!-- Success info (you can hide/show with PHP condition) -->
+        <div class="alert success" style="margin-bottom: 15px; text-align:center;">
+            You can now change your password.
         </div>
 
-        <form method="POST" action="" onsubmit="return handleSubmit(event);">
-            <label>New Password</label>
+        <form method="POST" action="" id="resetForm">
+            <label for="new_password">New Password</label>
             <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required>
             <span class="error-message" id="new-password-error"></span>
 
-            <label>Confirm Password</label>
+            <label for="confirm_password">Confirm Password</label>
             <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required>
-            <span class="error-message" id="confirm-password-error"></span>
 
+
+            <!-- Password strength (same style as we set in CSS) -->
             <div id="strength-container" class="password-strength-container">
                 <div class="strength-bar">
                     <div id="strength-bar-fill" class="strength-bar-fill"></div>
@@ -146,6 +167,7 @@
                 <div id="strength-text" class="strength-text"></div>
             </div>
 
+            <!-- Same requirement list as in register step -->
             <div class="password-requirements" id="password-requirements">
                 <div id="req-length">At least 8 characters</div>
                 <div id="req-uppercase">One uppercase letter</div>
@@ -161,12 +183,5 @@
         </form>
     </div>
 
-    <div id="successModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-icon">✓</div>
-            <h2>Password Changed!</h2>
-            <p>Your password has been successfully reset. Redirecting you to login...</p>
-        </div>
-    </div>
 </body>
 </html>

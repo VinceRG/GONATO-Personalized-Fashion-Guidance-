@@ -295,6 +295,17 @@ button[disabled]:hover {
         letter-spacing: 6px;
     }
 }
+
+.footer {
+    padding: 2rem 3rem;
+    text-align: center;
+    color: #78716C;
+    font-size: 0.85rem;
+    font-weight: 300;
+    position: relative;
+    z-index: 10;
+    font-family: 'Lexend', sans-serif;
+}
     </style>
 </head>
 

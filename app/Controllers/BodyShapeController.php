@@ -33,14 +33,14 @@ class BodyShapeController {
             // Basic height presence check (optional but harmless)
             if ($height === null || $height === '') {
                 $_SESSION['errorMessage'] = "Please provide your height.";
-                header("Location: index.php?page=features");
+                header("Location: index.php?page=features#features");
                 exit;
             }
 
             // Validate files exist (user-friendly message)
             if (empty($_FILES['front_image']['tmp_name']) || empty($_FILES['side_image']['tmp_name'])) {
                 $_SESSION['errorMessage'] = "Please upload both front and side images.";
-                header("Location: index.php?page=features");
+                header("Location: index.php?page=features#features");
                 exit;
             }
 
@@ -50,7 +50,7 @@ class BodyShapeController {
                 $sideMime  = UploadSecurity::validateImageAndGetMime('side_image',  5_000_000);
             } catch (RuntimeException $e) {
                 $_SESSION['errorMessage'] = $e->getMessage();
-                header("Location: index.php?page=features");
+               header("Location: index.php?page=features#features");
                 exit;
             }
             
@@ -83,7 +83,8 @@ class BodyShapeController {
             if (curl_errno($ch)) {
                 $_SESSION['errorMessage'] = "Server Connection Error. Is the Python app.py running?";
                 curl_close($ch);
-                header("Location: index.php?page=features");
+                header("Location: index.php?page=features#features");
+
                 exit;
             }
             curl_close($ch);
@@ -113,7 +114,8 @@ class BodyShapeController {
                                 'prediction'   => ['body_shape' => $bodyShapeName],
                                 'measurements' => $measurements
                             ];
-                            $_SESSION['successMessage'] = "Body shape analyzed successfully: " . $bodyShapeName;
+                            $_SESSION['successMessage']    = "Body shape analyzed successfully: " . $bodyShapeName;
+                            $_SESSION['show_body_modal']   = true;   // 👈 NEW: trigger body modal one time
                         } else {
                             $_SESSION['errorMessage'] = "Database Error: " . $stmt->error;
                         }

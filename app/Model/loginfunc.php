@@ -50,7 +50,7 @@ class User {
                     return ['success' => false, 'message' => 'Account locked after 3 failed login attempts. Please contact support.'];
                 }
 
-                return ['success' => false, 'message' => "Incorrect password. Attempt $failedAttempts of 3."];
+                return ['success' => false, 'message' => "Incorrect password. "];
             }
         } else {
             return ['success' => false, 'message' => 'Account not found.'];

@@ -129,13 +129,14 @@
                             <input type="text" id="postal_code" name="postal_code" placeholder="e.g., 1101" maxlength="10">
                             <span class="error-message" id="postal_code-error"></span>
                         </div>
-                    </div>
-
+                   
                     <div class="form-group">
                         <label for="contact_num">Contact Number</label>
                         <input type="text" id="contact_num" name="contact_num" maxlength="11" placeholder="09XX XXX XXXX" value="0">
                         <span class="error-message" id="contact_num-error"></span>
                     </div>
+                     </div>
+
 
                     <div class="form-buttons">
                         <button type="button" class="btn btn-secondary" id="prevStep2">Back</button>
