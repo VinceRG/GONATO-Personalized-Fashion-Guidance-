@@ -24,23 +24,32 @@
 </head>
 
 <body>
-  <?php
-    // Flash messages from analysis controllers (body + color)
-    $flashSuccess = $_SESSION['successMessage']      ?? '';
-    $flashError   = $_SESSION['errorMessage']        ?? '';
+<?php
+  // Flash messages from analysis controllers (body + color)
+  $flashSuccess = $_SESSION['successMessage']      ?? '';
+  $flashError   = $_SESSION['errorMessage']        ?? '';
 
-    // Stored analysis results (used in cards + modals)
-    $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
-    $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
+  // Stored analysis results (used in cards + modals)
+  $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
+  $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
 
-    // One-time modal triggers (set by controllers after analysis)
-    $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
-    $showColorModal = $_SESSION['show_color_modal'] ?? false;
+  // One-time modal triggers (set by controllers after analysis)
+  $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
+  $showColorModal = $_SESSION['show_color_modal'] ?? false;
 
-    // Clear only flash + flags (results stay for inline display)
-    unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
-    unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
-  ?>
+  // NEW: keep account modal open after profile update
+  $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
+
+  // Map to variables used below
+  $successMessage = $flashSuccess;
+  $errorMessage   = $flashError;
+
+  // Clear only flash + flags (results stay for inline display)
+  unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
+  unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
+  unset($_SESSION['keep_profile_open']); // clear this one-time flag
+?>
+
 
   <?php if (isset($successMessage) && $successMessage): ?>
     <div class="notification success"><?= htmlspecialchars($successMessage) ?></div>
@@ -166,7 +175,7 @@
           </div>
 
           <div class="clothes-grid">
-            <div class="clothes-item catalog-item">
+            <div class="clothes-item catalog-item" data-category="Tops">
               <img src="images/item1.jpg" alt="Clothing Item 1">
               <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
               <div class="clothes-caption">
@@ -175,7 +184,7 @@
               </div>
             </div>
 
-            <div class="clothes-item catalog-item">
+            <div class="clothes-item catalog-item" data-category="Bottoms">
               <img src="images/item2.jpg" alt="Clothing Item 2">
               <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
               <div class="clothes-caption">
@@ -184,7 +193,7 @@
               </div>
             </div>
 
-            <div class="clothes-item catalog-item">
+            <div class="clothes-item catalog-item" data-category="Bottoms">
               <img src="images/item3.jpg" alt="Clothing Item 3">
               <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
               <div class="clothes-caption">
@@ -193,7 +202,7 @@
               </div>
             </div>
 
-            <div class="clothes-item catalog-item">
+            <div class="clothes-item catalog-item" data-category="Tops">
               <img src="images/item1.jpg" alt="Clothing Item 4">
               <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
               <div class="clothes-caption">
@@ -337,7 +346,10 @@
   </div>
 
   <!-- USER PROFILE MODAL -->
-  <div class="overlay" id="userProfileOverlay">
+  <div class="overlay"
+       id="userProfileOverlay"
+       data-keep-open="<?= $keepProfileOpen ? '1' : '0' ?>">
+
     <div class="modal">
       <div class="modal-header">
         <div class="tabs">
@@ -465,31 +477,54 @@
                        disabled>
               </div>
 
-              <div class="form-group">
+              <div class="form-group address-group">
                 <label>Province</label>
-                <input type="text"
-                       name="province"
-                       id="province"
-                       value="<?= htmlspecialchars($user['PROVINCE'] ?? ''); ?>"
-                       disabled>
+                <select
+                  name="province"
+                  id="province"
+                  class="address-select"
+                  disabled
+                  required
+                  data-current-province="<?= htmlspecialchars($user['PROVINCE'] ?? '', ENT_QUOTES) ?>"
+                >
+                  <option value="" disabled>Select Province</option>
+                  <option value="Metro Manila">Metro Manila</option>
+                  <option value="Cavite">Cavite</option>
+                  <option value="Laguna">Laguna</option>
+                  <option value="Bulacan">Bulacan</option>
+                  <option value="Rizal">Rizal</option>
+                </select>
+                <small class="field-error">Province is required.</small>
               </div>
 
-              <div class="form-group">
-                <label>City / Municipality</label>
-                <input type="text"
-                       name="city"
-                       id="city"
-                       value="<?= htmlspecialchars($user['CITY'] ?? ''); ?>"
-                       disabled>
+              <div class="form-group address-group">
+                <label>City / Town</label>
+                <select
+                  name="city"
+                  id="city"
+                  class="address-select"
+                  disabled
+                  required
+                  data-current-city="<?= htmlspecialchars($user['CITY'] ?? '', ENT_QUOTES) ?>"
+                >
+                  <option value="" disabled>Select City</option>
+                </select>
+                <small class="field-error">City/Town is required.</small>
               </div>
 
-              <div class="form-group">
+              <div class="form-group address-group">
                 <label>Barangay</label>
-                <input type="text"
-                       name="barangay"
-                       id="barangay"
-                       value="<?= htmlspecialchars($user['BARANGAY'] ?? ''); ?>"
-                       disabled>
+                <select
+                  name="barangay"
+                  id="barangay"
+                  class="address-select"
+                  disabled
+                  required
+                  data-current-barangay="<?= htmlspecialchars($user['BARANGAY'] ?? '', ENT_QUOTES) ?>"
+                >
+                  <option value="" disabled>Select Barangay</option>
+                </select>
+                <small class="field-error">Barangay is required.</small>
               </div>
 
               <div class="form-group">

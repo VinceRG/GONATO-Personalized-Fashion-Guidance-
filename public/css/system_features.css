@@ -1848,9 +1848,12 @@ body.collapsed-layout .results-container {
 
 .bi-camera {
   font-size: 18px;
-}/* === Analysis modals – specific tweaks === */
+}
+
+/* === Analysis modals – specific tweaks === */
 #analysisErrorOverlay .analysis-modal {
-  max-width: 520px;        /* a bit narrower, easier to read */
+  max-width: 520px;
+  /* a bit narrower, easier to read */
   width: 100%;
   margin: 0 1rem;
 }
@@ -1875,4 +1878,35 @@ body.collapsed-layout .results-container {
 
 #analysisErrorOverlay .modal-footer .btn {
   margin-top: 0;
+}
+
+/* ------------ ADDRESS ERROR STYLE (MATCHES YOUR SCREENSHOT) ------------ */
+
+.address-group .address-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+/* when error */
+.address-group.has-error .address-select {
+  border-color: #e53e3e;
+  /* red border */
+  background-color: #fff5f5;
+  /* light red bg */
+}
+
+/* error text */
+.field-error {
+  display: none;
+  color: #e53e3e;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* show only when has-error */
+.address-group.has-error .field-error {
+  display: block;
 }

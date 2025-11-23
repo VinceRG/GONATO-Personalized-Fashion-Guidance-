@@ -1,4 +1,4 @@
-<?php
+<?php 
 // app/Model/features.php
 
 // Start session if not already started
@@ -14,7 +14,7 @@ if (!isset($_SESSION['user_id'])) {
 
 require_once __DIR__ . '/../Core/Database.php';
 
-$db  = new Database();
+$db   = new Database();
 $conn = $db->connect();
 
 $userId = $_SESSION['user_id'];
@@ -23,25 +23,25 @@ $userId = $_SESSION['user_id'];
 // 1) HANDLE PROFILE UPDATE (including profile image upload)
 // ---------------------------------------------------------------------
 $successMessage = $successMessage ?? '';
-$errorMessage   = $errorMessage ?? '';
+$errorMessage   = $errorMessage   ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
     // Basic sanitization of text fields
-    $firstName = trim($_POST['first_name'] ?? '');
-    $lastName  = trim($_POST['last_name'] ?? '');
-    $username  = trim($_POST['username'] ?? '');
-    $email     = trim($_POST['email'] ?? '');
-    $address   = trim($_POST['address'] ?? '');
-    $contacts  = trim($_POST['contacts'] ?? '');
-    $street    = trim($_POST['street_address'] ?? '');
-$apartment = trim($_POST['apartment'] ?? '');
-$province  = trim($_POST['province'] ?? '');
-$city      = trim($_POST['city'] ?? '');
-$barangay  = trim($_POST['barangay'] ?? '');
-$postal    = trim($_POST['postal_code'] ?? '');
-$contacts  = trim($_POST['contacts'] ?? '');
+    $firstName = trim($_POST['first_name']     ?? '');
+    $lastName  = trim($_POST['last_name']      ?? '');
+    $username  = trim($_POST['username']       ?? '');
+    $email     = trim($_POST['email']          ?? '');
+    $address   = trim($_POST['address']        ?? ''); // combined / extra address, optional
+    $contacts  = trim($_POST['contacts']       ?? '');
 
+    // Detailed address fields
+    $street    = trim($_POST['street_address'] ?? '');
+    $apartment = trim($_POST['apartment']      ?? '');
+    $province  = trim($_POST['province']       ?? '');
+    $city      = trim($_POST['city']           ?? '');
+    $barangay  = trim($_POST['barangay']       ?? '');
+    $postal    = trim($_POST['postal_code']    ?? '');
 
     // Simple validation (you can expand this)
     if ($firstName === '' || $lastName === '' || $username === '' || $email === '') {
@@ -54,8 +54,8 @@ $contacts  = trim($_POST['contacts'] ?? '');
             $fileInfo = $_FILES['profile_image'];
 
             // Allowed extensions
-            $ext = strtolower(pathinfo($fileInfo['name'], PATHINFO_EXTENSION));
-            $allowed = ['jpg','jpeg','png','webp'];
+            $ext     = strtolower(pathinfo($fileInfo['name'], PATHINFO_EXTENSION));
+            $allowed = ['jpg', 'jpeg', 'png', 'webp'];
 
             if (!in_array($ext, $allowed)) {
                 $errorMessage = "Invalid image type. Please upload JPG, PNG, or WEBP.";
@@ -68,58 +68,113 @@ $contacts  = trim($_POST['contacts'] ?? '');
                 }
 
                 $newImageFileName = 'user_' . $userId . '_' . time() . '.' . $ext;
-                $targetPath = $uploadDir . $newImageFileName;
+                $targetPath       = $uploadDir . $newImageFileName;
 
                 if (!move_uploaded_file($fileInfo['tmp_name'], $targetPath)) {
-                    $errorMessage = "Failed to upload profile image.";
+                    $errorMessage     = "Failed to upload profile image.";
                     $newImageFileName = null; // don't update DB image
                 }
             }
         }
 
         if ($errorMessage === '') {
+            // ---------------------------------------------------------
             // Build UPDATE query (with or without new image)
+            // ---------------------------------------------------------
+
             if ($newImageFileName) {
+                // ✅ WITH PROFILE_IMAGE
                 $sql = "UPDATE users 
-                        SET FIRST_NAME = ?, LAST_NAME = ?, USERNAME = ?, EMAIL = ?, ADDRESS = ?, CONTACTS = ?, PROFILE_IMAGE = ?
+                        SET FIRST_NAME     = ?, 
+                            LAST_NAME      = ?, 
+                            USERNAME       = ?, 
+                            EMAIL          = ?, 
+                            CONTACTS       = ?, 
+                            STREET_ADDRESS = ?, 
+                            APARTMENT      = ?, 
+                            PROVINCE       = ?, 
+                            CITY           = ?, 
+                            BARANGAY       = ?, 
+                            POSTAL_CODE    = ?, 
+                            ADDRESS        = ?, 
+                            PROFILE_IMAGE  = ?
                         WHERE USER_ID = ?";
+
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param(
-                    "sssssssi",
-                    $firstName,
-                    $lastName,
-                    $username,
-                    $email,
-                    $address,
-                    $contacts,
-                    $newImageFileName,
-                    $userId
+                    "sssssssssssssi",  // 13 strings + 1 int = 14 chars
+                    $firstName,        // 1
+                    $lastName,         // 2
+                    $username,         // 3
+                    $email,            // 4
+                    $contacts,         // 5
+                    $street,           // 6
+                    $apartment,        // 7
+                    $province,         // 8
+                    $city,             // 9
+                    $barangay,         // 10
+                    $postal,           // 11
+                    $address,          // 12
+                    $newImageFileName, // 13
+                    $userId            // 14 (int)
                 );
             } else {
+                // ✅ WITHOUT PROFILE_IMAGE
                 $sql = "UPDATE users 
-                        SET FIRST_NAME = ?, LAST_NAME = ?, USERNAME = ?, EMAIL = ?, ADDRESS = ?, CONTACTS = ?
+                        SET FIRST_NAME     = ?, 
+                            LAST_NAME      = ?, 
+                            USERNAME       = ?, 
+                            EMAIL          = ?, 
+                            CONTACTS       = ?, 
+                            STREET_ADDRESS = ?, 
+                            APARTMENT      = ?, 
+                            PROVINCE       = ?, 
+                            CITY           = ?, 
+                            BARANGAY       = ?, 
+                            POSTAL_CODE    = ?, 
+                            ADDRESS        = ?
                         WHERE USER_ID = ?";
+
                 $stmt = $conn->prepare($sql);
                 $stmt->bind_param(
-                    "ssssssi",
-                    $firstName,
-                    $lastName,
-                    $username,
-                    $email,
-                    $address,
-                    $contacts,
-                    $userId
+                    "ssssssssssssi",  // 12 strings + 1 int = 13 chars
+                    $firstName,   // 1
+                    $lastName,    // 2
+                    $username,    // 3
+                    $email,       // 4
+                    $contacts,    // 5
+                    $street,      // 6
+                    $apartment,   // 7
+                    $province,    // 8
+                    $city,        // 9
+                    $barangay,    // 10
+                    $postal,      // 11
+                    $address,     // 12
+                    $userId       // 13 (int)
                 );
             }
 
             if ($stmt->execute()) {
                 $successMessage = "Profile updated successfully.";
             } else {
-                $errorMessage = "Failed to update profile. Please try again.";
+                $errorMessage = "Failed to update profile: " . $stmt->error;
             }
             $stmt->close();
         }
     }
+
+    // -----------------------------------------------------------------
+    // Flash messages into session so the view can read them
+    // -----------------------------------------------------------------
+    if ($successMessage !== '') {
+        $_SESSION['successMessage'] = $successMessage;
+    }
+    if ($errorMessage !== '') {
+        $_SESSION['errorMessage'] = $errorMessage;
+    }
+
+    // ⭐ IMPORTANT: keep user account modal open after POST + reload
+    $_SESSION['keep_profile_open'] = true;
 }
 
 // ---------------------------------------------------------------------
@@ -138,7 +193,7 @@ $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $userId);
 $stmt->execute();
 $result = $stmt->get_result();
-$user = $result->fetch_assoc();
+$user   = $result->fetch_assoc();
 $stmt->close();
 
 // Calculate user initials for profile picture fallback
@@ -174,5 +229,3 @@ if ($hasColorDb && !$hasColorSession) {
         'palette' => []
     ];
 }
-
-?>
