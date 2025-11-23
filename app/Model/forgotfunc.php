@@ -24,6 +24,7 @@ class ForgotModel {
                 'message' => 'Email not found.'
             ];
         }
+        
 
         // ✅ Create OTP
         $otp = rand(100000, 999999);

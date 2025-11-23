@@ -15,20 +15,22 @@ class AdminApiController
     public function __construct()
     {
         try {
-            // Use PDO for AdminController
-            $pdo = new PDO(
-                "mysql:host=localhost;port=3307;dbname=Amarelle",
-                "root",
-                "root"
-            );
-            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+            // Use MYSQLI for AdminController and Models
+            $mysqli = new mysqli("localhost", "root", "root", "Amarelle", 3307);
+            
+            if ($mysqli->connect_error) {
+                // If connection fails, throw an exception
+                throw new Exception("MySQLi Connection failed: " . $mysqli->connect_error);
+            }
+            
+            // Pass the mysqli object to AdminController
+            $this->adminController = new AdminController($mysqli);
 
-            $this->adminController = new AdminController($pdo);
         } catch (Exception $e) {
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode([
+                // Change the error message to reflect mysqli failure
                 'error' => 'Database connection failed: ' . $e->getMessage()
             ]);
             exit;
@@ -68,13 +70,17 @@ class AdminApiController
                 $this->adminController->getProductsOnly();
             }
             elseif ($action === 'addProduct' && $method === 'POST') {
-                $data = json_decode(file_get_contents('php://input'), true);
+                $data = $_POST; // Collects all text fields from the FormData
+                $data['product_image_file'] = $_FILES['product_image'] ?? null; // Collects the file data
                 $this->adminController->addProduct($data);
             }
-            elseif ($action === 'updateProduct' && $method === 'PUT' && $id) {
-                $data = json_decode(file_get_contents('php://input'), true);
+            elseif ($action === 'updateProduct' && $method === 'POST' && $id) {
+                $data = $_POST; // Collects all text fields from the FormData
+                $data['product_image_file'] = $_FILES['product_image'] ?? null; // Collects the file data
                 $this->adminController->updateProduct((int)$id, $data);
             }
+
+
             elseif ($action === 'deleteProduct' && $method === 'DELETE' && $id) {
                 $this->adminController->deleteProduct((int)$id);
             }
@@ -93,6 +99,11 @@ class AdminApiController
             elseif ($action === 'bodyShapes' && $method === 'GET') {
                 $this->adminController->getBodyShapes();
             }
+            // ============= SEASONS ROUTE ============
+            elseif ($action === 'seasons' && $method === 'GET') {
+                $this->adminController->getSeasons();
+            }
+
 
             // ============= INVENTORY ROUTES =============
             elseif ($action === 'addInventory' && $method === 'POST') {

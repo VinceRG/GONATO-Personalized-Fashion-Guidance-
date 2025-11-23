@@ -24,6 +24,8 @@ if (isset($_GET['api'])) {
     }
 }
 
+
+
 // Get the requested page from the URL, default to 'landing'
 $page = $_GET['page'] ?? 'landing';
 
