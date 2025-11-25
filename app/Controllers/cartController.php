@@ -105,7 +105,7 @@ echo json_encode([
         return;
     }
 
-    $imageBasePath = '/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/image/';
+    $imageBasePath = '../public/image/';
     $product = [
         'id'    => (int)$productRow['PRODUCT_ID'],
         'name'  => $productRow['PRODUCT_NAME'],
@@ -233,7 +233,7 @@ public function getCartItems() {
     $totalAmount = 0;
     $totalQty = 0;
 
-    $imageBasePath = '/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/image/';
+    $imageBasePath = '../public/image/';
 
     while ($row = $result->fetch_assoc()) {
         $lineTotal = $row['PRICE'] * $row['QUANTITY'];
