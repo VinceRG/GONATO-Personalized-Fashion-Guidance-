@@ -1,18 +1,4 @@
-<?php
-session_start();
 
-if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
-    session_unset();
-    session_destroy();
-
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Pragma: no-cache");
-    header("Expires: 0");
-
-    header("Location: index.php");
-    exit();
-}
-?>
 
 
 <!DOCTYPE html>
@@ -27,6 +13,24 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
 </head>
 <body>
+     <?php if (isset($_GET['logged_out']) && $_GET['logged_out'] == '1'): ?>
+        <div class="side-alert" id="logoutAlert">
+            <i class="bi bi-check-circle"></i>
+            <span>You have successfully logged out.</span>
+        </div>
+
+        <script>
+            // Show animation after slight delay
+            setTimeout(() => {
+                document.getElementById('logoutAlert').classList.add('show');
+            }, 200);
+
+            // Auto-hide after 4 seconds
+            setTimeout(() => {
+                document.getElementById('logoutAlert').classList.remove('show');
+            }, 4200);
+        </script>
+    <?php endif; ?>
     <nav>
         <div class="nav-brand">[Logo] Amarelle</div>
         <div class="nav-links">

@@ -30,7 +30,7 @@ class ColorAnalysisController {
             
             if (empty($_FILES['face_image']['tmp_name'])) {
                 $_SESSION['errorMessage'] = "Please upload a face image.";
-                header("Location: index.php?page=features");
+                header("Location: index.php?page=features#features");
                 exit;
             }
 
@@ -39,7 +39,7 @@ class ColorAnalysisController {
                 $mime = UploadSecurity::validateImageAndGetMime('face_image', 5_000_000); // 5 MB
             } catch (RuntimeException $e) {
                 $_SESSION['errorMessage'] = $e->getMessage();
-                header("Location: index.php?page=features");
+                header("Location: index.php?page=features#features");
                 exit;
             }
             
@@ -65,7 +65,8 @@ class ColorAnalysisController {
             if (curl_errno($ch)) {
                 $_SESSION['errorMessage'] = "Server Connection Error: " . curl_error($ch);
                 curl_close($ch);
-                header("Location: index.php?page=features");
+               header("Location: index.php?page=features#features");
+
                 exit;
             }
             curl_close($ch);
@@ -75,7 +76,7 @@ class ColorAnalysisController {
 
             if ($httpCode === 200 && isset($result['status']) && $result['status'] === 'success') {
                 $seasonName = $result['season'];
-                $palette = $result['palette']; 
+                $palette    = $result['palette']; 
                 
                 // Get ID from mapping
                 $seasonId = isset($seasonMapping[$seasonName]) ? $seasonMapping[$seasonName] : null;
@@ -94,10 +95,11 @@ class ColorAnalysisController {
                         
                         if ($stmt->execute()) {
                             $_SESSION['colorAnalysisResult'] = [
-                                'season' => $seasonName,
+                                'season'  => $seasonName,
                                 'palette' => $palette
                             ];
-                            $_SESSION['successMessage'] = "Success! You are a " . $seasonName;
+                            $_SESSION['successMessage']    = "Success! You are a " . $seasonName;
+                            $_SESSION['show_color_modal']  = true;   // 👈 NEW: trigger color modal one time
                         } else {
                             $_SESSION['errorMessage'] = "Database Save Error: " . $stmt->error;
                         }
