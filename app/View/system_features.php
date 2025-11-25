@@ -1,61 +1,3 @@
-<?php
-session_start();
-require_once __DIR__ . '/../Model/features.php'; // ✅ Corrected path
-
-if (!isset($_SESSION['user_id'])) {
-    header("Location: index.php?page=login");
-    exit();
-}
-
-$user_id = $_SESSION['user_id'];
-$query = "SELECT * FROM users WHERE USER_ID = ?";
-$stmt = $conn->prepare($query);
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$result = $stmt->get_result();
-$user = $result->fetch_assoc();
-
-// Helper function to get profile image path
-function getProfileImagePath($user) {
-    if (!empty($user['PROFILE_IMAGE'])) {
-        // Remove any query parameters first for file existence check
-        $imagePath = "uploads/profile_images/" . $user['PROFILE_IMAGE'];
-        
-        // Check if file exists
-        if (file_exists($imagePath)) {
-            return $imagePath;
-        } else {
-            // Try alternative path
-            $altPath = "../uploads/profile_images/" . $user['PROFILE_IMAGE'];
-            if (file_exists($altPath)) {
-                return $altPath;
-            }
-        }
-    }
-    return "assets/default-avatar.png";
-}
-
-// Helper function to get initials
-function getInitials($user) {
-    $first = !empty($user['FIRST_NAME']) ? substr($user['FIRST_NAME'], 0, 1) : '';
-    $last = !empty($user['LAST_NAME']) ? substr($user['LAST_NAME'], 0, 1) : '';
-    return strtoupper($first . $last);
-}
-
-$profileImagePath = getProfileImagePath($user);
-$userInitials = getInitials($user);
-
-// Debug: Check what's in the database
-error_log("DEBUG - User PROFILE_IMAGE from DB: " . ($user['PROFILE_IMAGE'] ?? 'EMPTY'));
-error_log("DEBUG - Profile Image Path: " . $profileImagePath);
-error_log("DEBUG - File exists check: " . (file_exists($profileImagePath) ? 'YES' : 'NO'));
-
-// Add cache-busting parameter only if it's not the default avatar
-if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar.png') {
-    $profileImagePath .= '?v=' . time();
-}
-?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -67,10 +9,48 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
   <link rel="stylesheet" href="public/css/system_features.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="public/js/system_features.js" defer></script>
+  <style>
+    /* Ensure hidden utility class exists for the toggling logic */
+    .hidden { display: none !important; }
+
+    /* Small helper text for upload rules */
+    .upload-rules {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+  </style>
 </head>
 
 <body>
-  <!-- Notification Messages -->
+<?php
+  // Flash messages from analysis controllers (body + color)
+  $flashSuccess = $_SESSION['successMessage']      ?? '';
+  $flashError   = $_SESSION['errorMessage']        ?? '';
+
+  // Stored analysis results (used in cards + modals)
+  $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
+  $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
+
+  // One-time modal triggers (set by controllers after analysis)
+  $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
+  $showColorModal = $_SESSION['show_color_modal'] ?? false;
+
+  // NEW: keep account modal open after profile update
+  $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
+
+  // Map to variables used below
+  $successMessage = $flashSuccess;
+  $errorMessage   = $flashError;
+
+  // Clear only flash + flags (results stay for inline display)
+  unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
+  unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
+  unset($_SESSION['keep_profile_open']); // clear this one-time flag
+?>
+
+
   <?php if (isset($successMessage) && $successMessage): ?>
     <div class="notification success"><?= htmlspecialchars($successMessage) ?></div>
     <script>
@@ -97,308 +77,220 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
     </script>
   <?php endif; ?>
 
-  <!-- Main Page -->
-    <div class="results-container">
-      <!-- SIDEBAR -->
-      <aside class="sidebar" id="appSidebar" aria-expanded="true">
-        <div>
-          <div class="profile" onclick="openUserProfile()">
-            <div class="profile-pic" id="sidebar-profile-pic">
-              <?php if (!empty($user['PROFILE_IMAGE'])): ?>
-                <img src="<?= $profileImagePath ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-              <?php else: ?>
-                <?= $userInitials ?>
-              <?php endif; ?>
-            </div>
-            <div class="profile-info">
-              <div class="form-group">
-                <?php echo htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
-              </div>
-              <p>@<?php echo htmlspecialchars($user['USERNAME']); ?></p>
-            </div>
-          </div>
-
-          <nav class="nav-links" role="navigation" aria-label="Main navigation">
-            <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
-              <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
-              <span class="nav-label">Shop</span>
-              <span class="label-tooltip" aria-hidden="true"></span>
-            </a>
-            <a href="#features" class="nav-btn nav-item" data-label="Features">
-              <img src="public/image/features.png" class="nav-icon" alt="Features icon">
-              <span class="nav-label">Features</span>
-              <span class="label-tooltip" aria-hidden="true"></span>
-            </a>
-          </nav>
-        </div>
-
-        <div class="sidebar-footer" aria-hidden="true">
-          <div class="logo-section">
-            <div class="logo-img" style="width:40px; height:40px;">
-              <img src="public/image/amarelle.png" alt="Amarelle logo">
-            </div>
-          </div>
-          <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
-            <i class="bi bi-box-arrow-right"></i>
-          </button>
-          
-        </div>
-      </aside>
-
-<!-- MAIN CONTENT -->
-<div class="main-content">
-  <!-- 🛍️ SHOP SECTION -->
-  <section id="catalog-shop" class="content-section active">
-    <div class="shop-header">
+  <div class="results-container">
+    <aside class="sidebar" id="appSidebar" aria-expanded="true">
       <div>
-        <h2 class="section-title"><i>Shopping Catalog</i></h2>
-        <p class="section-subtitle">Find your perfect outfit below or explore personalized picks.</p>
+        <div class="profile" onclick="openUserProfile()">
+          <div class="profile-pic" id="sidebar-profile-pic">
+            <?php if (!empty($user['PROFILE_IMAGE'])): ?>
+              <img src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+            <?php else: ?>
+              <?= htmlspecialchars($userInitials) ?>
+            <?php endif; ?>
+          </div>
+          <div class="profile-info">
+            <div class="form-group">
+              <?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+            </div>
+            <p>@<?= htmlspecialchars($user['USERNAME']); ?></p>
+          </div>
+        </div>
+
+        <nav class="nav-links" role="navigation" aria-label="Main navigation">
+          <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
+            <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
+            <span class="nav-label">Shop</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
+          <a href="#features" class="nav-btn nav-item" data-label="Features">
+            <img src="public/image/features.png" class="nav-icon" alt="Features icon">
+            <span class="nav-label">Features</span>
+            <span class="label-tooltip" aria-hidden="true"></span>
+          </a>
+        </nav>
       </div>
 
-      <div class="shop-controls">
-        <button class="cart-button" onclick="openCart()">
-          <i class="bi bi-bag"></i>
-          <span class="cart-count">0</span>
+      <div class="sidebar-footer" aria-hidden="true">
+        <div class="logo-section">
+          <div class="logo-img" style="width:40px; height:40px;">
+            <img src="public/image/amarelle.png" alt="Amarelle logo">
+          </div>
+        </div>
+        <button class="logout-btn" onclick="logout()" title="Logout" aria-label="Logout">
+          <i class="bi bi-box-arrow-right"></i>
         </button>
       </div>
-    </div>
+    </aside>
 
-    <!-- Recommendations Section -->
-    <div id="recommendations" class="subsection">
-      <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
-      <p class="section-subtitle">Based on your color and body analysis results.</p>
+    <div class="main-content">
+      <section id="catalog-shop" class="content-section active">
+        <div class="shop-header">
+          <div>
+            <h2 class="section-title"><i>Shopping Catalog</i></h2>
+            <p class="section-subtitle">Find your perfect outfit below or explore personalized picks.</p>
+          </div>
 
-      <div class="clothes-grid">
-        <div class="clothes-item">
-          <img src="public/source/hourglass/autumn/AIRism Cotton Flare Midi Dress brown.avif" alt="Rustic Wrap Dress" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Rustic Wrap Dress</span>
-            <span class="price">$79</span>
+          <div class="shop-controls">
+<button class="cart-button" type="button" onclick="openCart()">
+  <i class="bi bi-cart"></i>
+  <span class="cart-count" id="cartCount"></span>
+</button>
           </div>
         </div>
 
-        <div class="clothes-item">
-          <img src="public/source/hourglass/Autumn/Smart Ankle Pants.avif" alt="Smart Ankle Pants" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Smart Ankle Pants</span>
-            <span class="price">$65</span>
+        <div id="recommendations" class="subsection">
+          <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
+          <p class="section-subtitle">Based on your color and body analysis results.</p>
+
+          <div class="clothes-grid">
+            <div class="clothes-item">
+              <img src="images/recommend1.jpg" alt="Recommended Outfit 1">
+              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
+              <div class="clothes-caption">
+                <span class="title">Soft Beige Blazer</span>
+                <span class="price">₱1,899</span>
+              </div>
+            </div>
+
+            <div class="clothes-item">
+              <img src="images/recommend2.jpg" alt="Recommended Outfit 2">
+              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
+              <div class="clothes-caption">
+                <span class="title">Classic White Dress</span>
+                <span class="price">₱2,150</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="clothes-item">
-          <img src="public/source/hourglass/autumn/Souffle Yarn Dress olive.avif" alt="Souffle Yarn Dress" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Souffle Yarn Dress</span>
-            <span class="price">$89</span>
-          </div>
-        </div>
+      <?php include 'catalog.php'; ?>
 
-        <div class="clothes-item">
-          <img src="public/source/hourglass/spring/Cotton Ribbed Long-Sleeve Cropped Cardigan Olive.avif" alt="Ribbed Cropped Cardigan" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Ribbed Cropped Cardigan</span>
-            <span class="price">$55</span>
-          </div>
-        </div>
+      </section>
 
-        <div class="clothes-item">
-          <img src="public/source/Inverted Triangle/winter/Rayon Long Sleeve Blouse dark brown.avif" alt="Rayon Long Sleeve Blouse" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Sage Linen Blouse</span>
-            <span class="price">$49</span>
-          </div>
-        </div>
-
-        <div class="clothes-item">
-          <img src="public/source/Inverted Triangle/winter/Smart Wide Pants body.webp" alt="Smart Wide Pants" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Smart Wide Pants</span>
-            <span class="price">$72</span>
-          </div>
-        </div>
-
-        <div class="clothes-item">
-          <img src="public/source/Inverted Triangle/winter/Volume Sleeve Short Sleeve Dress black.jfif" alt="Volume Sleeve Dress" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Volume Sleeve Dress</span>
-            <span class="price">$95</span>
-          </div>
-        </div>
-
-        <div class="clothes-item">
-          <img src="public/source/hourglass/winter/Flare Dress.avif" alt="Flare Dress" />
-          <button class="add-to-cart"><i class="bi bi-cart-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Midnight Tailored Coat</span>
-            <span class="price">$129</span>
-          </div>
-        </div>
-
-        <div class="clothes-item">
-          <img src="images/recommend1.jpg" alt="Soft Beige Blazer">
-          <button class="add-to-cart"><i class="bi bi-heart"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Soft Beige Blazer</span>
-            <span class="price">₱1,899</span>
-          </div>
-        </div>
-
-        <div class="clothes-item">
-          <img src="images/recommend2.jpg" alt="Classic White Dress">
-          <button class="add-to-cart"><i class="bi bi-heart"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Classic White Dress</span>
-            <span class="price">₱2,150</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Shop Catalog -->
-    <div class="subsection">
-      <div class="filter-bar">
-        <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
-        <select id="categoryFilter" onchange="filterProducts()">
-          <option value="">All Categories</option>
-          <option value="Dresses">Dresses</option>
-          <option value="Tops">Tops</option>
-          <option value="Bottoms">Bottoms</option>
-        </select>
-      </div>
-
-      <div class="clothes-grid">
-        <div class="clothes-item catalog-item">
-          <img src="images/item1.jpg" alt="Summer Linen Top">
-          <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Summer Linen Top</span>
-            <span class="price">₱999</span>
-          </div>
-        </div>
-
-        <div class="clothes-item catalog-item">
-          <img src="images/item2.jpg" alt="Flowy Midi Skirt">
-          <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Flowy Midi Skirt</span>
-            <span class="price">₱1,250</span>
-          </div>
-        </div>
-
-        <div class="clothes-item catalog-item">
-          <img src="images/item3.jpg" alt="Tan Trousers">
-          <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-          <div class="clothes-caption">
-            <span class="title">Tan Trousers</span>
-            <span class="price">₱1,799</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section id="features" class="content-section">
-    <div class="section-title"><i>Personalized Fashion Features</i></div>
-    <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
-
-    <div class="options-container">
-      <div class="option-card">
-        <div class="option-icon"><i class="bi bi-palette2"></i></div>
-        <div>
-          <h2 class="option-title">Color Analysis</h2>
-          <p>Choose how you'd like to proceed with your color analysis</p>
-        </div>
-
-        <div class="upload-section">
-          <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
-          <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
-        </div>
-
-        <ul class="feature-list">
-          <li>Real-time guidance and lighting tips</li>
-          <li>Instant capture and analysis</li>
-          <li>Personalized seasonal color palette</li>
-          <li>Complementary color recommendations</li>
-        </ul>
-
-        <!-- Hidden Color Analysis Result -->
-        <div id="colorSeasons" class="color-seasons-container">
-          <h3>Your Color Palette</h3>
-          <p>Your best palette is <strong>Soft Autumn</strong>.</p>
-          <p>Recommended tones: warm beige, muted green, soft coral.</p>
-          <button class="close-btn" onclick="toggleAnalysis('colorSeasons', false)">Close Analysis</button>
-        </div>
-      </div>
-    </div>
-  </section>
-</div>
-
-      <!-- ✨ FEATURES -->
       <section id="features" class="content-section">
         <div class="section-title"><i>Personalized Fashion Features</i></div>
         <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
 
         <div class="options-container">
-          <!-- Color Analysis -->
+          <!-- COLOR ANALYSIS CARD -->
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-palette2"></i></div>
             <div>
               <h2 class="option-title">Color Analysis</h2>
-              <p>Choose how you'd like to proceed with your color analysis</p>
+              <p>
+                Upload a selfie with good lighting to find your season.<br>
+                <span class="upload-rules">
+                  • Max file size: 5 MB<br>
+                  • Allowed formats: JPG, PNG, WEBP<br>
+                  • For your safety, images are scanned for viruses before analysis.
+                </span>
+              </p>
             </div>
 
-            <div class="upload-section">
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-camera"></i> Use Camera</button>
-              <button class="btn" onclick="simulateAnalysis('colorSeasons')"><i class="bi bi-upload"></i> Upload Image</button>
+            <?php 
+              $hasColorSession   = isset($_SESSION['colorAnalysisResult']);
+              $hasColorDb        = !empty($user['SEASON_TYPE']); 
+              $showColorResults  = ($hasColorSession || $hasColorDb);
+            ?>
+
+            <div id="colorUploadSection" class="upload-section <?= $showColorResults ? 'hidden' : '' ?>">
+              <form id="colorForm" method="POST" action="index.php?page=process_color_analysis" enctype="multipart/form-data">
+                <label>Face Image (Selfie):</label>
+                <input type="file" name="face_image" accept="image/*" required>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn" style="flex: 1;">
+                    <i class="bi bi-magic"></i> Analyze Color
+                  </button>
+                  
+                  <?php if ($showColorResults): ?>
+                    <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleColorAnalysis(false)">
+                      Cancel
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </form>
             </div>
 
-            <ul class="feature-list">
-              <li>Real-time guidance and lighting tips</li>
-              <li>Instant capture and analysis</li>
-              <li>Personalized seasonal color palette</li>
-              <li>Complementary color recommendations</li>
-            </ul>
-
-            <div id="colorSeasons" class="color-seasons-container">
+            <div id="colorSeasons" class="color-seasons-container <?= $showColorResults ? 'show-results' : '' ?>">
               <h3>Your Color Palette</h3>
-              <p>Your best palette is <strong>Soft Autumn</strong>.</p>
-              <p>Recommended tones: warm beige, muted green, soft coral.</p>
-              <button class="close-btn-analysis" onclick="toggleAnalysis('colorSeasons', false)">Close Analysis</button>
+              <?php if ($hasColorSession): ?>
+                  <p>Your season is <strong><?= htmlspecialchars($_SESSION['colorAnalysisResult']['season']) ?></strong>.</p>
+                  <p>Recommended tones: <?= implode(", ", $_SESSION['colorAnalysisResult']['palette']) ?></p>
+              <?php elseif ($hasColorDb): ?>
+                  <p>Your saved season is <strong><?= htmlspecialchars($user['SEASON_TYPE']) ?></strong>.</p>
+              <?php endif; ?>
+              
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" onclick="toggleColorAnalysis(true)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
+                    <i class="bi bi-arrow-repeat"></i> Try Again
+                </button>
+              </div>
             </div>
           </div>
 
+          <!-- BODY SHAPE ANALYSIS CARD -->
           <div class="option-card">
             <div class="option-icon"><i class="bi bi-person-standing"></i></div>
             <div>
               <h2 class="option-title">Body Shape Analysis</h2>
-              <p>Get accurate measurements for personalized style recommendations</p>
+              <p>
+                Get accurate measurements for personalized style recommendations.<br>
+                <span class="upload-rules">
+                  • Max file size per image: 5 MB<br>
+                  • Allowed formats: JPG, PNG, WEBP<br>
+                  • Both images are scanned for viruses before we analyze your body shape.
+                </span>
+              </p>
             </div>
 
-            <div class="upload-section">
-              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-camera"></i> Use Camera</button>
-              <button class="btn" onclick="simulateAnalysis('bodyShapes')"><i class="bi bi-upload"></i> Upload Image</button>
+            <?php 
+              $hasSessionResult     = isset($_SESSION['bodyShapeResult']);
+              $hasDbResult          = !empty($user['BODY_TYPE']); 
+              $showResultsByDefault = ($hasSessionResult || $hasDbResult);
+            ?>
+
+            <div class="upload-section <?= $showResultsByDefault ? 'hidden' : '' ?>">
+              <form id="bodyShapeForm" method="POST" action="index.php?page=process_body_shape" enctype="multipart/form-data">
+                <label>Front Image:</label>
+                <input type="file" name="front_image" accept="image/*" required>
+                <br>
+                <label>Side Image:</label>
+                <input type="file" name="side_image" accept="image/*" required>
+                <br>
+                <label>Height (cm):</label>
+                <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                  <button type="submit" class="btn" style="flex: 1;">
+                    <i class="bi bi-upload"></i> Analyze
+                  </button>
+                  
+                  <?php if ($showResultsByDefault): ?>
+                    <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleAnalysis('bodyShapes', true)">
+                      Cancel
+                    </button>
+                  <?php endif; ?>
+                </div>
+              </form>
             </div>
 
-            <ul class="feature-list">
-              <li>AI-assisted body recognition</li>
-              <li>Measurement-based style insights</li>
-              <li>Shape-specific outfit recommendations</li>
-              <li>Personalized fit suggestions</li>
-            </ul>
-
-            <div id="bodyShapes" class="body-shapes-container">
+            <div id="bodyShapes" class="body-shapes-container <?= $showResultsByDefault ? 'show-results' : '' ?>">
               <h3>Your Body Shape</h3>
-              <p>Your shape appears to be <strong>Hourglass</strong>.</p>
-              <p>Suggested styles: wrap dresses, high-waist skirts, fitted tops.</p>
-              <button class="close-btn-analysis" onclick="toggleAnalysis('bodyShapes', false)">Close Analysis</button>
+              
+              <?php if ($hasSessionResult): ?>
+                  <?php $result = $_SESSION['bodyShapeResult']; ?>
+                  <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
+              <?php elseif ($hasDbResult): ?>
+                  <p>Your saved shape is <strong><?= htmlspecialchars($user['BODY_TYPE']) ?></strong>.</p>
+                  <p>We have your measurements saved.</p>
+              <?php endif; ?>
+
+              <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn" onclick="toggleAnalysis('bodyShapes', false)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
+                  <i class="bi bi-arrow-repeat"></i> Try Again
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -406,8 +298,18 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
     </div>
   </div>
 
-  <!-- 👤 User Profile Modal -->
-  <div class="overlay" id="userProfileOverlay">
+  <!-- Toast Notification -->
+<div id="toast" class="toast hidden">
+  <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
+  <span id="toastMessage"></span>
+</div>
+
+
+  <!-- USER PROFILE MODAL -->
+  <div class="overlay"
+       id="userProfileOverlay"
+       data-keep-open="<?= $keepProfileOpen ? '1' : '0' ?>">
+
     <div class="modal">
       <div class="modal-header">
         <div class="tabs">
@@ -424,7 +326,7 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
       </div>
 
       <div class="modal-body">
-        <!-- Account Tab -->
+        <!-- ACCOUNT TAB -->
         <div class="tab-content active" id="account">
           <div class="section-header">
             <p class="section-title">Account Information</p>
@@ -434,48 +336,173 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             <div class="profile-section">
               <div class="profile-avatar">
                 <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
-                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                  <img id="avatar-img"
+                       src="<?= htmlspecialchars($profileImagePath) ?>"
+                       alt="Profile Picture"
+                       style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                 <?php else: ?>
-                  <img id="avatar-img" src="<?= $profileImagePath ?>" alt="Profile Picture" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
-                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>"><?= $userInitials ?></div>
+                  <img id="avatar-img"
+                       src="<?= htmlspecialchars($profileImagePath) ?>"
+                       alt="Profile Picture"
+                       style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
+                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>">
+                    <?= htmlspecialchars($userInitials) ?>
+                  </div>
                 <?php endif; ?>
-                <button type="button" class="edit-avatar-btn" id="edit-avatar-btn" title="Change Profile Picture" style="display:none;">
+
+                <button type="button"
+                        class="edit-avatar-btn"
+                        id="edit-avatar-btn"
+                        title="Change Profile Picture"
+                        style="display:none;">
                   <i class="bi bi-camera"></i>
                 </button>
-                <input type="file" id="profile_image" name="profile_image" accept="image/*" style="display:none;">
+
+                <input type="file"
+                       id="profile_image"
+                       name="profile_image"
+                       accept="image/*"
+                       style="display:none;">
               </div>
 
               <div class="profile-details">
-                <h2 id="display-name"><?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?></h2>
-                <div class="username" id="display-username">@<?= htmlspecialchars($user['USERNAME']); ?></div>
-                <p class="profile-tagline">Welcome to Amarelle — your personal style space.</p>
+                <h2 id="display-name">
+                  <?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+                </h2>
+                <div class="username" id="display-username">
+                  @<?= htmlspecialchars($user['USERNAME']); ?>
+                </div>
+                <p class="profile-tagline">
+                  Welcome to Amarelle — your personal style space.
+                </p>
               </div>
             </div>
 
             <div class="form-grid">
               <div class="form-group">
                 <label>First Name</label>
-                <input type="text" name="first_name" id="first_name" value="<?= htmlspecialchars($user['FIRST_NAME']); ?>" disabled required>
+                <input type="text"
+                       name="first_name"
+                       id="first_name"
+                       value="<?= htmlspecialchars($user['FIRST_NAME']); ?>"
+                       disabled
+                       required>
               </div>
+
               <div class="form-group">
                 <label>Last Name</label>
-                <input type="text" name="last_name" id="last_name" value="<?= htmlspecialchars($user['LAST_NAME']); ?>" disabled required>
+                <input type="text"
+                       name="last_name"
+                       id="last_name"
+                       value="<?= htmlspecialchars($user['LAST_NAME']); ?>"
+                       disabled
+                       required>
               </div>
+
               <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" id="username" value="<?= htmlspecialchars($user['USERNAME']); ?>" disabled required>
+                <input type="text"
+                       name="username"
+                       id="username"
+                       value="<?= htmlspecialchars($user['USERNAME']); ?>"
+                       disabled
+                       required>
               </div>
+
               <div class="form-group">
                 <label>Email</label>
-                <input type="email" name="email" id="email" value="<?= htmlspecialchars($user['EMAIL']); ?>" disabled required>
+                <input type="email"
+                       name="email"
+                       id="email"
+                       value="<?= htmlspecialchars($user['EMAIL']); ?>"
+                       disabled
+                       required>
               </div>
+
               <div class="form-group">
-                <label>Home Address</label>
-                <input type="text" name="address" id="address" value="<?= htmlspecialchars($user['ADDRESS']); ?>" disabled>
+                <label>Street Address</label>
+                <input type="text"
+                       name="street_address"
+                       id="street_address"
+                       value="<?= htmlspecialchars($user['STREET_ADDRESS'] ?? ''); ?>"
+                       disabled>
               </div>
+
+              <div class="form-group">
+                <label>Apartment / Unit (optional)</label>
+                <input type="text"
+                       name="apartment"
+                       id="apartment"
+                       value="<?= htmlspecialchars($user['APARTMENT'] ?? ''); ?>"
+                       disabled>
+              </div>
+
+              <div class="form-group address-group">
+                <label>Province</label>
+                <select
+                  name="province"
+                  id="province"
+                  class="address-select"
+                  disabled
+                  required
+                  data-current-province="<?= htmlspecialchars($user['PROVINCE'] ?? '', ENT_QUOTES) ?>"
+                >
+                  <option value="" disabled>Select Province</option>
+                  <option value="Metro Manila">Metro Manila</option>
+                  <option value="Cavite">Cavite</option>
+                  <option value="Laguna">Laguna</option>
+                  <option value="Bulacan">Bulacan</option>
+                  <option value="Rizal">Rizal</option>
+                </select>
+                <small class="field-error">Province is required.</small>
+              </div>
+
+              <div class="form-group address-group">
+                <label>City / Town</label>
+                <select
+                  name="city"
+                  id="city"
+                  class="address-select"
+                  disabled
+                  required
+                  data-current-city="<?= htmlspecialchars($user['CITY'] ?? '', ENT_QUOTES) ?>"
+                >
+                  <option value="" disabled>Select City</option>
+                </select>
+                <small class="field-error">City/Town is required.</small>
+              </div>
+
+              <div class="form-group address-group">
+                <label>Barangay</label>
+                <select
+                  name="barangay"
+                  id="barangay"
+                  class="address-select"
+                  disabled
+                  required
+                  data-current-barangay="<?= htmlspecialchars($user['BARANGAY'] ?? '', ENT_QUOTES) ?>"
+                >
+                  <option value="" disabled>Select Barangay</option>
+                </select>
+                <small class="field-error">Barangay is required.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Postal Code</label>
+                <input type="text"
+                       name="postal_code"
+                       id="postal_code"
+                       value="<?= htmlspecialchars($user['POSTAL_CODE'] ?? ''); ?>"
+                       disabled>
+              </div>
+
               <div class="form-group">
                 <label>Phone Number</label>
-                <input type="text" name="contacts" id="contacts" value="<?= htmlspecialchars($user['CONTACTS']); ?>" disabled>
+                <input type="text"
+                       name="contacts"
+                       id="contacts"
+                       value="<?= htmlspecialchars($user['CONTACTS']); ?>"
+                       disabled>
               </div>
             </div>
 
@@ -483,10 +510,19 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
               <button type="button" id="editProfileBtn" class="btn btn-secondary">
                 <i class="bi bi-pencil-square"></i> Edit Profile
               </button>
-              <button type="submit" name="update_profile" id="saveProfileBtn" class="btn btn-primary" style="display:none;">
+
+              <button type="submit"
+                      name="update_profile"
+                      id="saveProfileBtn"
+                      class="btn btn-primary"
+                      style="display:none;">
                 <i class="bi bi-save"></i> Save Changes
               </button>
-              <button type="button" id="cancelEditBtn" class="btn btn-outline" style="display:none;">
+
+              <button type="button"
+                      id="cancelEditBtn"
+                      class="btn btn-outline"
+                      style="display:none;">
                 <i class="bi bi-x-circle"></i> Cancel
               </button>
             </div>
@@ -497,7 +533,8 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
               <i class="bi bi-palette"></i>
               <h3>Style Profile</h3>
             </div>
-            <?php if (empty($user['COLOR_SEASON']) && empty($user['BODY_SHAPE'])): ?>
+
+            <?php if (empty($user['SEASON_TYPE']) && empty($user['BODY_TYPE'])): ?>
               <div class="info-empty">
                 <p>You haven't completed your style analysis yet.</p>
                 <button class="btn" onclick="goToFeatures()">
@@ -505,20 +542,20 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
                 </button>
               </div>
             <?php else: ?>
-              <?php if (!empty($user['COLOR_SEASON'])): ?>
+              <?php if (!empty($user['SEASON_TYPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Color Season</span>
                   <span class="info-value">
-                    <?php echo htmlspecialchars($user['COLOR_SEASON']); ?>
+                    <?= htmlspecialchars($user['SEASON_TYPE']); ?>
                   </span>
                 </div>
               <?php endif; ?>
 
-              <?php if (!empty($user['BODY_SHAPE'])): ?>
+              <?php if (!empty($user['BODY_TYPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Body Shape</span>
                   <span class="info-value">
-                    <?php echo htmlspecialchars($user['BODY_SHAPE']); ?>
+                    <?= htmlspecialchars($user['BODY_TYPE']); ?>
                   </span>
                 </div>
               <?php endif; ?>
@@ -526,7 +563,7 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
           </div>
         </div>
 
-        <!-- Purchases Tab -->
+        <!-- PURCHASES TAB -->
         <div class="tab-content" id="purchases">
           <div class="sub-tabs">
             <button class="sub-tab-btn active" data-subtab="orders">
@@ -540,7 +577,6 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             </button>
           </div>
           
-          <!-- Orders Sub Tab -->
           <div class="sub-tab-content active" id="orders">
             <div class="order-card">
               <div class="order-header">
@@ -581,7 +617,6 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             </div>
           </div>
           
-          <!-- To Receive Sub Tab -->
           <div class="sub-tab-content" id="to-receive">
             <div class="order-card">
               <div class="order-header">
@@ -622,7 +657,6 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
             </div>
           </div>
           
-          <!-- Order History Sub Tab -->
           <div class="sub-tab-content" id="history">
             <div class="order-card">
               <div class="order-header">
@@ -662,95 +696,464 @@ if (!empty($user['PROFILE_IMAGE']) && $user['PROFILE_IMAGE'] !== 'default-avatar
               </div>
             </div>
           </div>
+        </div> <!-- end purchases tab -->
+      </div> <!-- end modal-body -->
+    </div> <!-- end modal -->
+  </div> <!-- end userProfileOverlay -->
+
+  <!-- ===================== NEW ANALYSIS MODALS ===================== -->
+
+  <!-- 1) ERROR MODAL (shared for body + color) -->
+  <div
+    class="overlay <?= $flashError ? '' : 'hidden' ?>"
+    id="analysisErrorOverlay"
+    style="
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 9999;
+    "
+  >
+    <div
+      class="modal"
+      style="
+        width: 100%;
+        max-width: 520px;
+        background: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      "
+    >
+      <div
+        class="modal-header"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+          background: #D7C9AE;
+        "
+      >
+        <h2 style="font-size: 1.05rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+          Image / Analysis Error
+        </h2>
+        <button
+          class="close-btn"
+          onclick="closeAnalysisErrorModal()"
+          style="
+            background: transparent;
+            border: none;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 999px;
+          "
+        >
+          <i class="bi bi-x" style="font-size: 1.2rem;"></i>
+        </button>
+      </div>
+
+      <div
+        class="modal-body"
+        style="
+          padding: 1.5rem 1.75rem 1.25rem;
+          overflow-y: auto;
+          font-size: 0.95rem;
+          color: #111827;
+        "
+      >
+        <p style="margin-bottom: 0.75rem; line-height: 1.5;">
+          <?= htmlspecialchars($flashError) ?>
+        </p>
+        <p style="margin-top: 0.25rem; font-size: 0.85rem; color: #6b7280; line-height: 1.5;">
+          Please make sure your photo meets these requirements:
+        </p>
+        <ul style="margin: 0.35rem 0 0 1.1rem; padding: 0; font-size: 0.85rem; color: #6b7280; line-height: 1.5;">
+          <li>Good, even lighting and only one person in each photo.</li>
+          <li>File type is JPG, PNG, or WEBP and size is under 5 MB.</li>
+        </ul>
+      </div>
+
+      <div
+        class="modal-footer"
+        style="
+          padding: 0.9rem 1.75rem 1.1rem;
+          display: flex;
+          justify-content: flex-end;
+          border-top: 1px solid #e5e7eb;
+          background: #f9fafb;
+        "
+      >
+        <button
+          class="btn"
+          onclick="closeAnalysisErrorModal()"
+          style="
+            margin-top: 0;
+            padding: 0.5rem 1.3rem;
+            font-size: 0.9rem;
+          "
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2) BODY SHAPE RESULT MODAL (one-time trigger) -->
+  <div
+    class="overlay <?= $showBodyModal ? '' : 'hidden' ?>"
+    id="bodyShapeResultOverlay"
+    style="
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 9999;
+    "
+  >
+    <div
+      class="modal"
+      style="
+        width: 100%;
+        max-width: 520px;
+        background: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      "
+    >
+      <div
+        class="modal-header"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+          background: #D7C9AE;
+        "
+      >
+        <h2 style="font-size: 1.05rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="bi bi-person-standing"></i>
+          Body Shape Result
+        </h2>
+        <button
+          class="close-btn"
+          onclick="closeBodyShapeResultModal()"
+          style="
+            background: transparent;
+            border: none;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 999px;
+          "
+        >
+          <i class="bi bi-x" style="font-size: 1.2rem;"></i>
+        </button>
+      </div>
+
+      <div
+        class="modal-body"
+        style="
+          padding: 1.5rem 1.75rem 1.25rem;
+          overflow-y: auto;
+          font-size: 0.95rem;
+          color: #111827;
+        "
+      >
+        <?php if ($bodyShapeResult): ?>
+          <p style="margin-bottom: 0.75rem; line-height: 1.5;">
+            Your body shape is
+            <strong><?= htmlspecialchars($bodyShapeResult['prediction']['body_shape']) ?></strong>.
+          </p>
+
+          <?php if (!empty($bodyShapeResult['measurements'])): ?>
+            <ul style="margin-top: 0.25rem; padding-left: 1.2rem; font-size: 0.9rem; color: #374151; line-height: 1.5;">
+              <li>Shoulder width: <?= htmlspecialchars($bodyShapeResult['measurements']['ShoulderWidth']) ?> cm</li>
+              <li>Waist: <?= htmlspecialchars($bodyShapeResult['measurements']['Waist']) ?> cm</li>
+              <li>Hips: <?= htmlspecialchars($bodyShapeResult['measurements']['Hips']) ?> cm</li>
+            </ul>
+          <?php endif; ?>
+        <?php else: ?>
+          <p>No body shape result available.</p>
+        <?php endif; ?>
+      </div>
+
+      <div
+        class="modal-footer"
+        style="
+          padding: 0.9rem 1.75rem 1.1rem;
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.5rem;
+          border-top: 1px solid #e5e7eb;
+          background: #f9fafb;
+        "
+      >
+        <button
+          class="btn btn-outline"
+          onclick="closeBodyShapeResultModal()"
+          style="
+            margin-top: 0;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+          "
+        >
+          Close
+        </button>
+        <button
+          class="btn"
+          onclick="document.getElementById('recommendations')?.scrollIntoView({behavior:'smooth'})"
+          style="
+            margin-top: 0;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+          "
+        >
+          See Outfit Recommendations
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3) COLOR ANALYSIS RESULT MODAL (one-time trigger) -->
+  <div
+    class="overlay <?= $showColorModal ? '' : 'hidden' ?>"
+    id="colorResultOverlay"
+    style="
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 9999;
+    "
+  >
+    <div
+      class="modal"
+      style="
+        width: 100%;
+        max-width: 520px;
+        background: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+        display: flex;
+        flex-direction: column;
+        max-height: 90vh;
+      "
+    >
+      <div
+        class="modal-header"
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 1rem 1.5rem;
+          background: #D7C9AE;
+        "
+      >
+        <h2 style="font-size: 1.05rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+          <i class="bi bi-palette2"></i>
+          Color Analysis Result
+        </h2>
+        <button
+          class="close-btn"
+          onclick="closeColorResultModal()"
+          style="
+            background: transparent;
+            border: none;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border-radius: 999px;
+          "
+        >
+          <i class="bi bi-x" style="font-size: 1.2rem;"></i>
+        </button>
+      </div>
+
+      <div
+        class="modal-body"
+        style="
+          padding: 1.5rem 1.75rem 1.25rem;
+          overflow-y: auto;
+          font-size: 0.95rem;
+          color: #111827;
+        "
+      >
+        <?php if ($colorResult): ?>
+          <p style="margin-bottom: 0.75rem; line-height: 1.5;">
+            Your color season is
+            <strong><?= htmlspecialchars($colorResult['season']) ?></strong>.
+          </p>
+
+          <?php if (!empty($colorResult['palette'])): ?>
+            <p style="margin-top: 0.25rem; font-size: 0.9rem; color: #374151;">
+              Suggested colors:
+              <?= htmlspecialchars(implode(', ', $colorResult['palette'])) ?>
+            </p>
+          <?php endif; ?>
+        <?php else: ?>
+          <p>No color analysis result available.</p>
+        <?php endif; ?>
+      </div>
+
+      <div
+        class="modal-footer"
+        style="
+          padding: 0.9rem 1.75rem 1.1rem;
+          display: flex;
+          justify-content: flex-end;
+          gap: 0.5rem;
+          border-top: 1px solid #e5e7eb;
+          background: #f9fafb;
+        "
+      >
+        <button
+          class="btn btn-outline"
+          onclick="closeColorResultModal()"
+          style="
+            margin-top: 0;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+          "
+        >
+          Close
+        </button>
+        <button
+          class="btn"
+          onclick="document.getElementById('recommendations')?.scrollIntoView({behavior:'smooth'})"
+          style="
+            margin-top: 0;
+            padding: 0.5rem 1.2rem;
+            font-size: 0.9rem;
+          "
+        >
+          See Outfit Recommendations
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGOUT MODAL -->
+  <div class="overlay" id="logoutOverlay" style="display: none;">
+    <div class="modal" style="max-width: 450px;">
+      <div class="modal-header" style="background: #2D2D2D;">
+        <div style="flex: 1;">
+          <h3 style="color: white; font-size: 1.3rem; margin: 0; font-weight: 600;">
+            <i class="bi bi-box-arrow-right" style="margin-right: 0.5rem;"></i>
+            Confirm Logout
+          </h3>
+        </div>
+        <button class="close-btn" onclick ="closeLogoutOverlay()" style="color: white;">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+
+      <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
+        <div style="
+          width: 80px;
+          height: 80px;
+          background: linear-gradient(135deg, #D7C9AE, #A68763);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin: 0 auto 1.5rem;
+          box-shadow: 0 8px 20px rgba(166, 135, 99, 0.3);
+        ">
+          <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
+        </div>
+
+        <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
+          Are you sure?
+        </h3>
+        <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
+          You will be logged out of your account and redirected to the login page.
+        </p>
+
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <button onclick="closeLogoutOverlay()" style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+            <i class="bi bi-x-circle" style="margin-right: 0.5rem;"></i>
+            Cancel
+          </button>
+          <button onclick="confirmLogout()" style="flex:1; padding:0.85rem 1.5rem; border:none; background:#2D2D2D; color:white; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
+            <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
+            Yes, Logout
+          </button>
         </div>
       </div>
     </div>
   </div>
-<div class="overlay" id="logoutOverlay" style="display: none;">
-  <div class="modal" style="max-width: 450px;">
-    <div class="modal-header" style="background: #2D2D2D;">
-      <div style="flex: 1;">
-        <h3 style="color: white; font-size: 1.3rem; margin: 0; font-weight: 600;">
-          <i class="bi bi-box-arrow-right" style="margin-right: 0.5rem;"></i>
-          Confirm Logout
-        </h3>
-      </div>
-      <button class="close-btn" onclick="closeLogoutOverlay()" style="color: white;">
-        <i class="bi bi-x"></i>
-      </button>
-    </div>
 
-    <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
-      <div style="
-        width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #D7C9AE, #A68763);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1.5rem;
-        box-shadow: 0 8px 20px rgba(166, 135, 99, 0.3);
-      ">
-        <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
-      </div>
-
-      <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
-        Are you sure?
-      </h3>
-      <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
-        You will be logged out of your account and redirected to the login page.
-      </p>
-
-      <div style="display: flex; gap: 1rem; justify-content: center;">
-        <button onclick="closeLogoutOverlay()" style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
-          <i class="bi bi-x-circle" style="margin-right: 0.5rem;"></i>
-          Cancel
-        </button>
-        <button onclick="confirmLogout()" style="flex:1; padding:0.85rem 1.5rem; border:none; background:#2D2D2D; color:white; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
-          <i class="bi bi-check-circle" style="margin-right: 0.5rem;"></i>
-          Yes, Logout
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-    // document.querySelector('.cart-button').addEventListener('click', () => {
-    //   alert('Shopping cart feature coming soon!');
-    // });
-
-    /* ---- NEW ANALYSIS FUNCTIONALITY ---- */
-    function toggleAnalysis(targetId, show) {
-      const targetElement = document.getElementById(targetId);
-      if (!targetElement) return;
-      const card = targetElement.closest('.option-card');
-      const uploadSection = card.querySelector('.upload-section');
-      const featureList = card.querySelector('.feature-list');
-      if (show) {
-        targetElement.classList.add('show-results');
-        uploadSection.classList.add('hidden');
-        featureList.classList.add('hidden');
-        targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  <script>
+    function toggleColorAnalysis(showUpload) {
+      const results = document.getElementById('colorSeasons');
+      const uploadSection = document.getElementById('colorUploadSection');
+      
+      if (showUpload) {
+        if (results) results.classList.remove('show-results');
+        if (uploadSection) uploadSection.classList.remove('hidden');
+        const form = document.getElementById('colorForm');
+        if (form) form.reset();
       } else {
-        targetElement.classList.remove('show-results');
-        uploadSection.classList.remove('hidden');
-        featureList.classList.remove('hidden');
+        if (results) results.classList.add('show-results');
+        if (uploadSection) uploadSection.classList.add('hidden');
       }
     }
 
-    function simulateAnalysis(targetId) {
-      const button = event.target;
-      button.disabled = true;
-      const originalText = button.textContent;
-      button.textContent = "Analyzing...";
-      setTimeout(() => {
-        button.disabled = false;
-        button.textContent = originalText;
-        toggleAnalysis(targetId, true);
-      }, 1500);
+    function closeAnalysisErrorModal() {
+      const overlay = document.getElementById('analysisErrorOverlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    function closeBodyShapeResultModal() {
+      const overlay = document.getElementById('bodyShapeResultOverlay');
+      if (overlay) overlay.classList.add('hidden');
+    }
+
+    function closeColorResultModal() {
+      const overlay = document.getElementById('colorResultOverlay');
+      if (overlay) overlay.classList.add('hidden');
     }
   </script>
+<?php include __DIR__ . '/cartModal.php'; ?>
+
+<link rel="stylesheet" href="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/css/cartModal.css">
+<script>
+  // base64("pk_test_xxx:") — encode on the server
+  window.PAYMONGO_PUBLIC_KEY_B64 = "<?= base64_encode($_ENV['PAYMONGO_PUBLIC_KEY'] . ':') ?>";
+</script>
+<script src="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/js/cartModal.js"></script>
+<script src="https://js.paymongo.com/v1/paymongo.js"></script>
+
+
 </body>
 </html>
-<?php include 'cartModal.php'; ?>

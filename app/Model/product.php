@@ -81,14 +81,28 @@ class Product {
         return $stmt->execute();
     }
 
-    public function readAll() {
-        // Using mysqli->query() for simple SELECT
-        $query = "SELECT * FROM {$this->table} ORDER BY CREATED_AT DESC";
-        $result = $this->conn->query($query);
-        
-        // Returns mysqli_result object
-        return $result;
-    }
+public function readAll() {
+    $query = "
+        SELECT 
+            p.PRODUCT_ID,
+            p.PRODUCT_NAME,
+            p.DESCRIPTION,
+            p.PRICE,
+            p.IMAGE_FILE
+        FROM products p
+        WHERE EXISTS (
+            SELECT 1 
+            FROM inventory i
+            WHERE i.PRODUCT_ID = p.PRODUCT_ID
+              AND i.QUANTITY > 0
+        )
+        ORDER BY p.PRODUCT_NAME ASC
+    ";
+
+    $result = $this->conn->query($query);
+    return $result;
+}
+
 
     public function readSingle() {
         $query = "SELECT IMAGE_FILE FROM {$this->table} WHERE PRODUCT_ID = ? LIMIT 0,1";

@@ -37,20 +37,6 @@
       margin-left: 280px; 
       width: calc(100% - 280px); 
     }
-.pagination-controls {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.pagination-controls .active-page {
-  font-weight: bold;
-  border: 1px solid #333;
-}
-
-
 
     /* SIDEBAR */
     .sidebar {

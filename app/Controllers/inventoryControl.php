@@ -1,5 +1,4 @@
 <?php
-// Assuming '../Core/Database.php' now returns a new mysqli connection object.
 require_once '../Model/Product.php';
 require_once '../Model/Inventory.php';
 require_once '../Core/Database.php';

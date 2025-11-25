@@ -14,7 +14,7 @@ $dotenv->load();
 // Handle API requests FIRST (before page routing)
 if (isset($_GET['api'])) {
     if ($_GET['api'] === 'admin') {
-        require_once __DIR__ . '/app/Controllers/AdminApiController.php';
+        require_once __DIR__ . '/app/Controllers/adminApiController.php';
         $apiController = new AdminApiController();
         $apiController->handle();
         exit; // Stop execution after API response
@@ -25,6 +25,13 @@ if (isset($_GET['api'])) {
 }
 
 
+
+// Get requested page, default to 'landing'
+// Handle API requests FIRST (before page routing)
+if (isset($_GET['api']) && $_GET['api'] === 'admin') {
+    require_once './public/admin-api.php';
+    exit; // Stop execution after API response
+}
 
 // Get the requested page from the URL, default to 'landing'
 $page = $_GET['page'] ?? 'landing';
@@ -69,8 +76,10 @@ switch ($page) {
         $controller = new ForgotController();
         $controller->index();
         break;
+    
 
     // ===== DEFAULT: LANDING PAGE =====
+    // ===== ADMIN =====
      case 'admin_login':
         require_once 'app/Controllers/adminLoginControl.php';
         $controller = new AdminLoginController();
@@ -81,9 +90,106 @@ switch ($page) {
         require_once 'app/View/admin.php';
         break;
 
+    case 'policy':
+        require_once 'app/View/policy.php';
+        break;
+    case 'add_to_cart':
+        require_once __DIR__ . '/app/Controllers/cartController.php';
+        $controller = new CartController();
+
+        // This will be called via fetch/AJAX as POST and return JSON
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            header('Content-Type: application/json');
+
+            $productId   = isset($_POST['PRODUCT_ID'])   ? (int)$_POST['PRODUCT_ID']   : 0;
+            $inventoryId = isset($_POST['INVENTORY_ID']) ? (int)$_POST['INVENTORY_ID'] : null;
+            $price       = isset($_POST['PRICE'])        ? (float)$_POST['PRICE']      : 0;
+
+            $controller->addToCart($productId, $inventoryId, $price);
+            exit; // stop here, no view needed
+        } else {
+            http_response_code(405);
+            echo 'Method Not Allowed';
+            exit;
+        }
+
+        break;
+
+    case 'get_cart':
+        require_once __DIR__ . '/app/Controllers/cartController.php';
+        $controller = new CartController();
+        header('Content-Type: application/json');
+        $controller->getCartItems();
+        exit;
+        break;
+    case 'create_order':
+        require_once __DIR__ . '/app/Controllers/OrderController.php';
+        $controller = new OrderController();
+        header('Content-Type: application/json');
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->createFromCart();
+        } else {
+            echo json_encode(["success" => false, "message" => "Method not allowed"]);
+        }
+        exit;
+        break;
+
+    case 'get_product_variants':
+        require_once __DIR__ . '/app/Controllers/cartController.php';
+        $controller = new CartController();
+        header('Content-Type: application/json');
+        $controller->getProductVariants();
+        exit;
+        break;
+
+    case 'update_cart_item':
+    require_once __DIR__ . '/app/Controllers/cartController.php';
+    $controller = new CartController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        header('Content-Type: application/json');
+        $controller->updateCartItemQuantity();
+        exit;
+    }
+    http_response_code(405);
+    exit;
+
+case 'delete_cart_item':
+    require_once __DIR__ . '/app/Controllers/cartController.php';
+    $controller = new CartController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        header('Content-Type: application/json');
+        $controller->deleteCartItem();
+        exit;
+    }
+    http_response_code(405);
+    exit;
+case 'create_order':
+    require_once __DIR__ . '/app/Controllers/OrderController.php';
+    $controller = new OrderController();
+    header('Content-Type: application/json');
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->createFromCart();
+    } else {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Method not allowed'
+        ]);
+    }
+    exit;
+    break;
+
+case 'get_cart_count':
+    require_once __DIR__ . '/app/Controllers/cartController.php';
+    $ctrl = new CartController();
+    header('Content-Type: application/json');
+    $ctrl->getCartCount();
+    exit;
+
+
+    // ===== DEFAULT: LANDING PAGE =====
     case 'landing':
     default:
         require_once './app/View/landing.php';
         break;
-}
+}   
 ?>
