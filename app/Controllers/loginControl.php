@@ -80,9 +80,6 @@ class LoginController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = trim($_POST['username'] ?? '');
             $password = trim($_POST['password'] ?? '');
-            // validatioon for recaptcha
-            $recaptchaSecret = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC"; 
-            $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
             if (empty($username) || empty($password)) {
                 $message = "Please fill in all fields.";

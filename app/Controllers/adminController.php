@@ -2,7 +2,7 @@
 // app/Controllers/AdminController.php
 
 class AdminController {
-    private $db; // This is a mysqli object
+    private $db;
     
     public function __construct($database) {
         $this->db = $database;
@@ -13,9 +13,9 @@ class AdminController {
     /**
      * Get all products (without inventory details) - For Products Tab
      */
-    function getProductsOnly() {
+    public function getProductsOnly() {
         try {
-            $query = "
+            $stmt = $this->db->query("
                 SELECT 
                     p.PRODUCT_ID,
                     p.PRODUCT_NAME,
@@ -23,24 +23,16 @@ class AdminController {
                     p.PRICE,
                     p.IMAGE_FILE,
                     p.BODY_SHAPE_ID,
-                    bs.BODY_TYPE AS BODY_SHAPE_NAME
+                    bs.BODY_TYPE AS CATEGORY
                 FROM PRODUCTS p
                 LEFT JOIN BODY_SHAPES bs ON p.BODY_SHAPE_ID = bs.BODY_SHAPE_ID
-                ORDER BY p.PRODUCT_ID DESC
-            ";
-            $result = $this->db->query($query);
-
-            $products = [];
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $products[] = $row;
-                }
-                $result->free();
-            }
+                ORDER BY p.PRODUCT_NAME
+            ");
+            $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             header('Content-Type: application/json');
             echo json_encode($products);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to fetch products: ' . $e->getMessage()]);
         }
@@ -50,74 +42,25 @@ class AdminController {
      * Add a new product
      */
     public function addProduct($data) {
-        $imageFilename = null;
-        $uploadPath = null;
-        
         try {
-            // --- 1. Image File Handling ---
-            $imageFile = $data['product_image_file'] ?? null;
-
-            if ($imageFile && $imageFile['error'] === UPLOAD_ERR_OK) {
-                // Adjust the path based on your project structure relative to this controller
-                $uploadDir = __DIR__ . '/../../public/image/'; 
-                
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-                
-                $ext = pathinfo($imageFile['name'], PATHINFO_EXTENSION);
-                $imageFilename = uniqid('product_', true) . '.' . $ext; 
-                $uploadPath = $uploadDir . $imageFilename;
-
-                if (!move_uploaded_file($imageFile['tmp_name'], $uploadPath)) {
-                    throw new Exception("Failed to move uploaded file.");
-                }
-            }
-            
-            // --- 2. Data Preparation ---
-            $productName = $data['productName'] ?? null;
-            $description = $data['productDescription'] ?? ''; 
-            $bodyShapeId = isset($data['bodyShapeSelect']) ? (int)$data['bodyShapeSelect'] : 1;
-            $price       = isset($data['productPrice']) ? (float)$data['productPrice'] : 0.00;
-
-            if (!$productName || $price === null) {
-                throw new Exception("Product name and price are required.");
-            }
-
-            // --- 3. Database Insertion ---
-            $query = "
+            $stmt = $this->db->prepare("
                 INSERT INTO PRODUCTS (PRODUCT_NAME, DESCRIPTION, BODY_SHAPE_ID, PRICE, IMAGE_FILE)
                 VALUES (?, ?, ?, ?, ?)
-            ";
-            $stmt = $this->db->prepare($query);
-
-            // s, s, i, d, s   (name, desc, body_shape_id, price, image_file)
-            $stmt->bind_param(
-                "ssids",
-                $productName,
-                $description,
-                $bodyShapeId,
-                $price,
-                $imageFilename
-            );
-
-            if (!$stmt->execute()) {
-                throw new Exception("DB Execute failed: " . $stmt->error);
-            }
-
-            $productId = $this->db->insert_id;
-            $stmt->close();
+            ");
+            $stmt->execute([
+                $data['productName'],
+                $data['description'] ?? '',
+                $data['bodyShapeId'] ?? 1,
+                $data['price'],
+                $data['imageFile'] ?? null
+            ]);
 
             http_response_code(201);
             echo json_encode([
-                'success'   => true,
-                'productId' => $productId
+                'success' => true,
+                'productId' => $this->db->lastInsertId()
             ]);
-        } catch (Exception $e) {
-            // Delete the file if DB insertion or file move fails
-            if (isset($uploadPath) && file_exists($uploadPath)) {
-                unlink($uploadPath);
-            }
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to add product: ' . $e->getMessage()]);
         }
@@ -127,95 +70,22 @@ class AdminController {
      * Update existing product
      */
     public function updateProduct($productId, $data) {
-        $imageFilename = null;
-        $uploadPath = null;
-        $updateImage = false;
-        
         try {
-            // --- 1. Image File Handling (check if a new file was uploaded) ---
-            $imageFile = $data['product_image_file'] ?? null;
-
-            if ($imageFile && $imageFile['error'] === UPLOAD_ERR_OK) {
-                $uploadDir = __DIR__ . '/../../public/image/'; 
-                
-                if (!is_dir($uploadDir)) {
-                    mkdir($uploadDir, 0777, true);
-                }
-
-                $ext = pathinfo($imageFile['name'], PATHINFO_EXTENSION);
-                $imageFilename = uniqid('product_', true) . '.' . $ext;
-                $uploadPath = $uploadDir . $imageFilename;
-
-                if (!move_uploaded_file($imageFile['tmp_name'], $uploadPath)) {
-                    throw new Exception("Failed to move uploaded file.");
-                }
-
-                $updateImage = true;
-            }
-
-            // --- 2. Data Preparation ---
-            $productName = $data['productName'] ?? null;
-            $description = $data['productDescription'] ?? '';
-            $bodyShapeId = isset($data['bodyShapeSelect']) ? (int)$data['bodyShapeSelect'] : 1;
-            $price       = isset($data['productPrice']) ? (float)$data['productPrice'] : 0.00;
-
-            if (!$productName || $price === null) {
-                throw new Exception("Product name and price are required.");
-            }
-
-            // --- 3. Build the UPDATE query ---
-            if ($updateImage) {
-                $query = "
-                    UPDATE PRODUCTS
-                    SET PRODUCT_NAME = ?, DESCRIPTION = ?, BODY_SHAPE_ID = ?, PRICE = ?, IMAGE_FILE = ?
-                    WHERE PRODUCT_ID = ?
-                ";
-            } else {
-                $query = "
-                    UPDATE PRODUCTS
-                    SET PRODUCT_NAME = ?, DESCRIPTION = ?, BODY_SHAPE_ID = ?, PRICE = ?
-                    WHERE PRODUCT_ID = ?
-                ";
-            }
-
-            $stmt = $this->db->prepare($query);
-
-            if ($updateImage) {
-                $stmt->bind_param(
-                    "ssidsi",
-                    $productName,
-                    $description,
-                    $bodyShapeId,
-                    $price,
-                    $imageFilename,
-                    $productId
-                );
-            } else {
-                $stmt->bind_param(
-                    "ssidi",
-                    $productName,
-                    $description,
-                    $bodyShapeId,
-                    $price,
-                    $productId
-                );
-            }
-
-            if (!$stmt->execute()) {
-                throw new Exception("DB Execute failed: " . $stmt->error);
-            }
-
-            $stmt->close();
-
-            http_response_code(200);
-            echo json_encode([
-                'success'   => true,
-                'productId' => $productId
+            $stmt = $this->db->prepare("
+                UPDATE PRODUCTS
+                SET PRODUCT_NAME = ?, DESCRIPTION = ?, BODY_SHAPE_ID = ?, PRICE = ?
+                WHERE PRODUCT_ID = ?
+            ");
+            $stmt->execute([
+                $data['productName'],
+                $data['description'] ?? '',
+                $data['bodyShapeId'] ?? 1,
+                $data['price'],
+                $productId
             ]);
-        } catch (Exception $e) {
-            if (isset($uploadPath) && file_exists($uploadPath)) {
-                unlink($uploadPath);
-            }
+
+            echo json_encode(['success' => true]);
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to update product: ' . $e->getMessage()]);
         }
@@ -225,35 +95,30 @@ class AdminController {
      * Delete product and all its inventory
      */
     public function deleteProduct($productId) {
-        $this->db->begin_transaction();
-        
         try {
-            // First delete inventory
-            $stmt = $this->db->prepare("DELETE FROM INVENTORY WHERE PRODUCT_ID = ?");
-            $stmt->bind_param("i", $productId);
-            if (!$stmt->execute()) throw new Exception("Inventory delete failed: " . $stmt->error);
-            $stmt->close();
+            $this->db->beginTransaction();
             
-            // Then delete product
+            // Delete all inventory for this product
+            $stmt = $this->db->prepare("DELETE FROM INVENTORY WHERE PRODUCT_ID = ?");
+            $stmt->execute([$productId]);
+            
+            // Delete the product
             $stmt = $this->db->prepare("DELETE FROM PRODUCTS WHERE PRODUCT_ID = ?");
-            $stmt->bind_param("i", $productId);
-            if (!$stmt->execute()) throw new Exception("Product delete failed: " . $stmt->error);
-            $stmt->close();
-
+            $stmt->execute([$productId]);
+            
             $this->db->commit();
-
             echo json_encode(['success' => true]);
-        } catch (Exception $e) {
-            $this->db->rollback();
+        } catch (PDOException $e) {
+            $this->db->rollBack();
             http_response_code(500);
             echo json_encode(['error' => 'Failed to delete product: ' . $e->getMessage()]);
         }
     }
-
+    
     // ==================== INVENTORY ====================
-
+    
     /**
-     * Get inventory variants for a given product - For Inventory Tab
+     * Get inventory by product - For Inventory Tab
      */
     public function getInventoryByProduct($productId) {
         try {
@@ -270,23 +135,12 @@ class AdminController {
                 WHERE i.PRODUCT_ID = ?
                 ORDER BY i.SIZE, c.COLOR_VALUE
             ");
-            $stmt->bind_param("i", $productId);
-            
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-
-            $result = $stmt->get_result();
-            $inventory = [];
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $inventory[] = $row;
-                }
-                $result->free();
-            }
-            $stmt->close();
+            $stmt->execute([$productId]);
+            $inventory = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             header('Content-Type: application/json');
             echo json_encode($inventory);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to fetch inventory: ' . $e->getMessage()]);
         }
@@ -302,34 +156,24 @@ class AdminController {
                 echo json_encode(['error' => 'Product ID is required']);
                 return;
             }
-            if (empty($data['colorId']) || empty($data['size']) || !isset($data['quantity'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Color, size, and quantity are required']);
-                return;
-            }
-
-            $productId = (int)$data['productId'];
-            $colorId   = (int)$data['colorId'];
-            $size      = $data['size'];
-            $quantity  = (int)$data['quantity'];
 
             $stmt = $this->db->prepare("
                 INSERT INTO INVENTORY (PRODUCT_ID, COLOR_ID, SIZE, QUANTITY)
                 VALUES (?, ?, ?, ?)
             ");
-            $stmt->bind_param("iisi", $productId, $colorId, $size, $quantity);
-
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-
-            $inventoryId = $this->db->insert_id;
-            $stmt->close();
+            $stmt->execute([
+                $data['productId'],
+                $data['colorId'],
+                $data['size'],
+                $data['quantity']
+            ]);
 
             http_response_code(201);
             echo json_encode([
-                'success'      => true,
-                'inventory_id' => $inventoryId
+                'success' => true,
+                'inventoryId' => $this->db->lastInsertId()
             ]);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to add inventory: ' . $e->getMessage()]);
         }
@@ -340,28 +184,21 @@ class AdminController {
      */
     public function updateInventory($inventoryId, $data) {
         try {
-            if (empty($data['colorId']) || empty($data['size']) || !isset($data['quantity'])) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Color, size, and quantity are required']);
-                return;
-            }
-
-            $colorId  = (int)$data['colorId'];
-            $size     = $data['size'];
-            $quantity = (int)$data['quantity'];
-
             $stmt = $this->db->prepare("
-                UPDATE INVENTORY
+                UPDATE INVENTORY 
                 SET COLOR_ID = ?, SIZE = ?, QUANTITY = ?
                 WHERE INVENTORY_ID = ?
             ");
-            $stmt->bind_param("isii", $colorId, $size, $quantity, $inventoryId);
-
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-            $stmt->close();
-
+            
+            $stmt->execute([
+                $data['colorId'],
+                $data['size'],
+                $data['quantity'],
+                $inventoryId
+            ]);
+            
             echo json_encode(['success' => true]);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to update inventory: ' . $e->getMessage()]);
         }
@@ -373,338 +210,243 @@ class AdminController {
     public function deleteInventory($inventoryId) {
         try {
             $stmt = $this->db->prepare("DELETE FROM INVENTORY WHERE INVENTORY_ID = ?");
-            $stmt->bind_param("i", $inventoryId);
-
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-            $stmt->close();
-
+            $stmt->execute([$inventoryId]);
+            
             echo json_encode(['success' => true]);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to delete inventory: ' . $e->getMessage()]);
         }
     }
-
+    
     // ==================== COLORS ====================
-
+    
+    /**
+     * Get all colors
+     */
     public function getColors() {
         try {
-            $sql = "
-                SELECT 
-                    c.COLOR_ID,
-                    c.COLOR_VALUE,
-                    c.SEASON_ID,
-                    s.SEASON_TYPE
-                FROM COLORS c
-                LEFT JOIN SEASONS s ON c.SEASON_ID = s.SEASON_ID
-                ORDER BY s.SEASON_TYPE, c.COLOR_VALUE
-            ";
-            $result = $this->db->query($sql);
-            $colors = [];
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $colors[] = $row;
-                }
-                $result->free();
-            }
-
+            $stmt = $this->db->query("SELECT COLOR_ID, COLOR_VALUE FROM COLORS ORDER BY COLOR_VALUE");
+            $colors = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
             header('Content-Type: application/json');
             echo json_encode($colors);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to fetch colors: ' . $e->getMessage()]);
         }
     }
-
+    
+    /**
+     * Add new color
+     */
     public function addColor($data) {
         try {
-            $colorValue = trim($data['colorValue'] ?? '');
-            $seasonId   = isset($data['seasonId']) ? (int)$data['seasonId'] : null;
-
-            if ($colorValue === '' || !$seasonId) {
-                http_response_code(400);
-                echo json_encode(['error' => 'Color value and season are required']);
-                return;
-            }
-
-            $stmt = $this->db->prepare("
-                INSERT INTO COLORS (COLOR_VALUE, SEASON_ID)
-                VALUES (?, ?)
-            ");
-            $stmt->bind_param("si", $colorValue, $seasonId);
-
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-
-            $colorId = $this->db->insert_id;
-            $stmt->close();
-
+            $stmt = $this->db->prepare("INSERT INTO COLORS (COLOR_VALUE) VALUES (?)");
+            $stmt->execute([$data['colorValue']]);
+            
             http_response_code(201);
             echo json_encode([
-                'success'  => true,
-                'color_id' => $colorId
+                'success' => true,
+                'colorId' => $this->db->lastInsertId()
             ]);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to add color: ' . $e->getMessage()]);
         }
     }
-
+    
     // ==================== BODY SHAPES ====================
-
+    
+    /**
+     * Get all body shapes
+     */
     public function getBodyShapes() {
         try {
-            $sql = "SELECT BODY_SHAPE_ID, BODY_TYPE FROM BODY_SHAPES ORDER BY BODY_TYPE";
-            $result = $this->db->query($sql);
-            $shapes = [];
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $shapes[] = $row;
-                }
-                $result->free();
-            }
-
+            $stmt = $this->db->query("SELECT BODY_SHAPE_ID, BODY_TYPE FROM BODY_SHAPES ORDER BY BODY_TYPE");
+            $shapes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
             header('Content-Type: application/json');
             echo json_encode($shapes);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to fetch body shapes: ' . $e->getMessage()]);
         }
     }
-
-    // ==================== SEASONS ====================
-
-    public function getSeasons() {
-        try {
-            $sql = "SELECT SEASON_ID, SEASON_TYPE FROM SEASONS ORDER BY SEASON_TYPE";
-            $result = $this->db->query($sql);
-            $seasons = [];
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $seasons[] = $row;
-                }
-                $result->free();
-            }
-
-            header('Content-Type: application/json');
-            echo json_encode($seasons);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to fetch seasons: ' . $e->getMessage()]);
-        }
-    }
-
+    
     // ==================== USERS ====================
-
-public function getUsers() {
+    
+    /**
+     * Get all users
+     */
+    public function getUsers() {
     try {
-        // Match your actual schema (from adminfunc.php)
-        $sql = "
+        $stmt = $this->db->query("
             SELECT 
                 USER_ID,
                 USERNAME,
                 EMAIL,
-                CREATED_AT,
-                STATUS
-            FROM users
+                STATUS,
+                CREATED_AT
+            FROM USERS
             ORDER BY CREATED_AT DESC
-        ";
-
-        $result = $this->db->query($sql);
-        $users = [];
-
-        if ($result) {
-            while ($row = $result->fetch_assoc()) {
-                $users[] = [
-                    'USER_ID'    => $row['USER_ID'],
-                    'USERNAME'   => $row['USERNAME'],
-                    'EMAIL'      => $row['EMAIL'],
-                    'CREATED_AT' => $row['CREATED_AT'],
-                    // Convert STATUS: 0 = Active, 1 = Locked
-                    'IS_LOCKED'  => ($row['STATUS'] == 1),
-                ];
-            }
-            $result->free();
+        ");
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Convert STATUS to boolean for frontend
+        foreach ($users as &$user) {
+            $user['IS_LOCKED'] = (bool)$user['STATUS']; // 0 = active, 1 = locked
         }
-
+        
         header('Content-Type: application/json');
         echo json_encode($users);
-    } catch (Exception $e) {
+    } catch (PDOException $e) {
         http_response_code(500);
         echo json_encode(['error' => 'Failed to fetch users: ' . $e->getMessage()]);
     }
 }
 
+    
+    /**
+     * Toggle user lock status
+     */
 public function toggleUserLock($userId, $data) {
     try {
-        // Frontend sends isLocked = current state.
-        // Your DB uses STATUS: 0 = active, 1 = locked
-        $currentlyLocked = !empty($data['isLocked']);   // true/false
-        $newStatus = $currentlyLocked ? 0 : 1;          // flip it
+        $isLocked = isset($data['isLocked']) ? (bool)$data['isLocked'] : false;
+        $newStatus = $isLocked ? 1 : 0;
 
-        $stmt = $this->db->prepare(
-            "UPDATE users 
-             SET STATUS = ?, FAILED_ATTEMPTS = 0 
-             WHERE USER_ID = ?"
-        );
-        $stmt->bind_param("ii", $newStatus, $userId);
+        // Update status AND reset failed attempts when unlocking
+        $stmt = $this->db->prepare("
+            UPDATE USERS 
+            SET STATUS = ?, FAILED_ATTEMPTS = CASE WHEN ? = 0 THEN 0 ELSE FAILED_ATTEMPTS END
+            WHERE USER_ID = ?
+        ");
+        $stmt->execute([$newStatus, $newStatus, $userId]);
 
-        if (!$stmt->execute()) {
-            throw new Exception("Execute failed: " . $stmt->error);
-        }
-        $stmt->close();
-
-        $message = $newStatus ? 'User account locked successfully.' 
-                              : 'User account unlocked successfully.';
-
-        echo json_encode([
-            'success' => true,
-            'message' => $message
-        ]);
-    } catch (Exception $e) {
+        $message = $newStatus ? 'User account locked successfully.' : 'User account unlocked successfully.';
+        echo json_encode(['success' => true, 'message' => $message]);
+    } catch (PDOException $e) {
         http_response_code(500);
-        echo json_encode(['success' => false, 'message' => 'Failed to update user status: ' . $e->getMessage()]);
+        echo json_encode(['error' => 'Failed to update user status: ' . $e->getMessage()]);
     }
 }
 
 
-
+    
     // ==================== ORDERS ====================
-
+    
     /**
-     * Get all orders for admin Orders tab
+     * Get all orders with summary information
      */
     public function getOrders() {
         try {
-            $sql = "
+            $stmt = $this->db->query("
                 SELECT 
                     o.ORDER_ID,
-                    o.ORDER_NUMBER,
                     o.USER_ID,
+                    u.USERNAME,
                     o.TOTAL_AMOUNT,
                     o.STATUS,
-                    o.SHIPPING_ADDRESS,
+                    o.SHIPPING_REQUIRED,
                     o.CREATED_AT,
-                    u.USERNAME,
-                    (
-                        SELECT COALESCE(SUM(QUANTITY),0)
-                        FROM ORDER_ITEMS oi
-                        WHERE oi.ORDER_ID = o.ORDER_ID
-                    ) AS ITEM_COUNT,
-                    CASE WHEN o.SHIPPING_ADDRESS IS NULL OR o.SHIPPING_ADDRESS = '' 
-                        THEN 0 ELSE 1 
-                    END AS SHIPPING_REQUIRED
+                    COUNT(oi.ORDER_ITEM_ID) as ITEM_COUNT
                 FROM ORDERS o
-                LEFT JOIN USERS u ON u.USER_ID = o.USER_ID
+                LEFT JOIN USERS u ON o.USER_ID = u.USER_ID
+                LEFT JOIN ORDER_ITEMS oi ON o.ORDER_ID = oi.ORDER_ID
+                GROUP BY o.ORDER_ID
                 ORDER BY o.CREATED_AT DESC
-            ";
-            $result = $this->db->query($sql);
-            $orders = [];
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $orders[] = $row;
-                }
-                $result->free();
+            ");
+            $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Convert SHIPPING_REQUIRED to boolean
+            foreach ($orders as &$order) {
+                $order['SHIPPING_REQUIRED'] = (bool)$order['SHIPPING_REQUIRED'];
             }
-
+            
             header('Content-Type: application/json');
             echo json_encode($orders);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to fetch orders: ' . $e->getMessage()]);
         }
     }
-
+    
     /**
-     * Get details + items for a single order
+     * Get detailed order information including items
      */
     public function getOrderDetails($orderId) {
         try {
-            // Main order + user info
+            // Get order details
             $stmt = $this->db->prepare("
                 SELECT 
                     o.ORDER_ID,
-                    o.ORDER_NUMBER,
                     o.USER_ID,
+                    u.USERNAME,
+                    u.EMAIL,
                     o.TOTAL_AMOUNT,
                     o.STATUS,
-                    o.SHIPPING_ADDRESS,
-                    o.CREATED_AT,
-                    u.USERNAME,
-                    u.EMAIL
+                    o.SHIPPING_REQUIRED,
+                    o.CREATED_AT
                 FROM ORDERS o
-                LEFT JOIN USERS u ON u.USER_ID = o.USER_ID
+                LEFT JOIN USERS u ON o.USER_ID = u.USER_ID
                 WHERE o.ORDER_ID = ?
             ");
-            $stmt->bind_param("i", $orderId);
-            $stmt->execute();
-            $orderRes = $stmt->get_result();
-            $order = $orderRes ? $orderRes->fetch_assoc() : null;
-            $stmt->close();
-
+            $stmt->execute([$orderId]);
+            $order = $stmt->fetch(PDO::FETCH_ASSOC);
+            
             if (!$order) {
                 http_response_code(404);
                 echo json_encode(['error' => 'Order not found']);
                 return;
             }
-
-            // Items
+            
+            // Get order items
             $stmt = $this->db->prepare("
                 SELECT 
                     oi.ORDER_ITEM_ID,
-                    oi.ORDER_ID,
-                    oi.PRODUCT_ID,
-                    oi.COLOR_ID,
-                    oi.SIZE,
                     oi.QUANTITY,
-                    oi.UNIT_PRICE,
+                    oi.PRICE,
                     p.PRODUCT_NAME,
-                    p.PRICE,
+                    i.SIZE,
                     c.COLOR_VALUE
                 FROM ORDER_ITEMS oi
-                INNER JOIN PRODUCTS p ON oi.PRODUCT_ID = p.PRODUCT_ID
-                INNER JOIN COLORS c ON oi.COLOR_ID = c.COLOR_ID
+                INNER JOIN INVENTORY i ON oi.INVENTORY_ID = i.INVENTORY_ID
+                INNER JOIN PRODUCTS p ON i.PRODUCT_ID = p.PRODUCT_ID
+                INNER JOIN COLORS c ON i.COLOR_ID = c.COLOR_ID
                 WHERE oi.ORDER_ID = ?
             ");
-            $stmt->bind_param("i", $orderId);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            $order['items'] = [];
-            if ($result) {
-                while ($row = $result->fetch_assoc()) {
-                    $order['items'][] = $row;
-                }
-                $result->free();
-            }
-            $stmt->close();
-
+            $stmt->execute([$orderId]);
+            $order['items'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            // Convert boolean
+            $order['SHIPPING_REQUIRED'] = (bool)$order['SHIPPING_REQUIRED'];
+            
             header('Content-Type: application/json');
             echo json_encode($order);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to fetch order details: ' . $e->getMessage()]);
         }
     }
-
+    
     /**
-     * Update order status (optional, for future use)
+     * Update order status
      */
     public function updateOrderStatus($orderId, $data) {
         try {
-            $status = $data['status'] ?? null;
-            if (!$status) {
+            $validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
+            
+            if (!in_array($data['status'], $validStatuses)) {
                 http_response_code(400);
-                echo json_encode(['error' => 'Status is required']);
+                echo json_encode(['error' => 'Invalid status']);
                 return;
             }
-
-            $stmt = $this->db->prepare("UPDATE ORDERS SET STATUS = ? WHERE ORDER_ID = ?");
-            $stmt->bind_param("si", $status, $orderId);
             
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-            $stmt->close();
+            $stmt = $this->db->prepare("UPDATE ORDERS SET STATUS = ? WHERE ORDER_ID = ?");
+            $stmt->execute([$data['status'], $orderId]);
             
             echo json_encode(['success' => true]);
-        } catch (Exception $e) {
+        } catch (PDOException $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to update order status: ' . $e->getMessage()]);
         }

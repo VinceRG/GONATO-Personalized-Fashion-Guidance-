@@ -81,16 +81,6 @@ body {
 
 }
 
-.profile-header {
-  margin-bottom: 4px;
-}
-
-.profile-header h4 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
 .profile:hover {
   background: rgba(255, 255, 255, 0.1);
 }
@@ -370,6 +360,7 @@ body {
   width: 40px;
   height: 40px;
 }
+
 
 .sidebar.collapsed .logout-btn {
   display: none !important;

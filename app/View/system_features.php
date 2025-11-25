@@ -129,10 +129,10 @@
           </div>
 
           <div class="shop-controls">
-<button class="cart-button" type="button" onclick="openCart()">
-  <i class="bi bi-cart"></i>
-  <span class="cart-count" id="cartCount"></span>
-</button>
+            <button class="cart-button" onclick="openCart()">
+              <i class="bi bi-bag"></i>
+              <span class="cart-count">0</span>
+            </button>
           </div>
         </div>
 
@@ -161,8 +161,55 @@
           </div>
         </div>
 
-      <?php include 'catalog.php'; ?>
+        <div class="subsection">
+          <div class="filter-bar">
+            <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
+            <select id="categoryFilter" onchange="filterProducts()">
+              <option value="">All Categories</option>
+              <option value="Dresses">Dresses</option>
+              <option value="Tops">Tops</option>
+              <option value="Bottoms">Bottoms</option>
+            </select>
+          </div>
 
+          <div class="clothes-grid">
+            <div class="clothes-item catalog-item" data-category="Tops">
+              <img src="images/item1.jpg" alt="Clothing Item 1">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
+              <div class="clothes-caption">
+                <span class="title">Summer Linen Top</span>
+                <span class="price">₱999</span>
+              </div>
+            </div>
+
+            <div class="clothes-item catalog-item" data-category="Bottoms">
+              <img src="images/item2.jpg" alt="Clothing Item 2">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
+              <div class="clothes-caption">
+                <span class="title">Flowy Midi Skirt</span>
+                <span class="price">₱1,250</span>
+              </div>
+            </div>
+
+            <div class="clothes-item catalog-item" data-category="Bottoms">
+              <img src="images/item3.jpg" alt="Clothing Item 3">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
+              <div class="clothes-caption">
+                <span class="title">Tan Trousers</span>
+                <span class="price">₱1,799</span>
+              </div>
+            </div>
+
+            <div class="clothes-item catalog-item" data-category="Tops">
+              <img src="images/item1.jpg" alt="Clothing Item 4">
+              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
+              <div class="clothes-caption">
+                <span class="title">Summer Linen Top</span>
+                <span class="price">₱999</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section id="features" class="content-section">
@@ -295,13 +342,6 @@
       </section>
     </div>
   </div>
-
-  <!-- Toast Notification -->
-<div id="toast" class="toast hidden">
-  <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
-  <span id="toastMessage"></span>
-</div>
-
 
   <!-- USER PROFILE MODAL -->
   <div class="overlay"
@@ -1142,16 +1182,6 @@
       if (overlay) overlay.classList.add('hidden');
     }
   </script>
-<?php include __DIR__ . '/cartModal.php'; ?>
-
-<link rel="stylesheet" href="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/css/cartModal.css">
-<script>
-  // base64("pk_test_xxx:") — encode on the server
-  window.PAYMONGO_PUBLIC_KEY_B64 = "<?= base64_encode($_ENV['PAYMONGO_PUBLIC_KEY'] . ':') ?>";
-</script>
-<script src="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/js/cartModal.js"></script>
-<script src="https://js.paymongo.com/v1/paymongo.js"></script>
-
 
 </body>
 </html>

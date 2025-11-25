@@ -38,7 +38,6 @@ class RegisterController {
             }
         }
 
-        // Load the view
         require_once __DIR__ . '/../View/register.php';
     }
 
