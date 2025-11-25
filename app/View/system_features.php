@@ -76,6 +76,84 @@
       }, 3000);
     </script>
   <?php endif; ?>
+  <?php
+  // Flash messages from analysis controllers (body + color)
+  $flashSuccess = $_SESSION['successMessage']      ?? '';
+  $flashError   = $_SESSION['errorMessage']        ?? '';
+
+  // Stored analysis results (used in cards + modals)
+  $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
+  $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
+
+  // One-time modal triggers (set by controllers after analysis)
+  $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
+  $showColorModal = $_SESSION['show_color_modal'] ?? false;
+
+  // NEW: keep account modal open after profile update
+  $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
+
+  // Map to variables used below
+  $successMessage = $flashSuccess;
+  $errorMessage   = $flashError;
+
+  // Clear only flash + flags (results stay for inline display)
+  unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
+  unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
+  unset($_SESSION['keep_profile_open']); // clear this one-time flag
+
+  // ================= RECOMMENDATIONS LOGIC =================
+
+  // Where your product images are stored (adjust if different)
+  $productImageBasePath = "uploads/products/";
+
+  $recommendations = [];
+
+  // Make sure we have a logged-in user & a DB connection ($pdo or whatever you use)
+  if (!empty($user['USER_ID']) && isset($pdo)) {
+
+      $userId = (int)$user['USER_ID'];
+
+      $sql = "
+          SELECT 
+              p.PRODUCT_ID,
+              p.PRODUCT_NAME,
+              p.DESCRIPTION,
+              p.PRICE,
+              p.IMAGE_FILE,
+              bs.BODY_TYPE,
+              s.SEASON_TYPE,
+              c.COLOR_VALUE,
+              i.SIZE,
+              i.QUANTITY
+          FROM users u
+          JOIN products p
+              ON p.BODY_SHAPE_ID = u.BODY_SHAPE_ID          -- match fit
+          JOIN inventory i
+              ON i.PRODUCT_ID = p.PRODUCT_ID
+          JOIN colors c
+              ON c.COLOR_ID = i.COLOR_ID
+          JOIN seasons s
+              ON c.SEASON_ID = s.SEASON_ID                  -- match color season
+          LEFT JOIN body_shapes bs
+              ON bs.BODY_SHAPE_ID = u.BODY_SHAPE_ID
+          WHERE 
+              u.USER_ID        = :user_id
+              AND u.SEASON_ID IS NOT NULL
+              AND u.BODY_SHAPE_ID IS NOT NULL
+              AND c.SEASON_ID   = u.SEASON_ID               -- only colors for user's season
+              AND i.QUANTITY    > 0                         -- in stock
+          ORDER BY 
+              p.CREATED_AT DESC,
+              p.PRODUCT_NAME
+          LIMIT 8
+      ";
+
+      $stmt = $pdo->prepare($sql);
+      $stmt->execute(['user_id' => $userId]);
+      $recommendations = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  }
+?>
+
 
   <div class="results-container">
     <aside class="sidebar" id="appSidebar" aria-expanded="true">
@@ -143,24 +221,45 @@
           <p class="section-subtitle">Based on your color and body analysis results.</p>
 
           <div class="clothes-grid">
-            <div class="clothes-item">
-              <img src="images/recommend1.jpg" alt="Recommended Outfit 1">
-              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Soft Beige Blazer</span>
-                <span class="price">₱1,899</span>
-              </div>
-            </div>
+  <?php if (!empty($recommendations)): ?>
+    <?php foreach ($recommendations as $item): ?>
+      <div class="clothes-item">
+        <img
+          src="<?= htmlspecialchars($productImageBasePath . $item['IMAGE_FILE']) ?>"
+          alt="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
+        >
 
-            <div class="clothes-item">
-              <img src="images/recommend2.jpg" alt="Recommended Outfit 2">
-              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Classic White Dress</span>
-                <span class="price">₱2,150</span>
-              </div>
-            </div>
-          </div>
+        <!-- Heart / add-to-cart button (wired with data-attributes if you want JS to use them) -->
+        <button
+          class="add-to-cart"
+          data-product-id="<?= (int)$item['PRODUCT_ID'] ?>"
+          data-product-name="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
+          data-price="<?= htmlspecialchars($item['PRICE']) ?>"
+          data-size="<?= htmlspecialchars($item['SIZE']) ?>"
+          data-color="<?= htmlspecialchars($item['COLOR_VALUE'] ?? '') ?>"
+        >
+          <i class="bi bi-heart"></i>
+        </button>
+
+        <div class="clothes-caption">
+          <span class="title">
+            <?= htmlspecialchars($item['PRODUCT_NAME']) ?>
+          </span>
+          <span class="price">
+            ₱<?= number_format($item['PRICE'], 2) ?>
+          </span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p class="section-subtitle" style="grid-column: 1 / -1; margin-top: 1rem;">
+      No personalized items yet. Complete your
+      <a href="#features" style="text-decoration: underline;">color and body shape analysis</a>
+      to unlock outfit recommendations.
+    </p>
+  <?php endif; ?>
+</div>
+
         </div>
 
       <?php include 'catalog.php'; ?>

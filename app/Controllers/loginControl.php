@@ -13,7 +13,6 @@ class LoginController {
     }
 
     public function index() {
-        // ✅ Make sure session is started (in case this file is ever called directly)
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -21,6 +20,8 @@ class LoginController {
         $message = '';
         $messageType = '';
         $openOtpModal = false;
+        $remainingAttempts = null;
+        $isLocked = false;
 
         // ============================
         // STEP 2: AJAX OTP VERIFICATION
@@ -32,18 +33,29 @@ class LoginController {
             $storedOtp  = $_SESSION['login_otp'] ?? null;
             $otpTime    = $_SESSION['login_otp_time'] ?? 0;
 
+            if (!isset($_SESSION['login_otp_attempts'])) {
+                $_SESSION['login_otp_attempts'] = 0;
+            }
+
+            // Too many wrong OTP attempts → expire OTP and force re-login
+            if ($_SESSION['login_otp_attempts'] >= 5) {
+                $this->clearOtpSession();
+                unset($_SESSION['temp_user']);
+                echo json_encode(['success' => false, 'expired' => true]);
+                exit;
+            }
+
             if (!$storedOtp || (time() - $otpTime) > self::OTP_EXPIRY) {
                 $this->clearOtpSession();
+                unset($_SESSION['temp_user']);
                 echo json_encode(['success' => false, 'expired' => true]);
                 exit;
             }
 
             if ($enteredOtp === (string)$storedOtp) {
-                // Finalize login
                 $user = $_SESSION['temp_user'] ?? null;
 
                 if ($user) {
-                    // 🔐 Security: regenerate session id at login
                     session_regenerate_id(true);
 
                     $_SESSION['user_id']    = $user['USER_ID'];
@@ -53,21 +65,22 @@ class LoginController {
                     $_SESSION['last_name']  = $user['LAST_NAME'];
                     $_SESSION['logged_in']  = true;
 
-                    // ✅ Handle remember-me cookie (if requested)
                     if (!empty($_SESSION['remember_me'])) {
                         $this->setRememberMeCookies($user);
                         unset($_SESSION['remember_me']);
                     }
 
-                    // Optional: last login cookie
                     $this->setLastLoginCookie();
 
                     unset($_SESSION['temp_user']);
                     $this->clearOtpSession();
+                    unset($_SESSION['login_otp_attempts']);
 
                     echo json_encode(['success' => true]);
                     exit;
                 }
+            } else {
+                $_SESSION['login_otp_attempts']++;
             }
 
             echo json_encode(['success' => false]);
@@ -80,9 +93,6 @@ class LoginController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = trim($_POST['username'] ?? '');
             $password = trim($_POST['password'] ?? '');
-            // validatioon for recaptcha
-            $recaptchaSecret = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC"; 
-            $recaptchaResponse = $_POST['g-recaptcha-response'] ?? '';
 
             if (empty($username) || empty($password)) {
                 $message = "Please fill in all fields.";
@@ -91,30 +101,58 @@ class LoginController {
                 $loginResult = $this->userModel->login($username, $password);
 
                 if ($loginResult['success']) {
-                    // Store user temporarily until OTP is verified
-                    $_SESSION['temp_user'] = $loginResult['user'];
+                    // =====================================
+                    // ADMIN LOGIN BRANCH (NO OTP HERE)
+                    // =====================================
+                    if (!empty($loginResult['role']) && $loginResult['role'] === 'admin') {
+                        $admin = $loginResult['admin'];
 
-                    // ✅ Store remember_me preference in session
-                    $rememberMe = !empty($_POST['remember_me']);
-                    $_SESSION['remember_me'] = $rememberMe;
+                        session_regenerate_id(true);
 
-                    // Generate OTP (no DB, only session)
-                    $otp = rand(100000, 999999);
-                    $_SESSION['login_otp'] = $otp;
-                    $_SESSION['login_otp_time'] = time();
+                        $_SESSION['admin_id']       = $admin['ADMIN_ID'];
+                        $_SESSION['admin_username'] = $admin['USERNAME'];
+                        $_SESSION['is_admin']       = true;
 
-                    // Send OTP email
-                    $email = $loginResult['user']['EMAIL'];
-                    $this->sendLoginOtpEmail($email, $otp);
+                        // ✅ Redirect to your existing admin route
+                        header('Location: index.php?page=admin');
+                        exit;
+                    }
 
-                    // Trigger modal in the view
-                    $openOtpModal = true;
-                    $message = "Please verify your identity. An OTP has been sent to your email.";
-                    $messageType = 'info';
+                    // =====================================
+                    // NORMAL USER LOGIN → OTP FLOW
+                    // =====================================
+                    if (!empty($loginResult['role']) && $loginResult['role'] === 'user') {
+                        $_SESSION['temp_user'] = $loginResult['user'];
+
+                        $rememberMe = !empty($_POST['remember_me']);
+                        $_SESSION['remember_me'] = $rememberMe;
+
+                        // Generate OTP (session only, no DB)
+                        $otp = rand(100000, 999999);
+                        $_SESSION['login_otp']          = $otp;
+                        $_SESSION['login_otp_time']     = time();
+                        $_SESSION['login_otp_attempts'] = 0;
+
+                        // Send OTP email
+                        $email = $loginResult['user']['EMAIL'];
+                        $this->sendLoginOtpEmail($email, $otp);
+
+                        $openOtpModal = true;
+                        $message = "Please verify your identity. An OTP has been sent to your email.";
+                        $messageType = 'info';
+                    }
 
                 } else {
-                    $message = $loginResult['message'];
+                    // LOGIN FAILED
+                    $message = $loginResult['message'] ?? 'Login failed.';
                     $messageType = 'error';
+
+                    if (isset($loginResult['remainingAttempts'])) {
+                        $remainingAttempts = $loginResult['remainingAttempts'];
+                    }
+                    if (isset($loginResult['isLocked']) && $loginResult['isLocked'] === true) {
+                        $isLocked = true;
+                    }
                 }
             }
         }
@@ -123,16 +161,13 @@ class LoginController {
     }
 
     private function clearOtpSession() {
-        unset($_SESSION['login_otp'], $_SESSION['login_otp_time']);
+        unset($_SESSION['login_otp'], $_SESSION['login_otp_time'], $_SESSION['login_otp_attempts']);
     }
 
-    // ✅ NEW: remember-me cookie helper
     private function setRememberMeCookies(array $user) {
-        // 30 days
-        $expiry = time() + (60 * 60 * 24 * 30);
+        $expiry = time() + (60 * 60 * 24 * 30); // 30 days
         $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
 
-        // Only store non-sensitive info (e.g., username). Don't store passwords.
         setcookie(
             'remember_username',
             $user['USERNAME'],
@@ -140,13 +175,12 @@ class LoginController {
                 'expires'  => $expiry,
                 'path'     => '/',
                 'secure'   => $secure,
-                'httponly' => false,     // can be read by JS if you want to auto-fill
+                'httponly' => false,
                 'samesite' => 'Lax',
             ]
         );
     }
 
-    // ✅ NEW: last login cookie helper (for display)
     private function setLastLoginCookie() {
         $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
 
@@ -169,16 +203,14 @@ class LoginController {
         $mail = new PHPMailer(true);
 
         try {
-            // SMTP Settings (same as forgot password)
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             $mail->Username   = 'amarelle2025@gmail.com';
-            $mail->Password   = 'hdzk sgjm jnbx kipl'; // your app password
+            $mail->Password   = 'hdzk sgjm jnbx kipl'; // ⚠ move to ENV in real app
             $mail->SMTPSecure = 'tls';
             $mail->Port       = 587;
 
-            // Sender / Receiver
             $mail->setFrom('amarelle2025@gmail.com', 'Amarelle');
             $mail->addAddress($email);
 
@@ -186,16 +218,13 @@ class LoginController {
 
             $mail->isHTML(true);
             $mail->Subject = 'Login Verification - Amarelle';
-            $mail->Body = $this->getLoginEmailTemplate($email, $otpDigits);
+            $mail->Body    = $this->getLoginEmailTemplate($email, $otpDigits);
 
             $mail->send();
         } catch (Exception $e) {
             error_log("Login OTP Mailer Error: " . $mail->ErrorInfo);
         }
     }
-
-   
-
 
     private function getLoginEmailTemplate($email, $otpDigits) {
         // Reuse your nice template, just change wording for login
@@ -314,4 +343,6 @@ class LoginController {
         </html>
         ';
     }
+    
 }
+

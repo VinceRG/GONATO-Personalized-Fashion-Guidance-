@@ -224,11 +224,25 @@ case 'get_cart_count':
     $ctrl->getCartCount();
     exit;
 
+case 'system_features':
+    // $user loaded from session / db
+    $productModel = new ProductModel($pdo);
+
+    $recommendations = [];
+    if (!empty($user['USER_ID'])) {
+        $recommendations = $productModel->getRecommendationsForUser((int)$user['USER_ID']);
+    }
+
+    // now include the view, passing $user and $recommendations
+    include __DIR__ . '/views/system_features.php';
+    break;
+
 
     // ===== DEFAULT: LANDING PAGE =====
     case 'landing':
     default:
         require_once './app/View/landing.php';
         break;
+
 }   
 ?>
