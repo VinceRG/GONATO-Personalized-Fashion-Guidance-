@@ -19,8 +19,6 @@ class Database {
         if (!$conn) {
             die("<div class='status error'>Connection failed: " . mysqli_connect_error() . "</div>");
         }
-        // Optional: comment this line out in production
-        // echo "<div class='status success'>Database connected successfully!</div>";
 
         return $conn;
     }

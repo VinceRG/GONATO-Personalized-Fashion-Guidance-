@@ -7,7 +7,7 @@
 
 /* GLOBAL BODY */
 body {
-    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Lexend', 'Segoe UI', sans-serif;
     background: linear-gradient(180deg, #fff 0%, #D7C9AE 100%);
     color: #2D2D2D;
     min-height: 100vh;
@@ -133,7 +133,6 @@ label {
     color: #2D2D2D;
     margin-bottom: 0.6rem;
     margin-top: 1.2rem;
-    font-family: 'Lexend', sans-serif;
 }
 
 /* INPUT FIELDS */
@@ -143,7 +142,6 @@ input[type="email"] {
     width: 100%;
     padding: 1rem 1.2rem;
     font-size: 1rem;
-    font-family: 'Lexend', sans-serif;
     border: 1.5px solid rgba(166, 135, 99, 0.2);
     border-radius: 8px;
     background: #FAFAF9;
@@ -162,24 +160,6 @@ input:focus {
 input::placeholder {
     color: #A8A29E;
     font-size: 0.95rem;
-}
-
-/* CONTACT PREFIX */
-.contact-group {
-    display: flex;
-    padding-bottom: 1rem;
-}
-
-.contact-prefix {
-    background: #EAE0D2;
-    padding: 1rem;
-    border: 1.5px solid rgba(166, 135, 99, 0.2);
-    border-right: none;
-    border-radius: 8px 0 0 8px;
-}
-
-#contact_num {
-    border-radius: 0 8px 8px 0;
 }
 
 /* SUBMIT BUTTON */
@@ -212,7 +192,7 @@ form p {
     text-align: center;
     font-size: 0.95rem;
     color: #57534E;
-    margin-top: 1.5rem;
+    margin-top: 5px;
 }
 
 form a {
@@ -222,6 +202,7 @@ form a {
     position: relative;
 }
 
+/*
 form a::after {
     content: '';
     position: absolute;
@@ -239,145 +220,24 @@ form a:hover::after {
 
 form a:hover {
     color: #8B6F47;
-}
+} */
 
-/* PASSWORD STRENGTH */
-.password-strength-container {
-    margin: 15px 0;
-    display: none;
-}
-
-.password-strength-container.show {
-    display: block;
-}
-
-.strength-bar {
+.forgotpass {
     width: 100%;
-    height: 8px;
-    background-color: #e0e0e0;
-    border-radius: 10px;
-    overflow: hidden;
+    text-align: right;
+    /* changed from right to left */
+    margin-bottom: 15px;
 }
 
-.strength-bar-fill {
-    height: 100%;
-    width: 0%;
-    transition: all 0.3s ease;
-}
-
-.strength-text {
+.forgotpass a {
+    color: #A68763;
     font-size: 14px;
-    font-weight: bold;
-    margin-top: 10px;
+    text-decoration: none;
 }
 
-.strength-weak {
-    background: #ff4444;
-}
-
-.strength-fair {
-    background: #ff8800;
-}
-
-.strength-good {
-    background: #ffbb00;
-}
-
-.strength-strong {
-    background: #00cc00;
-}
-
-/* PASSWORD REQUIREMENTS */
-.password-requirements {
-    margin-top: 0.5rem;
-    padding: 0.75rem;
-    background: #f9fafb;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    display: none;
-}
-
-.password-requirements.show {
-    display: block;
-}
-
-.password-requirements div {
-    margin: 0.25rem 0;
-    display: flex;
-    align-items: center;
-    color: #666;
-}
-
-.password-requirements div::before {
-    content: '✗';
-    margin-right: 0.5rem;
-    color: #dc2626;
-    font-weight: bold;
-}
-
-.password-requirements div.valid {
-    color: #16a34a;
-}
-
-.password-requirements div.valid::before {
-    content: '✓';
-    color: #16a34a;
-}
-
-/* ERROR MESSAGES */
-.error-message {
-    color: #dc2626;
-    font-size: 0.85rem;
-    margin-top: -0.5rem;
-    display: none;
-}
-
-.error-message.show {
-    display: block;
-}
-
-input.error {
-    border-color: #dc2626 !important;
-    background-color: #fef2f2 !important;
-}
-
-/* MODAL */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    inset: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-}
-
-.modal.show {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 16px;
-    max-width: 400px;
-    width: 90%;
-    text-align: center;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-}
-
-.modal-icon {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg, #00cc00, #00aa00);
-    border-radius: 50%;
-    margin: 0 auto 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2.5rem;
-    color: white;
+.forgotpass a:hover {
+    text-decoration: underline;
+    color: #8B6F47;
 }
 
 /* ALERTS */
@@ -401,12 +261,6 @@ input.error {
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
-
-    .header,
-    .footer {
-        padding: 1.5rem;
-    }
-
     .content {
         padding: 2rem 1.5rem;
     }
@@ -438,4 +292,65 @@ input.error {
     label {
         font-size: 0.9rem;
     }
+}
+
+/* PASSWORD SHOW/HIDE */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 35%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 18px;
+    color: #555;
+}
+
+/* TERMS & FOOTER */
+.terms-text {
+    font-size: 12px;
+    text-align: center;
+    color: #555;
+    margin-top: 25px;
+    line-height: 1.5;
+}
+
+.terms-text a {
+    color: #007b8f;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.terms-text a:hover {
+    text-decoration: underline;
+}
+
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 2.5rem;
+    /* leave space for the eye icon */
+}
+
+.password-wrapper .toggle-password {
+    position: absolute;
+    top: 55%;
+    right: 0.7rem;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #888;
+    font-size: 1rem;
 }

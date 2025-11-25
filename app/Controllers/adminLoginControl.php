@@ -18,7 +18,7 @@ class AdminLoginController {
     }
 
     public function index() {
-        session_start();
+        //session_start();
         $message = '';
         $messageType = '';
 

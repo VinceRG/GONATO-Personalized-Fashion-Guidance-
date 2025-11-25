@@ -20,12 +20,10 @@ class User {
         if ($result->num_rows > 0) {
             $user = $result->fetch_assoc();
 
-            // 🔒 Check if user is locked
             if ($user['STATUS'] == 1) {
                 return ['success' => false, 'message' => 'Account is locked due to multiple failed login attempts.'];
             }
 
-            // ✅ Correct password
             if (password_verify($password, $user['PASSWORD'])) {
 
                 // Reset failed attempts after successful login
@@ -33,26 +31,17 @@ class User {
                 $reset->bind_param("i", $user['USER_ID']);
                 $reset->execute();
 
-                // Generate OTP (no email sending)
-                $otp = rand(100000, 999999);
-
                 return [
                     'success' => true,
-                    'step' => 'otp_verification',
-                    'user' => $user,
-                    'otp' => $otp
+                    'user' => $user
                 ];
-            } 
-            // ❌ Incorrect password
-            else {
+            } else {
                 $failedAttempts = $user['FAILED_ATTEMPTS'] + 1;
 
-                // Update failed attempts
                 $update = $this->conn->prepare("UPDATE users SET FAILED_ATTEMPTS = ? WHERE USER_ID = ?");
                 $update->bind_param("ii", $failedAttempts, $user['USER_ID']);
                 $update->execute();
 
-                // Lock account after 3 failed attempts
                 if ($failedAttempts >= 3) {
                     $lock = $this->conn->prepare("UPDATE users SET STATUS = 1 WHERE USER_ID = ?");
                     $lock->bind_param("i", $user['USER_ID']);
@@ -61,11 +50,9 @@ class User {
                     return ['success' => false, 'message' => 'Account locked after 3 failed login attempts. Please contact support.'];
                 }
 
-                return ['success' => false, 'message' => "Incorrect password. Attempt $failedAttempts of 3."];
+                return ['success' => false, 'message' => "Incorrect password. "];
             }
-        } 
-        // ❌ Account not found
-        else {
+        } else {
             return ['success' => false, 'message' => 'Account not found.'];
         }
     }

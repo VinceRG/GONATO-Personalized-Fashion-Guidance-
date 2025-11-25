@@ -1,288 +1,286 @@
-<!-- cart-modal.php -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-<link rel="stylesheet" href="public/css/cartModal.css">
+<!-- app/View/cartModal.php -->
 
-<!-- Overlay -->
-<div class="overlay" id="overlay" onclick="closeModals()"></div>
+<!-- CART OVERLAY -->
+<div id="cartOverlay" class="cart-overlay"></div>
 
-<!-- Shopping Cart Modal -->
-<div class="modal" id="cartModal">
-  <div class="modal-header">
-    <h2 class="modal-title"><i>Shopping Cart</i></h2>
-    <button class="close-btn" onclick="closeModals()">×</button>
+<!-- CART DRAWER -->
+<div id="cartModal" class="cart-modal">
+  <div class="cart-modal-header">
+    <h2 class="cart-modal-title">Your Cart</h2>
+    <button type="button" class="cart-close-btn" onclick="closeModals()">&times;</button>
   </div>
 
-  <div class="modal-content">
-    <div class="cart-items">
-      <!-- Sample Cart Items -->
-      <div class="cart-item">
-          <input type="checkbox" class="item-select">
-        <div class="item-image">
-          <img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400" alt="Product">
-        </div>
-        <div class="item-details">
-          <div>
-            <div class="item-name">Classic Cotton T-Shirt</div>
-            <div class="item-meta">
-              <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <div class="color-swatch" style="background: #3b82f6;"></div>
-                <span>Blue</span>
-              </div>
-              <span>Size M</span>
-            </div>
-          </div>
-          <div class="item-actions">
-            
-            <div class="quantity-control">
-              <button class="quantity-btn">−</button>
-              <span class="quantity-value">2</span>
-              <button class="quantity-btn">+</button>
-            </div>
-            <div class="item-price">$59.98</div>
-            <button class="remove-btn"><i class="bi bi-trash"></i></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Additional Cart Item -->
-      <div class="cart-item">
-                  <input type="checkbox" class="item-select">
-
-        <div class="item-image">
-          <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400" alt="Product">
-        </div>
-        <div class="item-details">
-          <div>
-            <div class="item-name">Denim Jeans</div>
-            <div class="item-meta">
-              <div style="display: flex; align-items: center; gap: 0.25rem;">
-                <div class="color-swatch" style="background: #1e3a8a;"></div>
-                <span>Dark Blue</span>
-              </div>
-              <span>Size 32</span>
-            </div>
-          </div>
-          <div class="item-actions">
-            <div class="quantity-control">
-              <button class="quantity-btn">−</button>
-              <span class="quantity-value">1</span>
-              <button class="quantity-btn">+</button>
-            </div>
-            <div class="item-price">$79.99</div>
-            <button class="remove-btn"><i class="bi bi-trash"></i></button>
-          </div>
-        </div>
-      </div>
+  <div class="cart-modal-content">
+    <!-- Cart items rendered by JS -->
+    <div id="cartItemsContainer" class="cart-items">
+      <!-- JS will render items here -->
     </div>
 
+    <!-- Summary -->
     <div class="summary-section">
-  <div class="summary-total">
-    <span class="total-label">Selected Items:</span>
-    <span id="selectedCount">0</span>
-  </div>
-  <div class="summary-total">
-    <span class="total-label">Total Price:</span>
-    <span id="selectedTotal">$0.00</span>
-  </div>
-
-  <button class="action-btn" onclick="proceedToCheckout()">
-    <i class="bi bi-bag-check"></i> Proceed to Checkout
-  </button>
-  <button class="action-btn secondary-btn" onclick="closeModals()">
-    <i class="bi bi-arrow-left"></i> Continue Shopping
-  </button>
-</div>
-
-  </div>
-</div>
-
-<!-- Checkout Modal -->
-<div class="modal" id="checkoutModal">
-  <div class="modal-header">
-    <h2 class="modal-title"><i>Checkout</i></h2>
-    <button class="close-btn" onclick="closeModals()">×</button>
-  </div>
-
-  <div class="modal-content">
-    <!-- Shipping Address Section -->
-    <div class="section-divider">
-      <div class="section-header">
-        <div class="section-header-left">
-          <div class="section-icon">
-            <i class="bi bi-geo-alt-fill"></i>
-          </div>
-          <h3 class="section-title">Shipping Address</h3>
-        </div>
-      </div>
-      <div class="address-display">
-        <div class="address-line">
-          <i class="bi bi-person-fill"></i>
-          <div><strong>John Doe</strong></div>
-        </div>
-        <div class="address-line">
-          <i class="bi bi-house-fill"></i>
-          <div>123 Main Street, Taguig City</div>
-        </div>
-        <div class="address-line">
-          <i class="bi bi-telephone-fill"></i>
-          <div>+63 912 345 6789</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Order Items Section -->
-    <div class="section-divider">
-      <div class="section-header">
-        <div class="section-header-left">
-          <div class="section-icon">
-            <i class="bi bi-bag-fill"></i>
-          </div>
-          <h3 class="section-title">Order Items</h3>
-        </div>
-      </div>
-      <div class="checkout-items">
-        <div class="checkout-item">
-          <img src="https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400" alt="Product">
-          <div class="checkout-item-details">
-            <div class="checkout-item-name">Classic Cotton T-Shirt</div>
-            <div class="checkout-item-meta">Blue • Size M • Qty: 2</div>
-          </div>
-          <div class="checkout-item-price">$59.98</div>
-        </div>
-        <div class="checkout-item">
-          <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400" alt="Product">
-          <div class="checkout-item-details">
-            <div class="checkout-item-name">Denim Jeans</div>
-            <div class="checkout-item-meta">Dark Blue • Size 32 • Qty: 1</div>
-          </div>
-          <div class="checkout-item-price">$79.99</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Payment Method Section -->
-    <div class="section-divider">
-      <div class="section-header">
-        <div class="section-header-left">
-          <div class="section-icon">
-            <i class="bi bi-credit-card-fill"></i>
-          </div>
-          <h3 class="section-title">Payment Method</h3>
-        </div>
-      </div>
-      <div class="payment-methods">
-        <label class="payment-option">
-          <input type="radio" name="payment" value="cod" checked>
-          <div class="payment-option-content">
-            <i class="bi bi-cash"></i>
-            <span>Cash on Delivery</span>
-          </div>
-        </label>
-        <label class="payment-option">
-          <input type="radio" name="payment" value="card">
-          <div class="payment-option-content">
-            <i class="bi bi-credit-card"></i>
-            <span>Credit/Debit Card</span>
-          </div>
-        </label>
-        <label class="payment-option">
-          <input type="radio" name="payment" value="gcash">
-          <div class="payment-option-content">
-            <i class="bi bi-wallet2"></i>
-            <span>GCash</span>
-          </div>
-        </label>
-      </div>
-    </div>
-
-    <!-- Order Summary -->
-    <div class="order-summary">
       <div class="summary-row">
-        <span>Subtotal</span>
-        <span>$139.97</span>
-      </div>
-      <div class="summary-row">
-        <span>Shipping</span>
-        <span>$5.00</span>
+        <span>Selected Items</span>
+        <span id="selectedCount">0</span>
       </div>
       <div class="summary-total">
         <span class="total-label">Total</span>
-        <span class="total-value">$144.97</span>
+        <span class="total-value" id="selectedTotal">₱0.00</span>
       </div>
+      <button type="button" class="action-btn" onclick="proceedToCheckout()">
+        Proceed to Checkout
+      </button>
     </div>
-
-    <button class="action-btn" onclick="placeOrder()">
-      <i class="bi bi-check-circle-fill"></i> Place Order
-    </button>
   </div>
 </div>
 
-<script>
-  const overlay = document.getElementById('overlay');
-  const cartModal = document.getElementById('cartModal');
-  const checkoutModal = document.getElementById('checkoutModal');
 
-  // Function to update total selected items and price
-function updateCartSummary() {
-  const items = document.querySelectorAll('.cart-item');
-  let total = 0;
-  let count = 0;
+<!-- CHECKOUT DRAWER -->
+<div id="checkoutModal" class="cart-modal">
+  <div class="cart-modal-header">
+    <h2 class="cart-modal-title">Checkout</h2>
+    <button type="button" class="cart-close-btn" onclick="closeModals()">&times;</button>
+  </div>
 
-  items.forEach(item => {
-    const checkbox = item.querySelector('.item-select');
-    if (checkbox && checkbox.checked) {
-      const priceText = item.querySelector('.item-price').textContent.replace('$', '');
-      const quantity = parseInt(item.querySelector('.quantity-value').textContent);
-      const itemTotal = parseFloat(priceText) * quantity;
-      total += itemTotal;
-      count += quantity;
+  <div class="cart-modal-content">
+   <?php
+$shipName = '';
+$shipAddress = '';
+$shipPhone = '';
+
+if (isset($user) && is_array($user)) {
+    $firstName = $user['FIRST_NAME'] ?? '';
+    $lastName  = $user['LAST_NAME'] ?? '';
+    $shipName  = trim("$firstName $lastName");
+
+    // Prefer SHIPPING_ADDRESS if set, otherwise build from components
+    if (!empty($user['SHIPPING_ADDRESS'])) {
+        $shipAddress = $user['SHIPPING_ADDRESS'];
+    } else {
+        $parts = [
+            $user['STREET_ADDRESS'] ?? '',
+            $user['APARTMENT']      ?? '',
+            $user['BARANGAY']       ?? '',
+            $user['CITY']           ?? '',
+            $user['PROVINCE']       ?? '',
+            $user['POSTAL_CODE']    ?? '',
+        ];
+        $shipAddress = trim(implode(', ', array_filter($parts)));
     }
-  });
 
-  document.getElementById('selectedCount').textContent = count;
-  document.getElementById('selectedTotal').textContent = `$${total.toFixed(2)}`;
+    $shipPhone = $user['CONTACTS'] ?? '';
 }
+?>
 
-// Listen for changes on all checkboxes
-document.addEventListener('change', (e) => {
-  if (e.target.classList.contains('item-select')) {
-    updateCartSummary();
-  }
-});
+<section class="section-divider">
+  <div class="section-header">
+    <div class="section-header-left">
+      <div class="section-icon"><i class="bi bi-geo-alt"></i></div>
+      <h3 class="section-title">Contact & Shipping Details</h3>
+    </div>
+    <button type="button" class="address-edit-btn" id="addressEditBtn">Edit</button>
+  </div>
+
+  <div class="address-display">
+    <div class="address-row">
+      <span class="address-label">Name</span>
+      <input
+        type="text"
+        id="shippingNameInput"
+        class="address-input"
+        value="<?= htmlspecialchars($shipName ?: 'Your name') ?>"
+        readonly
+      />
+    </div>
+
+    <div class="address-row">
+      <span class="address-label">Email</span>
+      <input
+        type="email"
+        id="shippingEmailInput"
+        class="address-input"
+        value="<?= htmlspecialchars($user['EMAIL'] ?? '') ?>"
+        readonly
+      />
+    </div>
+
+    <div class="address-row">
+      <span class="address-label">Contact</span>
+      <input
+        type="text"
+        id="shippingPhoneInput"
+        class="address-input"
+        value="<?= htmlspecialchars($shipPhone ?: '') ?>"
+        readonly
+      />
+    </div>
+
+    <div class="address-row">
+      <span class="address-label">Address</span>
+      <textarea
+        id="shippingAddressInput"
+        class="address-input"
+        readonly
+      ><?= htmlspecialchars($shipAddress ?? '') ?></textarea>
+    </div>
+  </div>
+</section>
 
 
-  function openCart() {
-    overlay.classList.add('show');
-    cartModal.classList.add('show');
-    checkoutModal.classList.remove('show');
-  }
+    <!-- Order items summary -->
+<section class="section-divider">
+  <div class="section-header">
+    <div class="section-header-left">
+      <div class="section-icon"><i class="bi bi-bag"></i></div>
+      <h3 class="section-title">Order Summary</h3>
+    </div>
+  </div>
 
-  function openCheckout() {
-    overlay.classList.add('show');
-    checkoutModal.classList.add('show');
-    cartModal.classList.remove('show');
-  }
+  <!-- Line items go here -->
+  <div id="checkoutItemsList" class="checkout-items-list">
+    <!-- JS will render selected items here -->
+  </div>
 
-  function closeModals() {
-    overlay.classList.remove('show');
-    cartModal.classList.remove('show');
-    checkoutModal.classList.remove('show');
-  }
+  <div class="order-summary">
+    <div class="summary-row">
+      <span>Items</span>
+      <span id="checkoutItemCount">0</span>
+    </div>
+    <div class="summary-total">
+      <span class="total-label">Total</span>
+      <span class="total-value" id="cartTotal">₱0.00</span>
+    </div>
+  </div>
+</section>
 
-  function proceedToCheckout() {
-    cartModal.classList.remove('show');
-    checkoutModal.classList.add('show');
-  }
 
-  function placeOrder() {
-    alert('Order placed successfully!');
-    closeModals();
-  }
+    <!-- Payment methods + card form -->
+    <!-- Payment methods + card form -->
+<section>
+  <div class="section-header">
+    <div class="section-header-left">
+      <div class="section-icon"><i class="bi bi-credit-card"></i></div>
+      <h3 class="section-title">Payment Method</h3>
+    </div>
+  </div>
 
-  // Close modal on ESC key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeModals();
-    }
-  });
-</script>
+  <div class="payment-methods">
+    <label class="payment-option">
+      <input type="radio" name="payment" value="card" checked />
+      <div class="payment-option-content">
+        <i class="bi bi-credit-card-2-front"></i>
+        Credit / Debit Card
+      </div>
+    </label>
+  </div>
+
+  <!-- Simple card form -->
+  <div class="card-form" style="margin-top:1.25rem;">
+    <div class="form-group">
+      <label>Card Number</label>
+      <input type="text" id="card-number" placeholder="4242 4242 4242 4242" />
+    </div>
+    <div style="display:flex; gap:0.75rem; margin-top:0.75rem;">
+      <div class="form-group" style="flex:1;">
+        <label>Exp. Month</label>
+        <input type="text" id="card-exp-month" placeholder="12" />
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label>Exp. Year</label>
+        <input type="text" id="card-exp-year" placeholder="2030" />
+      </div>
+      <div class="form-group" style="flex:1;">
+        <label>CVC</label>
+        <input type="text" id="card-cvc" placeholder="123" />
+      </div>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="action-btn"
+    style="margin-top:1.5rem;"
+    onclick="placeOrder()"
+  >
+    Place Order
+  </button>
+</section>
+
+  </div>
+</div>
+
+<!-- VARIANT / OPTIONS MODAL -->
+<div id="variantModal" class="cart-modal">
+  <div class="cart-modal-header">
+    <h2 class="cart-modal-title" id="variantProductName">Select Options</h2>
+    <button type="button" class="cart-close-btn" onclick="closeModals()">&times;</button>
+  </div>
+
+  <div class="cart-modal-content">
+    <!-- Product info -->
+    <section class="section-divider">
+      <div class="section-header">
+        <div class="section-header-left">
+          <div class="section-icon"><i class="bi bi-bag"></i></div>
+          <h3 class="section-title">Product Details</h3>
+        </div>
+      </div>
+
+      <div class="variant-product-info">
+        <img
+          id="variantProductImage"
+          src=""
+          alt=""
+          style="width:80px; height:80px; object-fit:cover; border-radius:8px;"
+        >
+        <div>
+          <p class="variant-name" id="variantProductNameText"></p>
+          <p class="variant-price" id="variantProductPrice" style="font-weight:600;"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Options -->
+    <section class="section-divider">
+      <div class="section-header">
+        <div class="section-header-left">
+          <div class="section-icon"><i class="bi bi-sliders"></i></div>
+          <h3 class="section-title">Choose Color & Size</h3>
+        </div>
+      </div>
+
+      <div class="variant-options">
+        <div class="form-group">
+          <label for="variantColorSelect">Color</label>
+          <select id="variantColorSelect"></select>
+        </div>
+
+        <div class="form-group">
+          <label for="variantSizeSelect">Size</label>
+          <select id="variantSizeSelect"></select>
+        </div>
+
+        <div class="stock-info">
+          Available stock: <strong id="variantStock">0</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section>
+      <button
+        type="button"
+        class="action-btn"
+        style="margin-top:1rem;"
+        onclick="confirmVariantSelection()"
+      >
+        Add to cart
+      </button>
+    </section>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICATION (overlay-level, not inside any modal) -->
+<div id="toast" class="toast hidden">
+  <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
+  <span id="toastMessage"></span>
+</div>

@@ -1,0 +1,253 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* GLOBAL TYPO SCALE */
+body {
+    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(180deg, #fff 0%, #D7C9AE 100%);
+    color: #2D2D2D;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+    font-size: 13px; /* base smaller size for entire page */
+}
+
+/* Glow background */
+body::before,
+body::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    z-index: 0;
+}
+
+body::before {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(166, 135, 99, 0.15) 0%, transparent 65%);
+    top: -100px;
+    right: -50px;
+}
+
+body::after {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(166, 135, 99, 0.12) 0%, transparent 65%);
+    bottom: -100px;
+    left: -50px;
+}
+
+/* CONTENT WRAPPER */
+.content {
+    flex: 1;
+    display: flex;
+    max-height: 10000px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 1.5rem;
+    position: relative;
+    z-index: 10;
+    animation: fadeInUp 0.8s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* PAGE TITLE */
+h1 {
+    font-family: 'Minion', 'Times New Roman', Times, serif;
+    font-size: clamp(1.6rem, 3vw, 2.1rem); /* smaller & scalable */
+    font-weight: 300;
+    color: #1a1a1a;
+    margin-bottom: 1.25rem; /* reduced spacing */
+    letter-spacing: -0.02em;
+    text-align: center;
+}
+
+/* POLICY HEADING INSIDE TEXT */
+.terms-text h2,
+.terms-text h3,
+.terms-text h4 {
+    font-family: 'Minion', 'Times New Roman', Times, serif;
+    font-weight: 400;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+    margin: 0.6rem 0 0.3rem; /* tighter spacing */
+}
+
+.terms-text h2 {
+    font-size: 1.1rem; /* smaller */
+}
+
+.terms-text h3 {
+    font-size: 1rem;
+}
+
+.terms-text h4 {
+    font-size: 0.95rem;
+}
+
+/* MAIN CARD */
+form {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 1.8rem 1.5rem; /* reduced padding */
+    width: min(800px, 90vw); /* more usable width for text */
+    border: 1px solid rgba(166, 135, 99, 0.15);
+    box-shadow: 0 16px 50px rgba(166, 135, 99, 0.12);
+    position: relative;
+    overflow: hidden;
+}
+
+form::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #A68763, #D7C9AE, #A68763);
+}
+
+/* TEXT INSIDE FORM (OUTSIDE SCROLL AREA) */
+form p,
+form li {
+    font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 0.85rem; /* smaller, tied to base */
+    font-weight: 400;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+    margin: 0.4rem 0; /* less spacing */
+}
+
+/* SCROLLABLE TERMS / PRIVACY AREA */
+.terms-text {
+    font-size: 0.8rem;          /* smaller policy text */
+    line-height: 1.4;           /* tighter but readable */
+    max-height: 360px;          /* fits nicely but still scrollable */
+    overflow-y: auto;
+    padding-right: 8px;         /* small padding for scrollbar */
+}
+
+/* Reduce spacing inside policy text */
+.terms-text p {
+    margin: 0.35rem 0;
+}
+
+.terms-text ul {
+    margin: 0.25rem 0 0.4rem 1rem;
+    padding-left: 0.4rem;
+}
+
+.terms-text li {
+    margin: 0.25rem 0;
+}
+
+/* BACK LINK */
+.back-link {
+    text-align: center;
+    color: #A68763;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    font-size: 0.8rem; /* smaller */
+}
+
+.back-link:hover {
+    color: #8B6F47;
+    text-decoration: underline;
+}
+
+/* If you use tabs later, keep them tiny & tidy */
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+}
+
+.tab {
+    padding: 0.35rem 0.8rem;
+    border-radius: 12px;
+    cursor: pointer;
+    background: rgba(166, 135, 99, 0.1);
+    font-weight: 500;
+    transition: all 0.3s ease;
+    color: #2D2D2D;
+    text-align: center;
+    flex: 1;
+    font-size: 0.75rem; /* smaller */
+}
+
+.tab.active {
+    background: #A68763;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(166, 135, 99, 0.2);
+}
+
+.tab-content {
+    max-height: 350px;
+    overflow-y: auto;
+    padding-right: 8px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #2D2D2D;
+    transition: opacity 0.3s ease;
+}
+
+/* SCROLLBAR STYLING (for terms box) */
+.terms-text::-webkit-scrollbar,
+.tab-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.terms-text::-webkit-scrollbar-track,
+.tab-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 8px;
+}
+
+.terms-text::-webkit-scrollbar-thumb,
+.tab-content::-webkit-scrollbar-thumb {
+    background: rgba(166, 135, 99, 0.35);
+    border-radius: 8px;
+}
+
+.terms-text::-webkit-scrollbar-thumb:hover,
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(166, 135, 99, 0.55);
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+    form {
+        padding: 1.4rem 1.1rem;
+    }
+
+    .terms-text {
+        max-height: 320px;
+        font-size: 0.78rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+}

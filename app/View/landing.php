@@ -1,18 +1,4 @@
-<?php
-session_start();
 
-if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
-    session_unset();
-    session_destroy();
-
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Pragma: no-cache");
-    header("Expires: 0");
-
-    header("Location: index.php");
-    exit();
-}
-?>
 
 
 <!DOCTYPE html>
@@ -27,16 +13,40 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
 
 </head>
 <body>
-    <nav>
-        <div class="nav-brand">[Logo] Amarelle</div>
-        <div class="nav-links">
-            <a href="index.php?page=features" class="nav-link">Features</a>
-            <div class="nav-auth">
-                <a href="index.php?page=login" class="nav-login">Login</a>
-                <a href="index.php?page=register" class="nav-cta">Sign Up</a>
-            </div>
+     <?php if (isset($_GET['logged_out']) && $_GET['logged_out'] == '1'): ?>
+        <div class="side-alert" id="logoutAlert">
+            <i class="bi bi-check-circle"></i>
+            <span>You have successfully logged out.</span>
         </div>
-    </nav>
+
+        <script>
+            // Show animation after slight delay
+            setTimeout(() => {
+                document.getElementById('logoutAlert').classList.add('show');
+            }, 200);
+
+            // Auto-hide after 4 seconds
+            setTimeout(() => {
+                document.getElementById('logoutAlert').classList.remove('show');
+            }, 4200);
+        </script>
+    <?php endif; ?>
+    <nav>
+    <div class="nav-brand">
+            <img src="public/image/amarelle.png" alt="Amarelle Logo"
+            style="    height: 40px;
+                    width: auto;
+                object-fit: contain;">
+        </a>
+    </div>
+    <div class="nav-links">
+        <a href="index.php?page=features" class="nav-link">Features</a>
+        <div class="nav-auth">
+            <a href="index.php?page=login" class="nav-login">Login</a>
+            <a href="index.php?page=register" class="nav-cta">Sign Up</a>
+        </div>
+    </div>
+</nav>
 
     <section class="hero">
         <h1>Fashion that <br> <span class="accent"> understands</span> you</h1>
