@@ -129,13 +129,14 @@
                             <input type="text" id="postal_code" name="postal_code" placeholder="e.g., 1101" maxlength="10">
                             <span class="error-message" id="postal_code-error"></span>
                         </div>
-                    </div>
-
+                   
                     <div class="form-group">
                         <label for="contact_num">Contact Number</label>
                         <input type="text" id="contact_num" name="contact_num" maxlength="11" placeholder="09XX XXX XXXX" value="0">
                         <span class="error-message" id="contact_num-error"></span>
                     </div>
+                     </div>
+
 
                     <div class="form-buttons">
                         <button type="button" class="btn btn-secondary" id="prevStep2">Back</button>
@@ -173,8 +174,8 @@
         <input type="checkbox" id="termsCheckbox" name="terms">
         <label for="termsCheckbox">
             By creating your account or signing in, you agree to our 
-            <a id="termsLink">Terms and Conditions</a> &
-            <a id="privacyLink">Privacy Policy</a>
+            <a id="privacyLink">Privacy Policy</a> &
+            <a id="termsLink">Cookies and Consent</a> 
         </label>
     </p>
     <span class="error-message" id="termsCheckbox-error"></span>
@@ -205,90 +206,49 @@
         <div id="termsModal" class="modal-overlay">
             <div class="modal-content">
     <span class="modal-close" data-modal="termsModal">&times;</span>
-            <h2>Terms and Conditions</h2>
+            <h2>Cookies and Consent</h2>
             
-            <p><strong>Last Updated:</strong> Nov 14, 2025</p>
-            
-            <p>Welcome to Amarelle! These terms and conditions ("Terms") outline the rules and regulations for the use of Amarelle's Website, located at amarelle2025.com.</p>
-            
-            <p>By accessing this website, we assume you accept these Terms and Conditions in full. Do not continue to use Amarelle if you do not agree to all of the terms and conditions stated on this page. Your access to and use of the Service is conditioned upon your acceptance of and compliance with these Terms.</p>
+<p><strong>Last Updated:</strong> Nov 14, 2025</p>
 
-            <p>The following terminology applies to these Terms and Conditions, Privacy Statement and Disclaimer Notice and all Agreements: "Client", "You" and "Your" refers to you, the person logging on this website and compliant to the Company’s terms and conditions. "The Company", "Ourselves", "We", "Our" and "Us", refers to our Company, Amarelle. "Party", "Parties", or "Us", refers to both the Client and ourselves.</p>
+<p>Welcome to Amarelle! This Cookies and Consent Policy explains how we use cookies and similar technologies on our website, located at amarelle2025.com.</p>
 
-            <h3>Eligibility</h3>
-            <p>You must be at least 18 years of age to use this website. By using this website and by agreeing to these Terms, you warrant and represent that you are at least 18 years of age.</p>
+<p>By accessing or using this website, you consent to the use of cookies as outlined in this policy. If you do not agree with the use of cookies, you should adjust your browser settings or discontinue using the website.</p>
 
-            <h3>Intellectual Property Rights</h3>
-            <p>Unless otherwise stated, Amarelle and/or its licensors own the intellectual property rights for all material on Amarelle. All intellectual property rights are reserved. This material includes, but is not limited to, the design, layout, look, appearance, text, graphics, logos, icons, and software.</p>
-            <p>You may view, download for caching purposes only, and print pages from the website for your own personal, non-commercial use, subject to the restrictions set out below and elsewhere in these Terms.</p>
-            
-            <p>You must not:</p>
-            <ul>
-                <li>Republish material from Amarelle in any other media.</li>
-                <li>Sell, rent, or sub-license material from Amarelle.</li>
-                <li>Reproduce, duplicate, copy, or otherwise exploit material on our website for a commercial purpose.</li>
-                <li>Redistribute content from Amarelle (unless content is specifically made for redistribution).</li>
-                <li>Modify or create derivative works based on the website's content.</li>
-            </ul>
+<p>The following terminology applies to this Cookies and Consent Policy and all Agreements: "Client", "You" and "Your" refers to you, the person accessing this website and consenting to our cookie usage. "The Company", "Ourselves", "We", "Our" and "Us", refers to Amarelle. "Party", "Parties", or "Us", refers to both the Client and ourselves.</p>
 
-            <h3>Acceptable Use</h3>
-            <p>You agree to use our website only for lawful purposes and in a way that does not infringe the rights of, restrict, or inhibit anyone else's use and enjoyment of the website.</p>
-            <p>Prohibited behavior includes:</p>
-            <ul>
-                <li>Using the website in any way that causes, or may cause, damage to the website or impairment of the availability or accessibility of Amarelle.</li>
-                <li>Using the website in any way which is unlawful, illegal, fraudulent, or harmful, or in connection with any unlawful, illegal, fraudulent, or harmful purpose or activity.</li>
-                <li>Using the website to copy, store, host, transmit, send, use, publish, or distribute any material which consists of (or is linked to) any spyware, computer virus, Trojan horse, worm, keystroke logger, rootkit, or other malicious computer software.</li>
-                <li>Conducting any systematic or automated data collection activities (including without limitation scraping, data mining, data extraction, and data harvesting) on or in relation to our website without our express written consent.</li>
-                <li>Using the website to transmit or send unsolicited commercial communications.</li>
-                <li>Accessing or attempting to access any parts of the site that you are not authorized to access.</li>
-            </ul>
+<h3>What Are Cookies?</h3>
+<p>Cookies are small text files that are stored on your device when you visit a website. They help us provide essential functions, improve your browsing experience, and analyze website performance.</p>
 
-            <h3>User-Generated Content</h3>
-            <p>In these Terms, "your user content" means material (including without limitation text, images, audio material, video material, and audio-visual material) that you submit to our website, for whatever purpose (e.g., comments, reviews, forum posts).</p>
-            <p>You grant to Amarelle a worldwide, irrevocable, non-exclusive, royalty-free license to use, reproduce, adapt, publish, translate, and distribute your user content in any existing or future media. You also grant to Amarelle the right to sub-license these rights and the right to bring an action for infringement of these rights.</p>
-            <p>Your user content must not be illegal or unlawful, must not infringe any third party's legal rights, and must not be capable of giving rise to legal action whether against you or Amarelle or a third party (in each case under any applicable law). You must not submit any user content to the website that is or has ever been the subject of any threatened or actual legal proceedings or other similar complaint.</p>
-            <p>Amarelle reserves the right to edit or remove any material submitted to our website, or stored on our servers, or hosted or published upon our website, at our sole discretion and without notice.</p>
+<h3>Types of Cookies We Use</h3>
+<p>We use different types of cookies for various purposes. These may include:</p>
 
-            <h3>Privacy</h3>
-            <p>Your use of the website is also governed by our Privacy Policy. Please review our Privacy Policy, which is incorporated into these Terms by reference, to understand our practices regarding the collection and use of your personal information.</p>
+<ul>
+    <li><strong>Essential Cookies:</strong> Required for the website to function properly. These enable basic features such as navigation and access to secure areas.</li>
+    <li><strong>Analytics Cookies:</strong> Help us understand how visitors interact with the website by collecting information such as pages visited and traffic sources.</li>
+    <li><strong>Functional Cookies:</strong> Allow the website to remember your preferences and provide enhanced functionality.</li>
+    <li><strong>Advertising Cookies:</strong (if applicable)> Used by third parties to deliver relevant advertisements and track ad performance.</li>
+</ul>
 
-            <h3>Disclaimer of Warranties</h3>
-            <p>This website is provided "as is" and "as available" without any representations or warranties, express or implied. Amarelle makes no representations or warranties in relation to this website or the information and materials provided on this website.</p>
-            <p>Without prejudice to the generality of the foregoing paragraph, Amarelle does not warrant that:</p>
-            <ul>
-                <li>This website will be constantly available, or available at all; or</li>
-                <li>The information on this website is complete, true, accurate, or non-misleading.</li>
-                <li>The website is free of viruses or other harmful components.</li>
-            </ul>
-            <p>Nothing on this website constitutes, or is meant to constitute, advice of any kind. If you require advice in relation to any (legal, financial, or medical) matter, you should consult an appropriate professional.</p>
+<h3>Your Consent</h3>
+<p>Upon first visiting our website, you may encounter a cookie consent banner. By selecting "Accept", you agree to our use of cookies. You may choose to "Reject" non-essential cookies or customize which cookies you allow.</p>
+<p>You can modify or withdraw your consent at any time by accessing your cookie settings on our website or adjusting your browser’s cookie controls.</p>
 
-            <h3>Limitation of Liability</h3>
-            <p>TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL AMARELLE, NOR ITS DIRECTORS, EMPLOYEES, PARTNERS, AGENTS, SUPPLIERS, OR AFFILIATES, BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, INCLUDING WITHOUT LIMITATION, LOSS OF PROFITS, DATA, USE, GOODWILL, OR OTHER INTANGIBLE LOSSES, RESULTING FROM:</p>
-            <ul>
-                <li>(i) Your access to or use of or inability to access or use the website;</li>
-                <li>(ii) Any conduct or content of any third party on the website;</li>
-                <li>(iii) Any content obtained from the website; and</li>
-                <li>(iv) Unauthorized access, use, or alteration of your transmissions or content,</li>
-            </ul>
-            <p>whether based on warranty, contract, tort (including negligence), or any other legal theory, whether or not we have been informed of the possibility of such damage, and even if a remedy set forth herein is found to have failed of its essential purpose.</p>
+<h3>Managing Cookies</h3>
+<p>You can control or delete cookies through your browser settings. However, restricting certain cookies may affect the functionality and performance of the website.</p>
+<p>Common browsers provide cookie management settings, including Google Chrome, Mozilla Firefox, Safari, and Microsoft Edge. Please refer to your browser's help section for detailed instructions.</p>
 
-            <h3>Indemnification</h3>
-            <p>You agree to defend, indemnify, and hold harmless Amarelle and its licensee and licensors, and their employees, contractors, agents, officers, and directors, from and against any and all claims, damages, obligations, losses, liabilities, costs or debt, and expenses (including but not limited to attorney's fees), resulting from or arising out of a) your use and access of the website, or b) a breach of these Terms.</p>
+<h3>Third-Party Cookies</h3>
+<p>Some cookies may be placed by trusted third-party services such as analytics providers, embedded content platforms, or advertising networks. These third parties may collect data according to their own privacy policies.</p>
 
-            <h3>Breaches of These Terms</h3>
-            <p>Without prejudice to Amarelle's other rights under these Terms, if you breach these Terms in any way, Amarelle may take such action as it deems appropriate to deal with the breach, including suspending your access to the website, prohibiting you from accessing the website, blocking computers using your IP address from accessing the website, contacting your internet service provider to request that they block your access to the website and/or bringing court proceedings against you.</p>
+<h3>Privacy</h3>
+<p>For more information on how we handle your personal data, please refer to our Privacy Policy. Cookies may work alongside personal data to enhance your experience.</p>
 
-            <h3>Variation of Terms</h3>
-            <p>Amarelle reserves the right to revise these Terms at any time as it sees fit, and by using this website, you are expected to review these Terms on a regular basis to ensure you understand all terms and conditions governing the use of this website. Your continued use of the website after any such changes constitutes your acceptance of the new Terms.</p>
+<h3>Changes to This Policy</h3>
+<p>We may update this Cookies and Consent Policy at any time. We encourage you to review this page regularly to stay informed of any changes. Continued use of the website signifies acceptance of the updated policy.</p>
 
-            <h3>Governing Law & Jurisdiction</h3>
-            <p>These Terms will be governed by and construed in accordance with the laws of Philippines, without regard to its conflict of law provisions. You agree to submit to the personal and exclusive jurisdiction of the state and federal courts located within [Your County, State] to resolve any dispute or claim arising from these Terms.</p>
+<h3>Contact Us</h3>
+<p>If you have any questions regarding our use of cookies, please contact us at amarelle2025@gmail.com.</p>
 
-            <h3>Severability</h3>
-            <p>If any provision of these Terms is found to be invalid or unenforceable under applicable law, such provision shall be deleted without affecting the remaining provisions herein, which shall continue in full force and effect.</p>
-
-            <h3>Entire Agreement</h3>
-            <p>These Terms, together with our Privacy Policy, constitute the entire agreement between you and Amarelle in relation to your use of this website and supersede all previous agreements in respect of your use of this website.</p>
             </div>
         </div>
 

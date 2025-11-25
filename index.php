@@ -1,6 +1,45 @@
 <?php
 // index.php (root of GONATO-Personalized-Fashion-Guidance-)
 
+// ✅ Secure session cookie config
+$secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
+
+session_set_cookie_params([
+    'lifetime' => 0,       // session cookie (until browser close)
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => $secure, // only over HTTPS
+    'httponly' => true,    // JS cannot read
+    'samesite' => 'Lax',
+]);
+
+session_start();
+
+
+if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Clear all session data
+    $_SESSION = [];
+    session_unset();
+    session_destroy();
+
+    // Delete the session cookie
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+
+    // 🔹 Go to landing page with a "logged_out" flag
+    header("Location: index.php?page=landing&logged_out=1");
+    exit;
+}
+
 // Get requested page, default to 'landing'
 // Handle API requests FIRST (before page routing)
 if (isset($_GET['api']) && $_GET['api'] === 'admin') {
@@ -40,6 +79,20 @@ switch ($page) {
         $controller->index();
         break;
 
+    // ===== BODY SHAPE PROCESS =====
+    case 'process_body_shape':
+        require_once './app/Controllers/BodyShapeController.php';
+        $controller = new BodyShapeController();
+        $controller->process();
+        break;
+
+    // ===== COLOR ANALYSIS PROCESS (NEW) =====
+    case 'process_color_analysis':
+        require_once './app/Controllers/ColorAnalysisController.php';
+        $controller = new ColorAnalysisController();
+        $controller->process();
+        break;
+
     // ===== OTP VERIFICATION (handled by LoginController internally) =====
     case 'otp_verification':
         require_once './app/View/otp_verification.php';
@@ -52,7 +105,7 @@ switch ($page) {
         $controller->index();
         break;
 
-    // ===== DEFAULT: LANDING PAGE =====
+    // ===== ADMIN =====
      case 'admin_login':
         require_once 'app/Controllers/adminLoginControl.php';
         $controller = new AdminLoginController();
@@ -67,9 +120,10 @@ switch ($page) {
         require_once 'app/View/policy.php';
         break;
 
+    // ===== DEFAULT: LANDING PAGE =====
     case 'landing':
     default:
         require_once './app/View/landing.php';
         break;
-}
+}   
 ?>
