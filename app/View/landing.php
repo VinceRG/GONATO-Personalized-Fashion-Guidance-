@@ -32,15 +32,21 @@
         </script>
     <?php endif; ?>
     <nav>
-        <div class="nav-brand">[Logo] Amarelle</div>
-        <div class="nav-links">
-            <a href="index.php?page=features" class="nav-link">Features</a>
-            <div class="nav-auth">
-                <a href="index.php?page=login" class="nav-login">Login</a>
-                <a href="index.php?page=register" class="nav-cta">Sign Up</a>
-            </div>
+    <div class="nav-brand">
+            <img src="public/image/amarelle.png" alt="Amarelle Logo"
+            style="    height: 40px;
+                    width: auto;
+                object-fit: contain;">
+        </a>
+    </div>
+    <div class="nav-links">
+        <a href="index.php?page=features" class="nav-link">Features</a>
+        <div class="nav-auth">
+            <a href="index.php?page=login" class="nav-login">Login</a>
+            <a href="index.php?page=register" class="nav-cta">Sign Up</a>
         </div>
-    </nav>
+    </div>
+</nav>
 
     <section class="hero">
         <h1>Fashion that <br> <span class="accent"> understands</span> you</h1>

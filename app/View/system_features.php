@@ -10,10 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="public/js/system_features.js" defer></script>
   <style>
-    /* Ensure hidden utility class exists for the toggling logic */
     .hidden { display: none !important; }
 
-    /* Small helper text for upload rules */
     .upload-rules {
       font-size: 0.8rem;
       color: #666;
