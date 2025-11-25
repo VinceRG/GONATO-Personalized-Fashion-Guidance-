@@ -26,19 +26,19 @@ if (isset($_GET['api'])) {
 
 
 
-// ✅ Secure session cookie config
-$secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
+// // ✅ Secure session cookie config
+// $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
 
-session_set_cookie_params([
-    'lifetime' => 0,       // session cookie (until browser close)
-    'path'     => '/',
-    'domain'   => '',
-    'secure'   => $secure, // only over HTTPS
-    'httponly' => true,    // JS cannot read
-    'samesite' => 'Lax',
-]);
+// session_set_cookie_params([
+//     'lifetime' => 0,       // session cookie (until browser close)
+//     'path'     => '/',
+//     'domain'   => '',
+//     'secure'   => $secure, // only over HTTPS
+//     'httponly' => true,    // JS cannot read
+//     'samesite' => 'Lax',
+// ]);
 
-session_start();
+// // session_start();
 
 
 if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
