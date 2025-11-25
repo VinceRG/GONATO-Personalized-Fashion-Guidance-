@@ -9,14 +9,15 @@ class LoginController {
     const OTP_EXPIRY = 120; // seconds
 
     public function __construct() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
         $this->userModel = new User();
     }
 
     public function index() {
-        //session_start();
+        // ✅ Make sure session is started (in case this file is ever called directly)
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $message = '';
         $messageType = '';
         $openOtpModal = false;
@@ -42,11 +43,24 @@ class LoginController {
                 $user = $_SESSION['temp_user'] ?? null;
 
                 if ($user) {
+                    // 🔐 Security: regenerate session id at login
+                    session_regenerate_id(true);
+
                     $_SESSION['user_id']    = $user['USER_ID'];
                     $_SESSION['username']   = $user['USERNAME'];
                     $_SESSION['email']      = $user['EMAIL'];
                     $_SESSION['first_name'] = $user['FIRST_NAME'];
                     $_SESSION['last_name']  = $user['LAST_NAME'];
+                    $_SESSION['logged_in']  = true;
+
+                    // ✅ Handle remember-me cookie (if requested)
+                    if (!empty($_SESSION['remember_me'])) {
+                        $this->setRememberMeCookies($user);
+                        unset($_SESSION['remember_me']);
+                    }
+
+                    // Optional: last login cookie
+                    $this->setLastLoginCookie();
 
                     unset($_SESSION['temp_user']);
                     $this->clearOtpSession();
@@ -80,6 +94,10 @@ class LoginController {
                     // Store user temporarily until OTP is verified
                     $_SESSION['temp_user'] = $loginResult['user'];
 
+                    // ✅ Store remember_me preference in session
+                    $rememberMe = !empty($_POST['remember_me']);
+                    $_SESSION['remember_me'] = $rememberMe;
+
                     // Generate OTP (no DB, only session)
                     $otp = rand(100000, 999999);
                     $_SESSION['login_otp'] = $otp;
@@ -106,6 +124,43 @@ class LoginController {
 
     private function clearOtpSession() {
         unset($_SESSION['login_otp'], $_SESSION['login_otp_time']);
+    }
+
+    // ✅ NEW: remember-me cookie helper
+    private function setRememberMeCookies(array $user) {
+        // 30 days
+        $expiry = time() + (60 * 60 * 24 * 30);
+        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
+
+        // Only store non-sensitive info (e.g., username). Don't store passwords.
+        setcookie(
+            'remember_username',
+            $user['USERNAME'],
+            [
+                'expires'  => $expiry,
+                'path'     => '/',
+                'secure'   => $secure,
+                'httponly' => false,     // can be read by JS if you want to auto-fill
+                'samesite' => 'Lax',
+            ]
+        );
+    }
+
+    // ✅ NEW: last login cookie helper (for display)
+    private function setLastLoginCookie() {
+        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
+
+        setcookie(
+            'last_login',
+            date('Y-m-d H:i:s'),
+            [
+                'expires'  => time() + (60 * 60 * 24 * 30),
+                'path'     => '/',
+                'secure'   => $secure,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]
+        );
     }
 
     private function sendLoginOtpEmail($email, $otp) {
@@ -138,6 +193,9 @@ class LoginController {
             error_log("Login OTP Mailer Error: " . $mail->ErrorInfo);
         }
     }
+
+   
+
 
     private function getLoginEmailTemplate($email, $otpDigits) {
         // Reuse your nice template, just change wording for login

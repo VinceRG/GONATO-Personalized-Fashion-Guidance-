@@ -5,10 +5,7 @@ require_once './app/Helpers/UploadSecurity.php';
 class BodyShapeController {
     
     public function process() {
-        // Start session if not already started
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        
 
         // 1. Check Authentication
         if (!isset($_SESSION['user_id'])) {

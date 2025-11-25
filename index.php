@@ -26,6 +26,45 @@ if (isset($_GET['api'])) {
 
 
 
+// ✅ Secure session cookie config
+$secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
+
+session_set_cookie_params([
+    'lifetime' => 0,       // session cookie (until browser close)
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => $secure, // only over HTTPS
+    'httponly' => true,    // JS cannot read
+    'samesite' => 'Lax',
+]);
+
+session_start();
+
+
+if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    // Clear all session data
+    $_SESSION = [];
+    session_unset();
+    session_destroy();
+
+    // Delete the session cookie
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params();
+        setcookie(session_name(), '', time() - 42000,
+            $params["path"], $params["domain"],
+            $params["secure"], $params["httponly"]
+        );
+    }
+
+    // 🔹 Go to landing page with a "logged_out" flag
+    header("Location: index.php?page=landing&logged_out=1");
+    exit;
+}
+
 // Get requested page, default to 'landing'
 // Handle API requests FIRST (before page routing)
 if (isset($_GET['api']) && $_GET['api'] === 'admin') {

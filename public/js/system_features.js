@@ -1,12 +1,22 @@
 document.addEventListener("DOMContentLoaded", () => {
   // ============================================
-  // CRITICAL: ENSURE OVERLAY IS HIDDEN ON LOAD
+  // USER PROFILE OVERLAY INITIAL STATE
   // ============================================
   const userProfileOverlay = document.getElementById('userProfileOverlay');
   if (userProfileOverlay) {
-    userProfileOverlay.style.display = 'none';
-    userProfileOverlay.classList.remove('show');
-    document.body.style.overflow = '';
+    const shouldKeepOpen = userProfileOverlay.dataset.keepOpen === '1';
+
+    if (shouldKeepOpen) {
+      // Stay in "User Information" after profile submit
+      userProfileOverlay.style.display = 'flex';
+      userProfileOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Default: hidden until user clicks profile
+      userProfileOverlay.style.display = 'none';
+      userProfileOverlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
   }
 
   // ============================================
@@ -76,36 +86,17 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================
-  // NOTIFICATION HANDLING
-  // ============================================
-  const notification = document.querySelector('.notification');
-  if (notification) {
-    setTimeout(() => {
-      if (userProfileOverlay && userProfileOverlay.classList.contains('show')) {
-        closeUserProfile();
-      }
-    }, 100);
-  }
-
-  // ============================================
-  // [UPDATED] RECOMMENDATIONS VISIBILITY
-  // Checks if PHP has rendered the results visible
+  // RECOMMENDATIONS VISIBILITY
   // ============================================
   const recommendationsSection = document.getElementById("recommendations");
   const colorResults = document.getElementById("colorSeasons");
   const bodyResults = document.getElementById("bodyShapes");
 
-  // Check if the containers have the 'show-results' class added by PHP
   const hasColor = colorResults && colorResults.classList.contains('show-results');
   const hasBody = bodyResults && bodyResults.classList.contains('show-results');
 
   if (recommendationsSection) {
-    // Show recommendations if EITHER analysis is done
-    if (hasColor || hasBody) {
-      recommendationsSection.style.display = "block";
-    } else {
-      recommendationsSection.style.display = "none";
-    }
+    recommendationsSection.style.display = (hasColor || hasBody) ? "block" : "none";
   }
 
   // ============================================
@@ -123,23 +114,6 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => button.classList.remove('added'), 1000);
     });
   });
-
-  // ============================================
-  // SEARCH BAR FILTER
-  // ============================================
-  const searchInput = document.getElementById("shopSearch");
-  if (searchInput) {
-    searchInput.addEventListener("input", () => {
-      const query = searchInput.value.toLowerCase();
-      document.querySelectorAll(".catalog-item").forEach(item => {
-        const titleElement = item.querySelector(".title");
-        if (titleElement) {
-          const title = titleElement.textContent.toLowerCase();
-          item.style.display = title.includes(query) ? "block" : "none";
-        }
-      });
-    });
-  }
 
   // ============================================
   // LOGOUT OVERLAY HANDLERS
@@ -252,41 +226,225 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================
-  // EDIT PROFILE UI
+  // CONTACT & POSTAL FORMATTING
+  // ============================================
+  const contactInput = document.getElementById("contacts");
+  if (contactInput) {
+    contactInput.addEventListener("input", function () {
+      let value = this.value.replace(/[^0-9]/g, "");
+      if (value === "") value = "0";
+      if (value[0] !== "0") value = "0" + value;
+      this.value = value;
+    });
+  }
+
+  const postalInput = document.getElementById("postal_code");
+  if (postalInput) {
+    postalInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "");
+    });
+  }
+
+  // ============================================
+  // ADDRESS DATA & CASCADING DROPDOWNS
+  // ============================================
+  const addressData = {
+    "Metro Manila": {
+      "Quezon City": ["Commonwealth", "Fairview", "Batasan Hills"],
+      "Manila": ["Barangay 1", "Barangay 2", "Barangay 3"],
+      "Pasig": ["Rosario", "Ugong", "Manggahan", "Pinagbuhatan", "Malinao"]
+    },
+    "Cavite": {
+      "Bacoor": ["Talaba", "Zapote", "Molino 1", "Molino 2"]
+    },
+    "Laguna": {
+      "Calamba": ["Canlubang", "Real", "Lingga"]
+    },
+    "Bulacan": {
+      "Malolos": ["Tikay", "Mojon", "San Agustin"]
+    },
+    "Rizal": {
+      "Antipolo": ["San Roque", "Dalig", "Cupang"]
+    }
+  };
+
+  const province = document.getElementById("province");
+  const city = document.getElementById("city");
+  const barangay = document.getElementById("barangay");
+
+  // ========== PRE-POPULATE FROM CURRENT VALUES ==========
+  (function prepopulateAddress() {
+    if (!province || !city || !barangay) return;
+
+    const currentProvince = province.dataset.currentProvince || "";
+    const currentCity = city.dataset.currentCity || "";
+    const currentBarangay = barangay.dataset.currentBarangay || "";
+
+    if (!currentProvince || !addressData[currentProvince]) return;
+
+    // 1) Set province value
+    province.value = currentProvince;
+
+    // 2) Populate cities for that province
+    city.innerHTML = `<option value="" disabled>Select City</option>`;
+    Object.keys(addressData[currentProvince]).forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c;
+      opt.textContent = c;
+      city.appendChild(opt);
+    });
+
+    // 3) Select saved city (if any)
+    if (currentCity) {
+      city.value = currentCity;
+    }
+
+    // 4) Populate barangays for that city
+    if (currentCity && addressData[currentProvince][currentCity]) {
+      barangay.innerHTML = `<option value="" disabled>Select Barangay</option>`;
+      addressData[currentProvince][currentCity].forEach(brgy => {
+        const opt = document.createElement("option");
+        opt.value = brgy;
+        opt.textContent = brgy;
+        barangay.appendChild(opt);
+      });
+
+      // 5) Select saved barangay (if any)
+      if (currentBarangay) {
+        barangay.value = currentBarangay;
+      }
+    }
+  })();
+
+  function validateSelect(selectEl) {
+    if (!selectEl) return true;
+    const wrapper = selectEl.closest(".address-group");
+    if (!wrapper) return true;
+
+    if (!selectEl.value) {
+      wrapper.classList.add("has-error");
+      return false;
+    } else {
+      wrapper.classList.remove("has-error");
+      return true;
+    }
+  }
+
+  if (province) {
+    province.addEventListener("change", () => {
+      if (!city || !barangay) return;
+
+      city.innerHTML = `<option value="" disabled selected>Select City</option>`;
+      barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
+
+      const selectedProv = province.value;
+      if (addressData[selectedProv]) {
+        Object.keys(addressData[selectedProv]).forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          city.appendChild(opt);
+        });
+      }
+      validateSelect(province);
+    });
+  }
+
+  if (city) {
+    city.addEventListener("change", () => {
+      if (!province || !barangay) return;
+
+      barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
+      const selectedProv = province.value;
+      const selectedCity = city.value;
+
+      if (addressData[selectedProv] && addressData[selectedProv][selectedCity]) {
+        addressData[selectedProv][selectedCity].forEach(brgy => {
+          const opt = document.createElement("option");
+          opt.value = brgy;
+          opt.textContent = brgy;
+          barangay.appendChild(opt);
+        });
+      }
+      validateSelect(city);
+    });
+  }
+
+  if (barangay) {
+    barangay.addEventListener("change", () => {
+      validateSelect(barangay);
+    });
+  }
+
+  // ============================================
+  // VALIDATE ON FORM SUBMIT (province/city/brgy)
+  // ============================================
+  const profileFormEl = document.getElementById("profileForm");
+  if (profileFormEl) {
+    profileFormEl.addEventListener("submit", function (e) {
+      const ok1 = validateSelect(province);
+      const ok2 = validateSelect(city);
+      const ok3 = validateSelect(barangay);
+
+      if (!ok1 || !ok2 || !ok3) {
+        e.preventDefault();
+      }
+    });
+  }
+
+  // ============================================
+  // EDIT PROFILE UI (ENABLE INPUTS + SELECTS)
   // ============================================
   const editProfileBtn = document.getElementById('editProfileBtn');
   const saveProfileBtn = document.getElementById('saveProfileBtn');
   const cancelEditBtn = document.getElementById('cancelEditBtn');
-  const formInputs = document.querySelectorAll('#profileForm input[type="text"], #profileForm input[type="email"]');
-  let originalValues = {};
 
-  if (editProfileBtn && saveProfileBtn && cancelEditBtn) {
-    editProfileBtn.addEventListener('click', () => {
-      formInputs.forEach(input => originalValues[input.id] = input.value);
-      formInputs.forEach(input => {
-        input.disabled = false;
-        input.style.borderColor = '#A68763';
-      });
-      editProfileBtn.style.display = 'none';
-      saveProfileBtn.style.display = 'inline-flex';
-      cancelEditBtn.style.display = 'inline-flex';
-      if (editAvatarBtn) editAvatarBtn.style.display = 'block';
+  let originalValues = {};
+  const editableFields = profileFormEl
+    ? profileFormEl.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select')
+    : [];
+
+  function setEditMode(isEditing) {
+    editableFields.forEach(el => {
+      // if you want some fields always read-only, skip them here:
+      // if (el.id === 'email' || el.id === 'username') return;
+      el.disabled = !isEditing;
+      el.style.borderColor = isEditing ? '#A68763' : '';
     });
 
-    cancelEditBtn.addEventListener('click', () => {
-      formInputs.forEach(input => {
-        input.value = originalValues[input.id];
-        input.disabled = true;
-        input.style.borderColor = '';
+    if (editProfileBtn) editProfileBtn.style.display = isEditing ? 'none' : 'inline-flex';
+    if (saveProfileBtn) saveProfileBtn.style.display = isEditing ? 'inline-flex' : 'none';
+    if (cancelEditBtn) cancelEditBtn.style.display = isEditing ? 'inline-flex' : 'none';
+    if (editAvatarBtn) editAvatarBtn.style.display = isEditing ? 'block' : 'none';
+  }
+
+  if (editProfileBtn && saveProfileBtn && cancelEditBtn && profileFormEl) {
+    // default view mode
+    setEditMode(false);
+
+    editProfileBtn.addEventListener('click', () => {
+      originalValues = {};
+      editableFields.forEach(el => {
+        if (el.id) originalValues[el.id] = el.value;
+      });
+      setEditMode(true);
+    });
+
+    cancelEditBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      editableFields.forEach(el => {
+        if (el.id && Object.prototype.hasOwnProperty.call(originalValues, el.id)) {
+          el.value = originalValues[el.id];
+        }
       });
       if (fileInput) fileInput.value = '';
-      window.location.reload();
+      setEditMode(false);
     });
   }
 });
 
 // ============================================
-// GLOBAL FUNCTIONS
+// GLOBAL FUNCTIONS (OUTSIDE DOMContentLoaded)
 // ============================================
 
 window.toggleAnalysis = function (targetId, show) {
@@ -307,8 +465,6 @@ window.toggleAnalysis = function (targetId, show) {
   }
 };
 
-// Note: simulateAnalysis is likely not needed anymore since we use real Forms,
-// but keeping it to prevent errors if old buttons still reference it.
 window.simulateAnalysis = function (targetId) {
   const button = event.target;
   button.disabled = true;
@@ -321,7 +477,26 @@ window.simulateAnalysis = function (targetId) {
   }, 1500);
 };
 
-window.logout = function() {
+window.filterProducts = function () {
+  const searchInput = document.getElementById('productSearch');
+  const categorySelect = document.getElementById('categoryFilter');
+
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
+  const category = categorySelect ? categorySelect.value : '';
+
+  document.querySelectorAll('.catalog-item').forEach(item => {
+    const titleEl = item.querySelector('.title');
+    const title = titleEl ? titleEl.textContent.toLowerCase() : '';
+    const itemCategory = item.dataset.category || '';
+
+    const matchesName = !query || title.includes(query);
+    const matchesCategory = !category || itemCategory === category;
+
+    item.style.display = (matchesName && matchesCategory) ? 'block' : 'none';
+  });
+};
+
+window.logout = function () {
   const logoutOverlay = document.getElementById('logoutOverlay');
   if (logoutOverlay) {
     logoutOverlay.style.cssText = `display: flex !important; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 999999; align-items: center; justify-content: center;`;
@@ -329,7 +504,7 @@ window.logout = function() {
   }
 };
 
-window.closeLogoutOverlay = function() {
+window.closeLogoutOverlay = function () {
   const logoutOverlay = document.getElementById('logoutOverlay');
   if (logoutOverlay) {
     logoutOverlay.style.display = 'none';
@@ -337,13 +512,12 @@ window.closeLogoutOverlay = function() {
   }
 };
 
-window.confirmLogout = function() {
+window.confirmLogout = function () {
   const logoutOverlay = document.getElementById('logoutOverlay');
   if (logoutOverlay) {
     logoutOverlay.innerHTML = `<div class="modal" style="max-width: 400px; background:white; padding:2rem; border-radius:15px; text-align:center;">Logging out...</div>`;
     setTimeout(() => {
-      // Update this URL to match your actual logout logic
-      window.location.href = "index.php?page=login&action=logout"; 
+      window.location.href = "index.php?page=login&action=logout";
     }, 800);
   }
 };

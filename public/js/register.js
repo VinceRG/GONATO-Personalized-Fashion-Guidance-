@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Handle regular input fields
         if (!inputElement) return;
         const formGroup = inputElement.closest('.form-group');
-        
+
         if (message) {
             errorElement.textContent = message;
             errorElement.classList.add('show');
@@ -336,7 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
 
     if (inputs.username) {
-        inputs.username.addEventListener('input', function() {
+        inputs.username.addEventListener('input', function () {
             if (touchedFields.has('username')) {
                 debouncedUsernameCheck(this.value);
             }
@@ -344,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     if (inputs.email) {
-        inputs.email.addEventListener('input', function() {
+        inputs.email.addEventListener('input', function () {
             if (touchedFields.has('email')) {
                 debouncedEmailCheck(this.value);
             }
@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========== CONTACT NUMBER FORMATTING ==========
 
     if (inputs.contact_num) {
-        inputs.contact_num.addEventListener('input', function() {
+        inputs.contact_num.addEventListener('input', function () {
             let value = this.value.replace(/[^0-9]/g, '');
             if (value.length === 0) {
                 this.value = '0';
@@ -365,7 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        inputs.contact_num.addEventListener('keydown', function(e) {
+        inputs.contact_num.addEventListener('keydown', function (e) {
             if ((e.key === 'Backspace' || e.key === 'Delete') && this.value.length <= 1) {
                 e.preventDefault();
                 this.value = '0';
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========== POSTAL CODE FORMATTING ==========
 
     if (inputs.postal_code) {
-        inputs.postal_code.addEventListener('input', function() {
+        inputs.postal_code.addEventListener('input', function () {
             this.value = this.value.replace(/[^0-9]/g, '');
         });
     }
@@ -438,7 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     city.appendChild(opt);
                 });
             }
-            
+
             // Validate after change if touched
             if (touchedFields.has('province')) {
                 validateField('province');
@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     barangay.appendChild(opt);
                 });
             }
-            
+
             // Validate after change if touched
             if (touchedFields.has('city')) {
                 validateField('city');
@@ -514,7 +514,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function validateCurrentStep() {
         const fields = stepFields[currentStep];
         let isValid = true;
-        
+
         // Mark all fields in current step as touched
         fields.forEach(field => touchedFields.add(field));
 
@@ -633,7 +633,7 @@ document.addEventListener('DOMContentLoaded', () => {
         inputs.termsCheckbox.addEventListener('change', () => {
             // Always mark as touched when user interacts
             touchedFields.add('termsCheckbox');
-            
+
             if (inputs.termsCheckbox.checked) {
                 createAccountBtn.disabled = false;
                 showError('termsCheckbox', '');
@@ -645,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         });
-        
+
         // Also add click listener to label
         const termsLabel = document.querySelector('label[for="termsCheckbox"]');
         if (termsLabel) {
@@ -657,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add validation trigger when Create Account button is clicked but disabled
     if (createAccountBtn) {
-        createAccountBtn.addEventListener('click', function(e) {
+        createAccountBtn.addEventListener('click', function (e) {
             if (this.disabled) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -670,15 +670,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // ========== FORM SUBMISSION ==========
 
     if (form) {
-        form.addEventListener('submit', async function(e) {
+        form.addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             // Ensure step 3 fields are marked as touched
             touchedFields.add('termsCheckbox');
             touchedFields.add('recaptcha');
-            
+
             const isValid = await validateCurrentStep();
-            
+
             if (!isValid) {
                 // Find first error and scroll to it
                 const firstError = document.querySelector('.error-message.show');
