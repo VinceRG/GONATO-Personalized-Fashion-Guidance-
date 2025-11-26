@@ -4,9 +4,30 @@
     <meta charset="UTF-8">
     <title>Forgot Password - Reset Password</title>
 
-    <!-- ✅ Link external CSS -->
+    <!-- External CSS -->
     <link rel="stylesheet" href="public/css/forgot.css">
     <link rel="stylesheet" href="public/css/register.css">
+
+    <!-- Small helpers so you see errors even if not in your CSS yet -->
+    <style>
+        input.error {
+            border: 1px solid #f87171; /* red border */
+        }
+        .error-message {
+            display: none;
+            color: #f87171;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+        .error-message.show {
+            display: block;
+        }
+        button.btn-disabled,
+        button[disabled] {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -30,7 +51,27 @@
         const reqSpecial  = document.getElementById('req-special');
         const reqMatch    = document.getElementById('req-match');
 
-        // --- Update requirements + strength bar (same behaviour as registration, but with special char) ---
+        const resetBtn = form.querySelector('button[type="submit"]');
+
+        // Same rules as registration
+        const passwordRegex =
+            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+
+        // Enable/disable submit button based on current validity
+        function updateSubmitState() {
+            const pwd = newPasswordInput.value;
+            const confirm = confirmPasswordInput.value;
+
+            const pwdValid = passwordRegex.test(pwd);
+            const matchValid = pwd.length > 0 && pwd === confirm;
+
+            const canSubmit = pwdValid && matchValid;
+
+            resetBtn.disabled = !canSubmit;
+            resetBtn.classList.toggle('btn-disabled', !canSubmit);
+        }
+
+        // Password strength + requirements update
         function updatePasswordRequirements() {
             const pwd = newPasswordInput.value;
 
@@ -59,7 +100,6 @@
             const metCount = Object.values(checks).filter(Boolean).length;
             const percentage = (metCount / 5) * 100;
 
-            // reset bar + text
             strengthBarFill.style.width = percentage + '%';
             strengthBarFill.className = 'strength-bar-fill';
             strengthText.textContent = '';
@@ -85,17 +125,15 @@
             }
         }
 
-        // --- Validate password rules (same rules you use in register) ---
-        const passwordRegex =
-            /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
-
         function validatePasswordField() {
             const pwd = newPasswordInput.value;
             const valid = passwordRegex.test(pwd);
 
             newPasswordInput.classList.toggle('error', !valid);
-            newPasswordError.textContent = valid ? '' : 'Password must meet all requirements.';
-            newPasswordError.classList.toggle('show', !valid);
+            if (newPasswordError) {
+                newPasswordError.textContent = valid ? '' : 'Password must meet all requirements.';
+                newPasswordError.classList.toggle('show', !valid);
+            }
 
             return valid;
         }
@@ -107,24 +145,33 @@
             const match = pwd.length > 0 && pwd === confirm;
 
             confirmPasswordInput.classList.toggle('error', !match);
-            confirmPasswordError.textContent = match ? '' : 'Passwords do not match.';
-            confirmPasswordError.classList.toggle('show', !match);
 
-            reqMatch.classList.toggle('valid', match);
+            if (confirmPasswordError) {
+                confirmPasswordError.textContent = match ? '' : 'Passwords do not match.';
+                confirmPasswordError.classList.toggle('show', !match);
+            }
+
+            if (reqMatch) {
+                reqMatch.classList.toggle('valid', match);
+            }
 
             return match;
         }
 
-        // --- Live updates ---
+        // Live events
         newPasswordInput.addEventListener('input', function () {
             updatePasswordRequirements();
             validatePasswordField();
             validateMatchField();
+            updateSubmitState();
         });
 
-        confirmPasswordInput.addEventListener('input', validateMatchField);
+        confirmPasswordInput.addEventListener('input', function () {
+            validateMatchField();
+            updateSubmitState();
+        });
 
-        // --- Submit handler (similar behaviour to your register form) ---
+        // Submit handler
         form.addEventListener('submit', function (e) {
             let hasError = false;
 
@@ -133,11 +180,15 @@
             if (!validatePasswordField()) hasError = true;
             if (!validateMatchField()) hasError = true;
 
+            updateSubmitState();
+
             if (hasError) {
                 e.preventDefault();
             }
-            // else: let the form submit normally (PHP will handle the reset)
         });
+
+        // Initial state
+        updateSubmitState();
     });
     </script>
 </head>
@@ -145,21 +196,24 @@
     <div class="content">
         <h1>Reset Password</h1>
 
-        <!-- Success info (you can hide/show with PHP condition) -->
+        <!-- Example success text; control with PHP if needed -->
         <div class="alert success" style="margin-bottom: 15px; text-align:center;">
             You can now change your password.
         </div>
 
         <form method="POST" action="" id="resetForm">
             <label for="new_password">New Password</label>
-            <input type="password" id="new_password" name="new_password" placeholder="Enter new password" required>
+            <input type="password" id="new_password" name="new_password"
+                   placeholder="Enter new password" required>
             <span class="error-message" id="new-password-error"></span>
 
             <label for="confirm_password">Confirm Password</label>
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm new password" required>
+            <input type="password" id="confirm_password" name="confirm_password"
+                   placeholder="Confirm new password" required>
+            <!-- error span for confirm -->
+            <span class="error-message" id="confirm-password-error"></span>
 
-
-            <!-- Password strength (same style as we set in CSS) -->
+            <!-- Password strength -->
             <div id="strength-container" class="password-strength-container">
                 <div class="strength-bar">
                     <div id="strength-bar-fill" class="strength-bar-fill"></div>
@@ -167,7 +221,7 @@
                 <div id="strength-text" class="strength-text"></div>
             </div>
 
-            <!-- Same requirement list as in register step -->
+            <!-- Requirements list -->
             <div class="password-requirements" id="password-requirements">
                 <div id="req-length">At least 8 characters</div>
                 <div id="req-uppercase">One uppercase letter</div>
@@ -182,6 +236,5 @@
             <p><a href="index.php?page=login">Back to Login</a></p>
         </form>
     </div>
-
 </body>
 </html>

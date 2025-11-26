@@ -25,6 +25,31 @@ body::after {
     z-index: 0;
 }
 
+/* red border when JS adds .error */
+input.error {
+    border: 1px solid #f87171;
+    /* soft red */
+}
+
+/* generic error message styling if not already there */
+.error-message {
+    color: #f87171;
+    font-size: 0.85rem;
+    margin-top: 4px;
+    display: none;
+}
+
+.error-message.show {
+    display: block;
+}
+
+/* disabled button look */
+button.btn-disabled,
+button[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 body::before {
     width: 500px;
     height: 500px;
