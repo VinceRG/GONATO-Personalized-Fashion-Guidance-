@@ -10,61 +10,110 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="public/js/system_features.js" defer></script>
   <style>
+    /* Ensure hidden utility class exists for the toggling logic */
     .hidden { display: none !important; }
+
+    /* Small helper text for upload rules */
     .upload-rules {
       font-size: 0.8rem;
       color: #666;
       margin-top: 4px;
       line-height: 1.4;
     }
-    .recommend-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-    }
-    .recommend-header-main {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
   </style>
 </head>
 
 <body>
 <?php
-  // Flash + analysis state
-  $flashSuccess   = $_SESSION['successMessage']        ?? '';
-  $flashError     = $_SESSION['errorMessage']          ?? '';
-  $bodyShapeResult = $_SESSION['bodyShapeResult']      ?? null;
-  $colorResult     = $_SESSION['colorAnalysisResult']  ?? null;
-  $showBodyModal   = $_SESSION['show_body_modal']      ?? false;
-  $showColorModal  = $_SESSION['show_color_modal']     ?? false;
-  $keepProfileOpen = $_SESSION['keep_profile_open']    ?? false;
+  // Flash messages from analysis controllers (body + color)
+  $flashSuccess = $_SESSION['successMessage']      ?? '';
+  $flashError   = $_SESSION['errorMessage']        ?? '';
 
+  // Stored analysis results (used in cards + modals)
+  $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
+  $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
+
+  // One-time modal triggers (set by controllers after analysis)
+  $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
+  $showColorModal = $_SESSION['show_color_modal'] ?? false;
+
+  // NEW: keep account modal open after profile update
+  $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
+
+  // Map to variables used below
   $successMessage = $flashSuccess;
   $errorMessage   = $flashError;
 
+  // Clear only flash + flags (results stay for inline display)
   unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
   unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
-  unset($_SESSION['keep_profile_open']);
+  unset($_SESSION['keep_profile_open']); // clear this one-time flag
+?>
 
-  // =================== RECOMMENDATIONS (MYSQLI) ===================
 
-  $productImageBasePath = '../public/image/';
+  <?php if (isset($successMessage) && $successMessage): ?>
+    <div class="notification success"><?= htmlspecialchars($successMessage) ?></div>
+    <script>
+      setTimeout(() => {
+        const notif = document.querySelector('.notification.success');
+        if (notif) {
+          notif.classList.add('hiding');
+          setTimeout(() => notif.remove(), 300);
+        }
+      }, 3000);
+    </script>
+  <?php endif; ?>
+
+  <?php if (isset($errorMessage) && $errorMessage): ?>
+    <div class="notification error"><?= htmlspecialchars($errorMessage) ?></div>
+    <script>
+      setTimeout(() => {
+        const notif = document.querySelector('.notification.error');
+        if (notif) {
+          notif.classList.add('hiding');
+          setTimeout(() => notif.remove(), 300);
+        }
+      }, 3000);
+    </script>
+  <?php endif; ?>
+  <?php
+  // Flash messages from analysis controllers (body + color)
+  $flashSuccess = $_SESSION['successMessage']      ?? '';
+  $flashError   = $_SESSION['errorMessage']        ?? '';
+
+  // Stored analysis results (used in cards + modals)
+  $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
+  $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
+
+  // One-time modal triggers (set by controllers after analysis)
+  $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
+  $showColorModal = $_SESSION['show_color_modal'] ?? false;
+
+  // NEW: keep account modal open after profile update
+  $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
+
+  // Map to variables used below
+  $successMessage = $flashSuccess;
+  $errorMessage   = $flashError;
+
+  // Clear only flash + flags (results stay for inline display)
+  unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
+  unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
+  unset($_SESSION['keep_profile_open']); // clear this one-time flag
+
+  // ================= RECOMMENDATIONS LOGIC =================
+
+  // Where your product images are stored (adjust if different)
+  $productImageBasePath = "uploads/products/";
+
   $recommendations = [];
 
-  $hasUserShapeId  = !empty($user['BODY_SHAPE_ID']);
-  $hasUserSeasonId = !empty($user['SEASON_ID']);
-  $canShowRecommendationsSection = $hasUserShapeId && $hasUserSeasonId;
+  // Make sure we have a logged-in user & a DB connection ($pdo or whatever you use)
+  if (!empty($user['USER_ID']) && isset($pdo)) {
 
-  if ($canShowRecommendationsSection && !empty($user['USER_ID']) && isset($conn) && $conn instanceof mysqli) {
-      $userId   = (int)$user['USER_ID'];
-      $seasonId = (int)$user['SEASON_ID'];
-      $shapeId  = (int)$user['BODY_SHAPE_ID'];
+      $userId = (int)$user['USER_ID'];
 
-      // 1) Strict: match body shape + season, random 4
-      $sqlStrict = "
+      $sql = "
           SELECT 
               p.PRODUCT_ID,
               p.PRODUCT_NAME,
@@ -78,107 +127,33 @@
               i.QUANTITY
           FROM users u
           JOIN products p
-              ON p.BODY_SHAPE_ID = u.BODY_SHAPE_ID
+              ON p.BODY_SHAPE_ID = u.BODY_SHAPE_ID          -- match fit
           JOIN inventory i
               ON i.PRODUCT_ID = p.PRODUCT_ID
           JOIN colors c
               ON c.COLOR_ID = i.COLOR_ID
           JOIN seasons s
-              ON c.SEASON_ID = s.SEASON_ID
+              ON c.SEASON_ID = s.SEASON_ID                  -- match color season
           LEFT JOIN body_shapes bs
               ON bs.BODY_SHAPE_ID = u.BODY_SHAPE_ID
           WHERE 
-              u.USER_ID        = ?
-              AND u.SEASON_ID  = ?
-              AND u.BODY_SHAPE_ID = ?
-              AND c.SEASON_ID  = u.SEASON_ID
-              AND i.QUANTITY   > 0
-          ORDER BY RAND()
-          LIMIT 4
+              u.USER_ID        = :user_id
+              AND u.SEASON_ID IS NOT NULL
+              AND u.BODY_SHAPE_ID IS NOT NULL
+              AND c.SEASON_ID   = u.SEASON_ID               -- only colors for user's season
+              AND i.QUANTITY    > 0                         -- in stock
+          ORDER BY 
+              p.CREATED_AT DESC,
+              p.PRODUCT_NAME
+          LIMIT 8
       ";
 
-      if ($stmt = $conn->prepare($sqlStrict)) {
-          $stmt->bind_param("iii", $userId, $seasonId, $shapeId);
-          $stmt->execute();
-          if ($result = $stmt->get_result()) {
-              while ($row = $result->fetch_assoc()) {
-                  $recommendations[] = $row;
-              }
-              $result->free();
-          }
-          $stmt->close();
-      }
-
-      // 2) Fallback: if none found, season-only match, random 4
-      if (empty($recommendations)) {
-          $sqlSeasonOnly = "
-              SELECT 
-                  p.PRODUCT_ID,
-                  p.PRODUCT_NAME,
-                  p.DESCRIPTION,
-                  p.PRICE,
-                  p.IMAGE_FILE,
-                  s.SEASON_TYPE,
-                  c.COLOR_VALUE,
-                  i.SIZE,
-                  i.QUANTITY
-              FROM users u
-              JOIN colors c
-                  ON c.SEASON_ID = u.SEASON_ID
-              JOIN inventory i
-                  ON i.COLOR_ID = c.COLOR_ID
-              JOIN products p
-                  ON p.PRODUCT_ID = i.PRODUCT_ID
-              LEFT JOIN seasons s
-                  ON s.SEASON_ID = c.SEASON_ID
-              WHERE 
-                  u.USER_ID      = ?
-                  AND u.SEASON_ID IS NOT NULL
-                  AND i.QUANTITY  > 0
-              ORDER BY RAND()
-              LIMIT 4
-          ";
-
-          if ($stmt2 = $conn->prepare($sqlSeasonOnly)) {
-              $stmt2->bind_param("i", $userId);
-              $stmt2->execute();
-              if ($result2 = $stmt2->get_result()) {
-                  while ($row2 = $result2->fetch_assoc()) {
-                      $recommendations[] = $row2;
-                  }
-                  $result2->free();
-              }
-              $stmt2->close();
-          }
-      }
+      $stmt = $pdo->prepare($sql);
+      $stmt->execute(['user_id' => $userId]);
+      $recommendations = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
   }
 ?>
 
-<?php if (!empty($successMessage)): ?>
-  <div class="notification success"><?= htmlspecialchars($successMessage) ?></div>
-  <script>
-    setTimeout(() => {
-      const notif = document.querySelector('.notification.success');
-      if (notif) {
-        notif.classList.add('hiding');
-        setTimeout(() => notif.remove(), 300);
-      }
-    }, 3000);
-  </script>
-<?php endif; ?>
-
-<?php if (!empty($errorMessage)): ?>
-  <div class="notification error"><?= htmlspecialchars($errorMessage) ?></div>
-  <script>
-    setTimeout(() => {
-      const notif = document.querySelector('.notification.error');
-      if (notif) {
-        notif.classList.add('hiding');
-        setTimeout(() => notif.remove(), 300);
-      }
-    }, 3000);
-  </script>
-<?php endif; ?>
 
   <div class="results-container">
     <aside class="sidebar" id="appSidebar" aria-expanded="true">
@@ -234,65 +209,61 @@
           </div>
 
           <div class="shop-controls">
-            <button class="cart-button" type="button" onclick="openCart()">
-              <i class="bi bi-cart"></i>
-              <span class="cart-count" id="cartCount"></span>
-            </button>
+<button class="cart-button" type="button" onclick="openCart()">
+  <i class="bi bi-cart"></i>
+  <span class="cart-count" id="cartCount"></span>
+</button>
           </div>
         </div>
 
-        <?php if ($canShowRecommendationsSection): ?>
-          <div id="recommendations" class="subsection">
-            <div class="recommend-header">
-              <div class="recommend-header-main">
-                <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
-                <p class="section-subtitle">Based on your color and body analysis results.</p>
-              </div>
-              <button type="button" class="btn btn-outline" onclick="refreshRecommendations()">
-                <i class="bi bi-arrow-repeat"></i> Refresh
-              </button>
-            </div>
+        <div id="recommendations" class="subsection">
+          <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
+          <p class="section-subtitle">Based on your color and body analysis results.</p>
 
-            <div class="clothes-grid">
-              <?php if (!empty($recommendations)): ?>
-                <?php foreach ($recommendations as $item): ?>
-                  <div class="clothes-item">
-                    <img
-                      src="<?= htmlspecialchars($productImageBasePath . $item['IMAGE_FILE']) ?>"
-                      alt="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
-                    >
+          <div class="clothes-grid">
+  <?php if (!empty($recommendations)): ?>
+    <?php foreach ($recommendations as $item): ?>
+      <div class="clothes-item">
+        <img
+          src="<?= htmlspecialchars($productImageBasePath . $item['IMAGE_FILE']) ?>"
+          alt="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
+        >
 
-                    <button
-                      class="add-to-cart"
-                      data-product-id="<?= (int)$item['PRODUCT_ID'] ?>"
-                      data-product-name="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
-                      data-price="<?= htmlspecialchars($item['PRICE']) ?>"
-                      data-size="<?= htmlspecialchars($item['SIZE'] ?? '') ?>"
-                      data-color="<?= htmlspecialchars($item['COLOR_VALUE'] ?? '') ?>"
-                    >
-                      <i class="bi bi-heart"></i>
-                    </button>
+        <!-- Heart / add-to-cart button (wired with data-attributes if you want JS to use them) -->
+        <button
+          class="add-to-cart"
+          data-product-id="<?= (int)$item['PRODUCT_ID'] ?>"
+          data-product-name="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
+          data-price="<?= htmlspecialchars($item['PRICE']) ?>"
+          data-size="<?= htmlspecialchars($item['SIZE']) ?>"
+          data-color="<?= htmlspecialchars($item['COLOR_VALUE'] ?? '') ?>"
+        >
+          <i class="bi bi-heart"></i>
+        </button>
 
-                    <div class="clothes-caption">
-                      <span class="title">
-                        <?= htmlspecialchars($item['PRODUCT_NAME']) ?>
-                      </span>
-                      <span class="price">
-                        ₱<?= number_format($item['PRICE'], 2) ?>
-                      </span>
-                    </div>
-                  </div>
-                <?php endforeach; ?>
-              <?php else: ?>
-                <p class="section-subtitle" style="grid-column: 1 / -1; margin-top: 1rem;">
-                  No personalized items found for your current profile.
-                </p>
-              <?php endif; ?>
-            </div>
-          </div>
-        <?php endif; ?>
+        <div class="clothes-caption">
+          <span class="title">
+            <?= htmlspecialchars($item['PRODUCT_NAME']) ?>
+          </span>
+          <span class="price">
+            ₱<?= number_format($item['PRICE'], 2) ?>
+          </span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p class="section-subtitle" style="grid-column: 1 / -1; margin-top: 1rem;">
+      No personalized items yet. Complete your
+      <a href="#features" style="text-decoration: underline;">color and body shape analysis</a>
+      to unlock outfit recommendations.
+    </p>
+  <?php endif; ?>
+</div>
 
-        <?php include 'catalog.php'; ?>
+        </div>
+
+      <?php include 'catalog.php'; ?>
+
       </section>
 
       <section id="features" class="content-section">
@@ -427,10 +398,11 @@
   </div>
 
   <!-- Toast Notification -->
-  <div id="toast" class="toast hidden">
-    <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
-    <span id="toastMessage"></span>
-  </div>
+<div id="toast" class="toast hidden">
+  <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
+  <span id="toastMessage"></span>
+</div>
+
 
   <!-- USER PROFILE MODAL -->
   <div class="overlay"
@@ -828,9 +800,9 @@
     </div> <!-- end modal -->
   </div> <!-- end userProfileOverlay -->
 
-  <!-- ===================== ANALYSIS MODALS ===================== -->
+  <!-- ===================== NEW ANALYSIS MODALS ===================== -->
 
-  <!-- 1) ERROR MODAL -->
+  <!-- 1) ERROR MODAL (shared for body + color) -->
   <div
     class="overlay <?= $flashError ? '' : 'hidden' ?>"
     id="analysisErrorOverlay"
@@ -938,7 +910,7 @@
     </div>
   </div>
 
-  <!-- 2) BODY SHAPE RESULT MODAL -->
+  <!-- 2) BODY SHAPE RESULT MODAL (one-time trigger) -->
   <div
     class="overlay <?= $showBodyModal ? '' : 'hidden' ?>"
     id="bodyShapeResultOverlay"
@@ -1064,7 +1036,7 @@
     </div>
   </div>
 
-  <!-- 3) COLOR ANALYSIS RESULT MODAL -->
+  <!-- 3) COLOR ANALYSIS RESULT MODAL (one-time trigger) -->
   <div
     class="overlay <?= $showColorModal ? '' : 'hidden' ?>"
     id="colorResultOverlay"
@@ -1270,12 +1242,8 @@
       const overlay = document.getElementById('colorResultOverlay');
       if (overlay) overlay.classList.add('hidden');
     }
-
-    function refreshRecommendations() {
-      // simple reload so MySQL ORDER BY RAND() gives new items
-      window.location.reload();
-    }
   </script>
+<?php include __DIR__ . '/cartModal.php'; ?>
 
 <link rel="stylesheet" href="public/css/cartModal.css">
 <script>
@@ -1285,12 +1253,6 @@
 <script src="public/js/cartModal.js"></script>
 <script src="https://js.paymongo.com/v1/paymongo.js"></script>
 
-  <link rel="stylesheet" href="../public/css/cartModal.css">
-  <script>
-    window.PAYMONGO_PUBLIC_KEY_B64 = "<?= base64_encode($_ENV['PAYMONGO_PUBLIC_KEY'] . ':') ?>";
-  </script>
-  <script src="../public/js/cartModal.js"></script>
-  <script src="https://js.paymongo.com/v1/paymongo.js"></script>
 
 
 </body>
