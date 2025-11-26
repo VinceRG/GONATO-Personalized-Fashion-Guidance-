@@ -1,10 +1,62 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // ==========================
+    //  READ URL QUERY PARAMS
+    // ==========================
+    const urlParams = new URLSearchParams(window.location.search);
+    const verifyStatus = urlParams.get('verify');   // "success" | "failed" | null
+    const stepParam = parseInt(urlParams.get('step') || '1', 10);
+
+    let initialStep = stepParam || 1;
+
+    if (verifyStatus === 'success') {
+        alert('Email verified successfully! You can now continue to Step 2.');
+        initialStep = 2;
+    } else if (verifyStatus === 'failed') {
+        alert('Verification link is invalid or expired. Please request a new one.');
+        initialStep = 1;
+    }
+
+    const startStep = initialStep;
+
     // Current step tracker
-    let currentStep = 1;
+    let currentStep = startStep;
     const totalSteps = 3;
 
-    // Input elements
+    // ==========================
+    //  STEP SWITCHING
+    // ==========================
+    function showStep(step) {
+        // Show/hide by step index (1,2,3) and toggle "hidden"
+        document.querySelectorAll('.form-step').forEach((el, idx) => {
+            const s = idx + 1; // step number based on order in DOM
+
+            if (s === step) {
+                el.classList.remove('hidden');
+                el.classList.add('active');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('active');
+            }
+        });
+
+        currentStep = step;
+        updateProgressBar();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // helper used by PHP-injected start step
+    function goToStep(step) {
+        showStep(step);
+    }
+
+    // Initialize to the starting step (1 or 2 depending on verifyStatus)
+    goToStep(startStep);
+
+
+    // ==========================
+    //  INPUT ELEMENTS
+    // ==========================
     const inputs = {
         firstname: document.getElementById('firstname'),
         lastname: document.getElementById('lastname'),
@@ -130,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!/[A-Z]/.test(value)) return "Must contain at least one uppercase letter.";
         if (!/[a-z]/.test(value)) return "Must contain at least one lowercase letter.";
         if (!/[0-9]/.test(value)) return "Must contain at least one number.";
-        if (!/[!@#$%^&*(),.?":{}|<>]/.test(value)) return "Must contain at least one special character.";
+        if (!/[!@#$%^&*(),.?\":{}|<>]/.test(value)) return "Must contain at least one special character.";
         return "";
     }
 
@@ -218,7 +270,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         if (validators[field]) {
-            const value = field === 'termsCheckbox' || field === 'recaptcha' ? '' : (inputs[field]?.value || '');
+            const value = field === 'termsCheckbox' || field === 'recaptcha'
+                ? ''
+                : (inputs[field]?.value || '');
             const message = validators[field](value);
             showError(field, message);
             return message === "";
@@ -439,7 +493,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Validate after change if touched
             if (touchedFields.has('province')) {
                 validateField('province');
             }
@@ -466,7 +519,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
 
-            // Validate after change if touched
             if (touchedFields.has('city')) {
                 validateField('city');
             }
@@ -476,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // ========== STEP NAVIGATION ==========
+    // ========== PROGRESS BAR ==========
 
     function updateProgressBar() {
         const progressLine = document.getElementById('progressLine');
@@ -500,16 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function showStep(step) {
-        document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
-        const currentStepElement = document.querySelector(`.form-step[data-step="${step}"]`);
-        if (currentStepElement) {
-            currentStepElement.classList.add('active');
-        }
-        currentStep = step;
-        updateProgressBar();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    // ========== VALIDATE CURRENT STEP ==========
 
     async function validateCurrentStep() {
         const fields = stepFields[currentStep];
@@ -525,7 +568,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (!validateField(field)) isValid = false;
                 }
             } else if (field === 'recaptcha' || field === 'termsCheckbox') {
-                // Force validation for these special fields
                 if (!validateField(field)) isValid = false;
             } else {
                 if (inputs[field]) {
@@ -534,11 +576,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Additional checks for step 1
+        // Additional checks for step 1: username/email existence
         if (currentStep === 1 && isValid) {
-            const usernameExists = await checkUsernameExists(inputs.username.value);
-            const emailExists = await checkEmailExists(inputs.email.value);
-            if (usernameExists === false || emailExists === false) {
+            const usernameOk = await checkUsernameExists(inputs.username.value);
+            const emailOk = await checkEmailExists(inputs.email.value);
+            if (!usernameOk || !emailOk) {
                 isValid = false;
             }
         }
@@ -548,17 +590,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ========== BUTTON EVENT LISTENERS ==========
 
+    // STEP 1 -> send verification email
     document.getElementById('nextStep1')?.addEventListener('click', async () => {
         const isValid = await validateCurrentStep();
-        if (isValid) {
-            showStep(2);
-        } else {
+
+        if (!isValid) {
             const firstError = document.querySelector('.error-message.show');
             if (firstError) {
                 firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }
+            return;
+        }
+
+        // Send verification email
+        const fd = new FormData();
+        fd.append('firstname', inputs.firstname.value.trim());
+        fd.append('lastname', inputs.lastname.value.trim());
+        fd.append('username', inputs.username.value.trim());
+        fd.append('email', inputs.email.value.trim());
+
+        try {
+            const response = await fetch('index.php?page=register&action=sendVerifyEmail', {
+                method: 'POST',
+                body: fd,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                alert(data.message || 'Failed to send verification email.');
+                return;
+            }
+
+            // Tell the user to check their email
+            alert(data.message);
+
+            // You can optionally show a "Check your email" panel here
+            // and keep them on Step 1 until they verify.
+            // If you prefer to move them to Step 2 immediately, uncomment:
+            // showStep(2);
+
+        } catch (err) {
+            console.error('Error sending verification email:', err);
+            alert('An error occurred while sending the verification email. Please try again.');
         }
     });
 
@@ -623,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ========== TERMS CHECKBOX LOGIC ==========
+    // ========== TERMS CHECKBOX / CREATE ACCOUNT BUTTON ==========
 
     if (createAccountBtn) {
         createAccountBtn.disabled = true;
@@ -631,7 +710,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (inputs.termsCheckbox) {
         inputs.termsCheckbox.addEventListener('change', () => {
-            // Always mark as touched when user interacts
             touchedFields.add('termsCheckbox');
 
             if (inputs.termsCheckbox.checked) {
@@ -639,14 +717,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError('termsCheckbox', '');
             } else {
                 createAccountBtn.disabled = true;
-                // Show error when unchecked if field was touched
-                if (touchedFields.has('termsCheckbox')) {
-                    showError('termsCheckbox', 'You must accept the terms and conditions.');
-                }
+                showError('termsCheckbox', 'You must accept the terms and conditions.');
             }
         });
 
-        // Also add click listener to label
         const termsLabel = document.querySelector('label[for="termsCheckbox"]');
         if (termsLabel) {
             termsLabel.addEventListener('click', () => {
@@ -655,7 +729,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Add validation trigger when Create Account button is clicked but disabled
     if (createAccountBtn) {
         createAccountBtn.addEventListener('click', function (e) {
             if (this.disabled) {
@@ -673,14 +746,12 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            // Ensure step 3 fields are marked as touched
             touchedFields.add('termsCheckbox');
             touchedFields.add('recaptcha');
 
             const isValid = await validateCurrentStep();
 
             if (!isValid) {
-                // Find first error and scroll to it
                 const firstError = document.querySelector('.error-message.show');
                 if (firstError) {
                     firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -688,13 +759,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             } else {
-                // Submit the form
                 this.submit();
             }
         });
     }
 
-    // ========== INITIALIZE ==========
-
+    // Initial progress bar update
     updateProgressBar();
 });
