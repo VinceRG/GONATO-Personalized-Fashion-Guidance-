@@ -9,13 +9,16 @@ class LoginController {
     const OTP_EXPIRY = 120; // seconds
 
     public function __construct() {
+     
         $this->userModel = new User();
     }
 
     public function index() {
-        // ✅ Make sure session is started (in case this file is ever called directly)
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+
+        // ✅ If already logged in, don’t allow access to login page
+        if (!empty($_SESSION['logged_in']) && !empty($_SESSION['user_id'])) {
+            header("Location: index.php?page=features");
+            exit;
         }
 
         $message = '';
@@ -28,6 +31,8 @@ class LoginController {
         if (isset($_GET['action']) && $_GET['action'] === 'verifyOtp') {
             header('Content-Type: application/json');
 
+            // (session is already started in __construct)
+
             $enteredOtp = trim($_POST['otp'] ?? '');
             $storedOtp  = $_SESSION['login_otp'] ?? null;
             $otpTime    = $_SESSION['login_otp_time'] ?? 0;
@@ -39,28 +44,13 @@ class LoginController {
             }
 
             if ($enteredOtp === (string)$storedOtp) {
-                // Finalize login
                 $user = $_SESSION['temp_user'] ?? null;
 
                 if ($user) {
-                    // 🔐 Security: regenerate session id at login
-                    session_regenerate_id(true);
+                    // 🔐 Final secure login after OTP
+                    $rememberMe = $_SESSION['remember_me'] ?? false;
 
-                    $_SESSION['user_id']    = $user['USER_ID'];
-                    $_SESSION['username']   = $user['USERNAME'];
-                    $_SESSION['email']      = $user['EMAIL'];
-                    $_SESSION['first_name'] = $user['FIRST_NAME'];
-                    $_SESSION['last_name']  = $user['LAST_NAME'];
-                    $_SESSION['logged_in']  = true;
-
-                    // ✅ Handle remember-me cookie (if requested)
-                    if (!empty($_SESSION['remember_me'])) {
-                        $this->setRememberMeCookies($user);
-                        unset($_SESSION['remember_me']);
-                    }
-
-                    // Optional: last login cookie
-                    $this->setLastLoginCookie();
+                    $this->secureLoginSession($user, $rememberMe);
 
                     unset($_SESSION['temp_user']);
                     $this->clearOtpSession();
@@ -75,7 +65,7 @@ class LoginController {
         }
 
         // ============================
-        // STEP 1: USERNAME / PASSWORD
+        // STEP 1: USERNAME/PASSWORD
         // ============================
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $username = trim($_POST['username'] ?? '');
@@ -88,27 +78,23 @@ class LoginController {
                 $loginResult = $this->userModel->login($username, $password);
 
                 if ($loginResult['success']) {
-                    // Store user temporarily until OTP is verified
+                    // Temporarily store until OTP is validated
                     $_SESSION['temp_user'] = $loginResult['user'];
 
-                    // ✅ Store remember_me preference in session
-                    $rememberMe = !empty($_POST['remember_me']);
-                    $_SESSION['remember_me'] = $rememberMe;
+                    $_SESSION['remember_me'] = !empty($_POST['remember_me']);
 
-                    // Generate OTP (no DB, only session)
+                    // Generate OTP
                     $otp = rand(100000, 999999);
                     $_SESSION['login_otp'] = $otp;
                     $_SESSION['login_otp_time'] = time();
 
-                    // Send OTP email
+                    // Send OTP Email
                     $email = $loginResult['user']['EMAIL'];
                     $this->sendLoginOtpEmail($email, $otp);
 
-                    // Trigger modal in the view
                     $openOtpModal = true;
                     $message = "Please verify your identity. An OTP has been sent to your email.";
                     $messageType = 'info';
-
                 } else {
                     $message = $loginResult['message'];
                     $messageType = 'error';
@@ -123,42 +109,54 @@ class LoginController {
         unset($_SESSION['login_otp'], $_SESSION['login_otp_time']);
     }
 
-    // ✅ NEW: remember-me cookie helper
-    private function setRememberMeCookies(array $user) {
-        // 30 days
-        $expiry = time() + (60 * 60 * 24 * 30);
+    // ======================================================
+    // 🔐 MAIN SECURITY SESSION (called after successful OTP)
+    // ======================================================
+    private function secureLoginSession(array $user, bool $rememberMe) {
+
+        // 1. Prevent session fixation
+        session_regenerate_id(true);
+
+        // 2. Store user login session
+        $_SESSION['user_id']    = $user['USER_ID'];
+        $_SESSION['username']   = $user['USERNAME'];
+        $_SESSION['email']      = $user['EMAIL'];
+        $_SESSION['first_name'] = $user['FIRST_NAME'];
+        $_SESSION['last_name']  = $user['LAST_NAME'];
+        $_SESSION['logged_in']  = true;
+
+        // 3. Bind session to the client
+        $_SESSION['ip_address']    = $_SERVER['REMOTE_ADDR'] ?? '';
+        $_SESSION['user_agent']    = $_SERVER['HTTP_USER_AGENT'] ?? '';
+        $_SESSION['last_activity'] = time();
+
+        // 4. Secure cookies (same as register)
         $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
 
-        // Only store non-sensitive info (e.g., username). Don't store passwords.
-        setcookie(
-            'remember_username',
-            $user['USERNAME'],
-            [
-                'expires'  => $expiry,
+        // Last login cookie
+        setcookie('last_login', date('Y-m-d H:i:s'), [
+            'expires'  => time() + (86400 * 30),
+            'path'     => '/',
+            'secure'   => $secure,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+
+        // Remember username
+        if ($rememberMe) {
+            setcookie('remember_username', $user['USERNAME'], [
+                'expires'  => time() + (86400 * 30),
                 'path'     => '/',
                 'secure'   => $secure,
-                'httponly' => false,     // can be read by JS if you want to auto-fill
+                'httponly' => false,
                 'samesite' => 'Lax',
-            ]
-        );
+            ]);
+        } else {
+            setcookie('remember_username', '', time() - 3600, '/');
+        }
     }
 
-    // ✅ NEW: last login cookie helper (for display)
-    private function setLastLoginCookie() {
-        $secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
-
-        setcookie(
-            'last_login',
-            date('Y-m-d H:i:s'),
-            [
-                'expires'  => time() + (60 * 60 * 24 * 30),
-                'path'     => '/',
-                'secure'   => $secure,
-                'httponly' => true,
-                'samesite' => 'Lax',
-            ]
-        );
-    }
+    // Email sending logic ---------------------------------------------------
 
     private function sendLoginOtpEmail($email, $otp) {
         require_once __DIR__ . '/../../vendor/autoload.php';
@@ -166,16 +164,14 @@ class LoginController {
         $mail = new PHPMailer(true);
 
         try {
-            // SMTP Settings (same as forgot password)
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
             $mail->Username   = 'amarelle2025@gmail.com';
-            $mail->Password   = 'hdzk sgjm jnbx kipl'; // your app password
+            $mail->Password   = 'hdzk sgjm jnbx kipl';
             $mail->SMTPSecure = 'tls';
             $mail->Port       = 587;
 
-            // Sender / Receiver
             $mail->setFrom('amarelle2025@gmail.com', 'Amarelle');
             $mail->addAddress($email);
 
@@ -191,7 +187,7 @@ class LoginController {
         }
     }
 
-   
+
 
 
     private function getLoginEmailTemplate($email, $otpDigits) {

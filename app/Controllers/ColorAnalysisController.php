@@ -5,9 +5,7 @@ require_once './app/Helpers/UploadSecurity.php';
 class ColorAnalysisController {
     
     public function process() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+      
 
         // 1. Check Authentication
         if (!isset($_SESSION['user_id'])) {

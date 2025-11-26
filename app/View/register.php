@@ -12,6 +12,7 @@
     </head>
 
     <body>
+        
         <div class="header">
             <a href="index.php?page=landing" class="logo-link">
                 <div class="logo">Amarelle</div>
@@ -76,6 +77,9 @@
                         <button type="button" class="btn btn-primary btn-full" id="nextStep1">Next</button>
                     </div>
                 </div>
+                <script>
+    window.REGISTER_START_STEP = <?= isset($startStep) ? (int)$startStep : 1 ?>;
+</script>
 
                 <div class="form-step" data-step="2">
                     <div class="address-section">

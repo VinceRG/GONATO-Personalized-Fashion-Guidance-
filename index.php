@@ -1,19 +1,8 @@
 <?php
 // index.php (root of GONATO-Personalized-Fashion-Guidance-)
 
-// ✅ Secure session cookie config
-$secure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on');
-
-session_set_cookie_params([
-    'lifetime' => 0,       // session cookie (until browser close)
-    'path'     => '/',
-    'domain'   => '',
-    'secure'   => $secure, // only over HTTPS
-    'httponly' => true,    // JS cannot read
-    'samesite' => 'Lax',
-]);
-
 session_start();
+
 
 
 if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
@@ -40,73 +29,77 @@ if (isset($_GET['logout']) && $_GET['logout'] === 'true') {
     exit;
 }
 
-// Get requested page, default to 'landing'
-// Handle API requests FIRST (before page routing)
+// =====================================================
+// 4. Admin API Endpoint
+// =====================================================
 if (isset($_GET['api']) && $_GET['api'] === 'admin') {
     require_once './public/admin-api.php';
-    exit; // Stop execution after API response
+    exit;
 }
 
-// Get the requested page from the URL, default to 'landing'
+// =====================================================
+// 5. Page Routing
+// =====================================================
 $page = $_GET['page'] ?? 'landing';
 
 switch ($page) {
-    // ===== LOGIN PAGE + MFA =====
+
+    // LOGIN
     case 'login':
         require_once './app/Controllers/loginControl.php';
         $controller = new LoginController();
         $controller->index();
         break;
 
-    // ===== REGISTRATION PAGE =====
+    // REGISTER
     case 'register':
         require_once './app/Controllers/registerControl.php';
         $controller = new RegisterController();
         $controller->index();
         break;
 
-    // ===== USER INFO PAGE =====
+    // USER INFO
     case 'user_info':
         require_once './app/Controllers/userControl.php';
         $controller = new UserController();
         $controller->index();
         break;
 
-    // ===== FEATURES PAGE (after successful login) =====
+    // FEATURES
     case 'features':
         require_once './app/Controllers/featureControl.php';
         $controller = new FeaturesController();
         $controller->index();
         break;
 
-    // ===== BODY SHAPE PROCESS =====
+    // BODY SHAPE
     case 'process_body_shape':
         require_once './app/Controllers/BodyShapeController.php';
         $controller = new BodyShapeController();
         $controller->process();
         break;
 
-    // ===== COLOR ANALYSIS PROCESS (NEW) =====
+    // COLOR ANALYSIS
     case 'process_color_analysis':
         require_once './app/Controllers/ColorAnalysisController.php';
         $controller = new ColorAnalysisController();
         $controller->process();
         break;
 
-    // ===== OTP VERIFICATION (handled by LoginController internally) =====
+    // OTP
     case 'otp_verification':
         require_once './app/View/otp_verification.php';
         break;
 
-    // ===== FORGOT PASSWORD PAGE =====
+    // FORGOT PASSWORD
     case 'forgot':
         require_once './app/Controllers/forgotControl.php';
         $controller = new ForgotController();
         $controller->index();
         break;
 
-    // ===== ADMIN =====
-     case 'admin_login':
+    // ADMIN
+    case 'admin_login':
         require_once 'app/Controllers/adminLoginControl.php';
         $controller = new AdminLoginController();
         $controller->index();
@@ -120,10 +113,10 @@ switch ($page) {
         require_once 'app/View/policy.php';
         break;
 
-    // ===== DEFAULT: LANDING PAGE =====
+    // DEFAULT
     case 'landing':
     default:
         require_once './app/View/landing.php';
         break;
-}   
+}
 ?>
