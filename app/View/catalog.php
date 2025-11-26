@@ -1,7 +1,7 @@
 <?php 
 // We assume $catalogProducts is provided by FeaturesController
 
-    $imageBasePath = 'public/image/';
+$imageBasePath = '/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/image/';
 ?>
 
 <div class="subsection">
