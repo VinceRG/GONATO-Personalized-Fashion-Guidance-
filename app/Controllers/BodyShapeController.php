@@ -3,9 +3,12 @@
 require_once './app/Helpers/UploadSecurity.php';
 
 class BodyShapeController {
-    
+
     public function process() {
-        
+        // Make sure session is active (defensive, in case index.php changes later)
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
 
         // 1. Check Authentication
         if (!isset($_SESSION['user_id'])) {
@@ -13,7 +16,11 @@ class BodyShapeController {
             exit;
         }
 
-        // Include your Database Connection
+        // Always clear previous flash state so this run is authoritative
+        $_SESSION['successMessage']  = '';
+        $_SESSION['errorMessage']    = '';
+        $_SESSION['show_body_modal'] = false;
+
         require_once './app/Core/Database.php';
 
         // 2. Define Body Shape ID Mapping (based on your DB)
@@ -27,16 +34,18 @@ class BodyShapeController {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $height = $_POST['height_cm'] ?? null;
 
-            // Basic height presence check (optional but harmless)
+            // Basic height presence check
             if ($height === null || $height === '') {
-                $_SESSION['errorMessage'] = "Please provide your height.";
+                $_SESSION['errorMessage']    = "Please provide your height.";
+                $_SESSION['show_body_modal'] = false;
                 header("Location: index.php?page=features#features");
                 exit;
             }
 
-            // Validate files exist (user-friendly message)
+            // Validate files exist
             if (empty($_FILES['front_image']['tmp_name']) || empty($_FILES['side_image']['tmp_name'])) {
-                $_SESSION['errorMessage'] = "Please upload both front and side images.";
+                $_SESSION['errorMessage']    = "Please upload both front and side images.";
+                $_SESSION['show_body_modal'] = false;
                 header("Location: index.php?page=features#features");
                 exit;
             }
@@ -46,11 +55,12 @@ class BodyShapeController {
                 $frontMime = UploadSecurity::validateImageAndGetMime('front_image', 5_000_000); // 5 MB
                 $sideMime  = UploadSecurity::validateImageAndGetMime('side_image',  5_000_000);
             } catch (RuntimeException $e) {
-                $_SESSION['errorMessage'] = $e->getMessage();
-               header("Location: index.php?page=features#features");
+                $_SESSION['errorMessage']    = $e->getMessage();
+                $_SESSION['show_body_modal'] = false;
+                header("Location: index.php?page=features#features");
                 exit;
             }
-            
+
             // Prepare files for cURL using trusted MIME types
             $frontFile = new CURLFile(
                 $_FILES['front_image']['tmp_name'],
@@ -73,15 +83,15 @@ class BodyShapeController {
                 'height_cm'   => $height
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            
+
             $response = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            
+
             if (curl_errno($ch)) {
-                $_SESSION['errorMessage'] = "Server Connection Error. Is the Python app.py running?";
+                $_SESSION['errorMessage']    = "Server Connection Error. Is the Python app.py running?";
+                $_SESSION['show_body_modal'] = false;
                 curl_close($ch);
                 header("Location: index.php?page=features#features");
-
                 exit;
             }
             curl_close($ch);
@@ -90,42 +100,52 @@ class BodyShapeController {
             $result = json_decode($response, true);
 
             if ($httpCode === 200 && isset($result['status']) && $result['status'] === 'success') {
-                $bodyShapeName = $result['body_shape'];
-                $measurements = $result['measurements'];
-                
+                $bodyShapeName = $result['body_shape'] ?? null;
+                $measurements  = $result['measurements'] ?? [];
+
                 $bodyShapeId = isset($shapeMapping[$bodyShapeName]) ? $shapeMapping[$bodyShapeName] : null;
 
                 if ($bodyShapeId) {
-                    $db = new Database();
-                    $conn = $db->connect(); 
+                    $db   = new Database();
+                    $conn = $db->connect();
 
                     $query = "UPDATE users SET BODY_SHAPE_ID = ? WHERE USER_ID = ?";
-                    
+
                     $stmt = $conn->prepare($query);
-                    
+
                     if ($stmt) {
                         $stmt->bind_param("ii", $bodyShapeId, $_SESSION['user_id']);
-                        
+
                         if ($stmt->execute()) {
                             $_SESSION['bodyShapeResult'] = [
                                 'prediction'   => ['body_shape' => $bodyShapeName],
                                 'measurements' => $measurements
                             ];
-                            $_SESSION['successMessage']    = "Body shape analyzed successfully: " . $bodyShapeName;
-                            $_SESSION['show_body_modal']   = true;   // 👈 NEW: trigger body modal one time
+
+                            $_SESSION['successMessage']  = "Body shape analyzed successfully: " . $bodyShapeName;
+                            $_SESSION['errorMessage']    = '';
+                            $_SESSION['show_body_modal'] = true;  // 🔥 tells the view to open success modal
                         } else {
-                            $_SESSION['errorMessage'] = "Database Error: " . $stmt->error;
+                            $_SESSION['errorMessage']    = "Database Error: " . $stmt->error;
+                            $_SESSION['successMessage']  = '';
+                            $_SESSION['show_body_modal'] = false;
                         }
                         $stmt->close();
                     } else {
-                        $_SESSION['errorMessage'] = "Database Prepare Error: " . $conn->error;
+                        $_SESSION['errorMessage']    = "Database Prepare Error: " . $conn->error;
+                        $_SESSION['successMessage']  = '';
+                        $_SESSION['show_body_modal'] = false;
                     }
                 } else {
-                     $_SESSION['errorMessage'] = "Predicted shape '$bodyShapeName' is not valid in the database.";
+                    $_SESSION['errorMessage']    = "Predicted shape '$bodyShapeName' is not valid in the database.";
+                    $_SESSION['successMessage']  = '';
+                    $_SESSION['show_body_modal'] = false;
                 }
             } else {
                 $errorMsg = isset($result['message']) ? $result['message'] : "Failed to connect to analysis server.";
-                $_SESSION['errorMessage'] = "Analysis Failed: " . $errorMsg;
+                $_SESSION['errorMessage']    = "Analysis Failed: " . $errorMsg;
+                $_SESSION['successMessage']  = '';
+                $_SESSION['show_body_modal'] = false;
             }
 
             // Redirect back to features page

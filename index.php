@@ -116,7 +116,20 @@ switch ($page) {
         $controller->index();
         break;
     
+    // ===== BODY SHAPE PROCESS =====
+    case 'process_body_shape':
+        require_once './app/Controllers/BodyShapeController.php';
+        $controller = new BodyShapeController();
+        $controller->process();
+        break;
 
+
+    // ===== COLOR ANALYSIS PROCESS (NEW) =====
+    case 'process_color_analysis':
+        require_once './app/Controllers/ColorAnalysisController.php';
+        $controller = new ColorAnalysisController();
+        $controller->process();
+        break;
     // ===== DEFAULT: LANDING PAGE =====
     // ===== ADMIN =====
      case 'admin_login':

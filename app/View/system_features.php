@@ -13,6 +13,7 @@
     /* Ensure hidden utility class exists for the toggling logic */
     .hidden { display: none !important; }
 
+
     /* Small helper text for upload rules */
     .upload-rules {
       font-size: 0.8rem;
@@ -23,32 +24,40 @@
   </style>
 </head>
 
+
 <body>
 <?php
   // Flash messages from analysis controllers (body + color)
   $flashSuccess = $_SESSION['successMessage']      ?? '';
   $flashError   = $_SESSION['errorMessage']        ?? '';
 
+
   // Stored analysis results (used in cards + modals)
   $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
   $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
+
 
   // One-time modal triggers (set by controllers after analysis)
   $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
   $showColorModal = $_SESSION['show_color_modal'] ?? false;
 
+
   // NEW: keep account modal open after profile update
   $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
+
 
   // Map to variables used below
   $successMessage = $flashSuccess;
   $errorMessage   = $flashError;
+
 
   // Clear only flash + flags (results stay for inline display)
   unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
   unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
   unset($_SESSION['keep_profile_open']); // clear this one-time flag
 ?>
+
+
 
 
   <?php if (isset($successMessage) && $successMessage): ?>
@@ -64,6 +73,7 @@
     </script>
   <?php endif; ?>
 
+
   <?php if (isset($errorMessage) && $errorMessage): ?>
     <div class="notification error"><?= htmlspecialchars($errorMessage) ?></div>
     <script>
@@ -77,30 +87,6 @@
     </script>
   <?php endif; ?>
   <?php
-  // Flash messages from analysis controllers (body + color)
-  $flashSuccess = $_SESSION['successMessage']      ?? '';
-  $flashError   = $_SESSION['errorMessage']        ?? '';
-
-  // Stored analysis results (used in cards + modals)
-  $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
-  $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
-
-  // One-time modal triggers (set by controllers after analysis)
-  $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
-  $showColorModal = $_SESSION['show_color_modal'] ?? false;
-
-  // NEW: keep account modal open after profile update
-  $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
-
-  // Map to variables used below
-  $successMessage = $flashSuccess;
-  $errorMessage   = $flashError;
-
-  // Clear only flash + flags (results stay for inline display)
-  unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
-  unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
-  unset($_SESSION['keep_profile_open']); // clear this one-time flag
-
   // ================= RECOMMENDATIONS LOGIC =================
 
   // Where your product images are stored (adjust if different)
@@ -114,7 +100,7 @@
       $userId = (int)$user['USER_ID'];
 
       $sql = "
-          SELECT 
+          SELECT
               p.PRODUCT_ID,
               p.PRODUCT_NAME,
               p.DESCRIPTION,
@@ -127,22 +113,22 @@
               i.QUANTITY
           FROM users u
           JOIN products p
-              ON p.BODY_SHAPE_ID = u.BODY_SHAPE_ID          -- match fit
+              ON p.BODY_SHAPE_ID = u.BODY_SHAPE_ID
           JOIN inventory i
               ON i.PRODUCT_ID = p.PRODUCT_ID
           JOIN colors c
               ON c.COLOR_ID = i.COLOR_ID
           JOIN seasons s
-              ON c.SEASON_ID = s.SEASON_ID                  -- match color season
+              ON c.SEASON_ID = s.SEASON_ID
           LEFT JOIN body_shapes bs
               ON bs.BODY_SHAPE_ID = u.BODY_SHAPE_ID
-          WHERE 
+          WHERE
               u.USER_ID        = :user_id
               AND u.SEASON_ID IS NOT NULL
               AND u.BODY_SHAPE_ID IS NOT NULL
-              AND c.SEASON_ID   = u.SEASON_ID               -- only colors for user's season
-              AND i.QUANTITY    > 0                         -- in stock
-          ORDER BY 
+              AND c.SEASON_ID   = u.SEASON_ID
+              AND i.QUANTITY    > 0
+          ORDER BY
               p.CREATED_AT DESC,
               p.PRODUCT_NAME
           LIMIT 8
@@ -174,6 +160,7 @@
           </div>
         </div>
 
+
         <nav class="nav-links" role="navigation" aria-label="Main navigation">
           <a href="#catalog-shop" class="nav-btn active nav-item" data-label="Shop">
             <i class="bi bi-basket nav-icon" aria-hidden="true"></i>
@@ -188,6 +175,7 @@
         </nav>
       </div>
 
+
       <div class="sidebar-footer" aria-hidden="true">
         <div class="logo-section">
           <div class="logo-img" style="width:40px; height:40px;">
@@ -200,6 +188,7 @@
       </div>
     </aside>
 
+
     <div class="main-content">
       <section id="catalog-shop" class="content-section active">
         <div class="shop-header">
@@ -207,6 +196,7 @@
             <h2 class="section-title"><i>Shopping Catalog</i></h2>
             <p class="section-subtitle">Find your perfect outfit below or explore personalized picks.</p>
           </div>
+
 
           <div class="shop-controls">
 <button class="cart-button" type="button" onclick="openCart()">
@@ -216,9 +206,11 @@
           </div>
         </div>
 
+
         <div id="recommendations" class="subsection">
           <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
           <p class="section-subtitle">Based on your color and body analysis results.</p>
+
 
           <div class="clothes-grid">
   <?php if (!empty($recommendations)): ?>
@@ -228,6 +220,7 @@
           src="<?= htmlspecialchars($productImageBasePath . $item['IMAGE_FILE']) ?>"
           alt="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
         >
+
 
         <!-- Heart / add-to-cart button (wired with data-attributes if you want JS to use them) -->
         <button
@@ -240,6 +233,7 @@
         >
           <i class="bi bi-heart"></i>
         </button>
+
 
         <div class="clothes-caption">
           <span class="title">
@@ -260,15 +254,20 @@
   <?php endif; ?>
 </div>
 
+
         </div>
+
 
       <?php include 'catalog.php'; ?>
 
+
       </section>
+
 
       <section id="features" class="content-section">
         <div class="section-title"><i>Personalized Fashion Features</i></div>
         <div class="section-subtitle">Discover our advanced tools designed to enhance your style journey</div>
+
 
         <div class="options-container">
           <!-- COLOR ANALYSIS CARD -->
@@ -286,22 +285,24 @@
               </p>
             </div>
 
-            <?php 
+
+            <?php
               $hasColorSession   = isset($_SESSION['colorAnalysisResult']);
-              $hasColorDb        = !empty($user['SEASON_TYPE']); 
+              $hasColorDb        = !empty($user['SEASON_TYPE']);
               $showColorResults  = ($hasColorSession || $hasColorDb);
             ?>
+
 
             <div id="colorUploadSection" class="upload-section <?= $showColorResults ? 'hidden' : '' ?>">
               <form id="colorForm" method="POST" action="index.php?page=process_color_analysis" enctype="multipart/form-data">
                 <label>Face Image (Selfie):</label>
                 <input type="file" name="face_image" accept="image/*" required>
-                
+               
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                   <button type="submit" class="btn" style="flex: 1;">
                     <i class="bi bi-magic"></i> Analyze Color
                   </button>
-                  
+                 
                   <?php if ($showColorResults): ?>
                     <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleColorAnalysis(false)">
                       Cancel
@@ -311,6 +312,7 @@
               </form>
             </div>
 
+
             <div id="colorSeasons" class="color-seasons-container <?= $showColorResults ? 'show-results' : '' ?>">
               <h3>Your Color Palette</h3>
               <?php if ($hasColorSession): ?>
@@ -319,7 +321,7 @@
               <?php elseif ($hasColorDb): ?>
                   <p>Your saved season is <strong><?= htmlspecialchars($user['SEASON_TYPE']) ?></strong>.</p>
               <?php endif; ?>
-              
+             
               <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="btn" onclick="toggleColorAnalysis(true)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
                     <i class="bi bi-arrow-repeat"></i> Try Again
@@ -327,6 +329,7 @@
               </div>
             </div>
           </div>
+
 
           <!-- BODY SHAPE ANALYSIS CARD -->
           <div class="option-card">
@@ -343,11 +346,13 @@
               </p>
             </div>
 
-            <?php 
+
+            <?php
               $hasSessionResult     = isset($_SESSION['bodyShapeResult']);
-              $hasDbResult          = !empty($user['BODY_TYPE']); 
+              $hasDbResult          = !empty($user['BODY_TYPE']);
               $showResultsByDefault = ($hasSessionResult || $hasDbResult);
             ?>
+
 
             <div class="upload-section <?= $showResultsByDefault ? 'hidden' : '' ?>">
               <form id="bodyShapeForm" method="POST" action="index.php?page=process_body_shape" enctype="multipart/form-data">
@@ -360,11 +365,12 @@
                 <label>Height (cm):</label>
                 <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
 
+
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                   <button type="submit" class="btn" style="flex: 1;">
                     <i class="bi bi-upload"></i> Analyze
                   </button>
-                  
+                 
                   <?php if ($showResultsByDefault): ?>
                     <button type="button" class="btn btn-outline" style="flex: 1; justify-content: center;" onclick="toggleAnalysis('bodyShapes', true)">
                       Cancel
@@ -374,9 +380,10 @@
               </form>
             </div>
 
+
             <div id="bodyShapes" class="body-shapes-container <?= $showResultsByDefault ? 'show-results' : '' ?>">
               <h3>Your Body Shape</h3>
-              
+             
               <?php if ($hasSessionResult): ?>
                   <?php $result = $_SESSION['bodyShapeResult']; ?>
                   <p>Your shape appears to be <strong><?= htmlspecialchars($result['prediction']['body_shape']) ?></strong>.</p>
@@ -384,6 +391,7 @@
                   <p>Your saved shape is <strong><?= htmlspecialchars($user['BODY_TYPE']) ?></strong>.</p>
                   <p>We have your measurements saved.</p>
               <?php endif; ?>
+
 
               <div style="display: flex; gap: 10px; margin-top: 15px;">
                 <button class="btn" onclick="toggleAnalysis('bodyShapes', false)" style="background: #2D2D2D; color: white; flex: 1; justify-content: center;">
@@ -397,6 +405,7 @@
     </div>
   </div>
 
+
   <!-- Toast Notification -->
 <div id="toast" class="toast hidden">
   <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
@@ -404,10 +413,13 @@
 </div>
 
 
+
+
   <!-- USER PROFILE MODAL -->
   <div class="overlay"
        id="userProfileOverlay"
        data-keep-open="<?= $keepProfileOpen ? '1' : '0' ?>">
+
 
     <div class="modal">
       <div class="modal-header">
@@ -424,12 +436,14 @@
         </button>
       </div>
 
+
       <div class="modal-body">
         <!-- ACCOUNT TAB -->
         <div class="tab-content active" id="account">
           <div class="section-header">
             <p class="section-title">Account Information</p>
           </div>
+
 
           <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
             <div class="profile-section">
@@ -449,6 +463,7 @@
                   </div>
                 <?php endif; ?>
 
+
                 <button type="button"
                         class="edit-avatar-btn"
                         id="edit-avatar-btn"
@@ -457,12 +472,14 @@
                   <i class="bi bi-camera"></i>
                 </button>
 
+
                 <input type="file"
                        id="profile_image"
                        name="profile_image"
                        accept="image/*"
                        style="display:none;">
               </div>
+
 
               <div class="profile-details">
                 <h2 id="display-name">
@@ -477,6 +494,7 @@
               </div>
             </div>
 
+
             <div class="form-grid">
               <div class="form-group">
                 <label>First Name</label>
@@ -488,6 +506,7 @@
                        required>
               </div>
 
+
               <div class="form-group">
                 <label>Last Name</label>
                 <input type="text"
@@ -497,6 +516,7 @@
                        disabled
                        required>
               </div>
+
 
               <div class="form-group">
                 <label>Username</label>
@@ -508,6 +528,7 @@
                        required>
               </div>
 
+
               <div class="form-group">
                 <label>Email</label>
                 <input type="email"
@@ -518,6 +539,7 @@
                        required>
               </div>
 
+
               <div class="form-group">
                 <label>Street Address</label>
                 <input type="text"
@@ -527,6 +549,7 @@
                        disabled>
               </div>
 
+
               <div class="form-group">
                 <label>Apartment / Unit (optional)</label>
                 <input type="text"
@@ -535,6 +558,7 @@
                        value="<?= htmlspecialchars($user['APARTMENT'] ?? ''); ?>"
                        disabled>
               </div>
+
 
               <div class="form-group address-group">
                 <label>Province</label>
@@ -556,6 +580,7 @@
                 <small class="field-error">Province is required.</small>
               </div>
 
+
               <div class="form-group address-group">
                 <label>City / Town</label>
                 <select
@@ -570,6 +595,7 @@
                 </select>
                 <small class="field-error">City/Town is required.</small>
               </div>
+
 
               <div class="form-group address-group">
                 <label>Barangay</label>
@@ -586,6 +612,7 @@
                 <small class="field-error">Barangay is required.</small>
               </div>
 
+
               <div class="form-group">
                 <label>Postal Code</label>
                 <input type="text"
@@ -594,6 +621,7 @@
                        value="<?= htmlspecialchars($user['POSTAL_CODE'] ?? ''); ?>"
                        disabled>
               </div>
+
 
               <div class="form-group">
                 <label>Phone Number</label>
@@ -605,10 +633,12 @@
               </div>
             </div>
 
+
             <div class="form-actions">
               <button type="button" id="editProfileBtn" class="btn btn-secondary">
                 <i class="bi bi-pencil-square"></i> Edit Profile
               </button>
+
 
               <button type="submit"
                       name="update_profile"
@@ -617,6 +647,7 @@
                       style="display:none;">
                 <i class="bi bi-save"></i> Save Changes
               </button>
+
 
               <button type="button"
                       id="cancelEditBtn"
@@ -627,11 +658,13 @@
             </div>
           </form>
 
+
           <div class="info-card">
             <div class="info-card-header">
               <i class="bi bi-palette"></i>
               <h3>Style Profile</h3>
             </div>
+
 
             <?php if (empty($user['SEASON_TYPE']) && empty($user['BODY_TYPE'])): ?>
               <div class="info-empty">
@@ -650,6 +683,7 @@
                 </div>
               <?php endif; ?>
 
+
               <?php if (!empty($user['BODY_TYPE'])): ?>
                 <div class="info-item">
                   <span class="info-label">Body Shape</span>
@@ -661,6 +695,7 @@
             <?php endif; ?>
           </div>
         </div>
+
 
         <!-- PURCHASES TAB -->
         <div class="tab-content" id="purchases">
@@ -675,7 +710,7 @@
               <i class="bi bi-clock-history"></i> Order History
             </button>
           </div>
-          
+         
           <div class="sub-tab-content active" id="orders">
             <div class="order-card">
               <div class="order-header">
@@ -697,7 +732,7 @@
                 <span class="order-total">Total: ₱4,300</span>
               </div>
             </div>
-            
+           
             <div class="order-card">
               <div class="order-header">
                 <span class="order-number">#001235</span>
@@ -715,7 +750,7 @@
               </div>
             </div>
           </div>
-          
+         
           <div class="sub-tab-content" id="to-receive">
             <div class="order-card">
               <div class="order-header">
@@ -733,7 +768,7 @@
                 <span class="order-total">Total: ₱4,500</span>
               </div>
             </div>
-            
+           
             <div class="order-card">
               <div class="order-header">
                 <span class="order-number">#001228</span>
@@ -755,7 +790,7 @@
               </div>
             </div>
           </div>
-          
+         
           <div class="sub-tab-content" id="history">
             <div class="order-card">
               <div class="order-header">
@@ -773,7 +808,7 @@
                 <span class="order-total">Total: ₱1,500</span>
               </div>
             </div>
-            
+           
             <div class="order-card">
               <div class="order-header">
                 <span class="order-number">#001215</span>
@@ -800,7 +835,9 @@
     </div> <!-- end modal -->
   </div> <!-- end userProfileOverlay -->
 
+
   <!-- ===================== NEW ANALYSIS MODALS ===================== -->
+
 
   <!-- 1) ERROR MODAL (shared for body + color) -->
   <div
@@ -864,6 +901,7 @@
         </button>
       </div>
 
+
       <div
         class="modal-body"
         style="
@@ -884,6 +922,7 @@
           <li>File type is JPG, PNG, or WEBP and size is under 5 MB.</li>
         </ul>
       </div>
+
 
       <div
         class="modal-footer"
@@ -909,6 +948,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- 2) BODY SHAPE RESULT MODAL (one-time trigger) -->
   <div
@@ -972,6 +1012,7 @@
         </button>
       </div>
 
+
       <div
         class="modal-body"
         style="
@@ -987,6 +1028,7 @@
             <strong><?= htmlspecialchars($bodyShapeResult['prediction']['body_shape']) ?></strong>.
           </p>
 
+
           <?php if (!empty($bodyShapeResult['measurements'])): ?>
             <ul style="margin-top: 0.25rem; padding-left: 1.2rem; font-size: 0.9rem; color: #374151; line-height: 1.5;">
               <li>Shoulder width: <?= htmlspecialchars($bodyShapeResult['measurements']['ShoulderWidth']) ?> cm</li>
@@ -998,6 +1040,7 @@
           <p>No body shape result available.</p>
         <?php endif; ?>
       </div>
+
 
       <div
         class="modal-footer"
@@ -1035,6 +1078,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- 3) COLOR ANALYSIS RESULT MODAL (one-time trigger) -->
   <div
@@ -1098,6 +1142,7 @@
         </button>
       </div>
 
+
       <div
         class="modal-body"
         style="
@@ -1113,6 +1158,7 @@
             <strong><?= htmlspecialchars($colorResult['season']) ?></strong>.
           </p>
 
+
           <?php if (!empty($colorResult['palette'])): ?>
             <p style="margin-top: 0.25rem; font-size: 0.9rem; color: #374151;">
               Suggested colors:
@@ -1123,6 +1169,7 @@
           <p>No color analysis result available.</p>
         <?php endif; ?>
       </div>
+
 
       <div
         class="modal-footer"
@@ -1161,6 +1208,7 @@
     </div>
   </div>
 
+
   <!-- LOGOUT MODAL -->
   <div class="overlay" id="logoutOverlay" style="display: none;">
     <div class="modal" style="max-width: 450px;">
@@ -1175,6 +1223,7 @@
           <i class="bi bi-x"></i>
         </button>
       </div>
+
 
       <div class="modal-body" style="text-align: center; padding: 2.5rem 2rem;">
         <div style="
@@ -1191,12 +1240,14 @@
           <i class="bi bi-box-arrow-right" style="font-size: 2.5rem; color: white;"></i>
         </div>
 
+
         <h3 style="color: #2D2D2D; font-size: 1.4rem; margin-bottom: 0.75rem; font-weight: 600;">
           Are you sure?
         </h3>
         <p style="color: #666; font-size: 1rem; margin-bottom: 2rem; line-height: 1.6;">
           You will be logged out of your account and redirected to the login page.
         </p>
+
 
         <div style="display: flex; gap: 1rem; justify-content: center;">
           <button onclick="closeLogoutOverlay()" style="flex:1; padding:0.85rem 1.5rem; border:2px solid #e0e0e0; background:white; color:#666; border-radius:10px; font-size:1rem; font-weight:600; cursor:pointer; transition:all 0.3s ease;">
@@ -1212,11 +1263,12 @@
     </div>
   </div>
 
+
   <script>
     function toggleColorAnalysis(showUpload) {
       const results = document.getElementById('colorSeasons');
       const uploadSection = document.getElementById('colorUploadSection');
-      
+     
       if (showUpload) {
         if (results) results.classList.remove('show-results');
         if (uploadSection) uploadSection.classList.remove('hidden');
@@ -1228,15 +1280,18 @@
       }
     }
 
+
     function closeAnalysisErrorModal() {
       const overlay = document.getElementById('analysisErrorOverlay');
       if (overlay) overlay.classList.add('hidden');
     }
 
+
     function closeBodyShapeResultModal() {
       const overlay = document.getElementById('bodyShapeResultOverlay');
       if (overlay) overlay.classList.add('hidden');
     }
+
 
     function closeColorResultModal() {
       const overlay = document.getElementById('colorResultOverlay');
@@ -1245,13 +1300,16 @@
   </script>
 <?php include __DIR__ . '/cartModal.php'; ?>
 
-<link rel="stylesheet" href="../public/css/cartModal.css">
+
+<link rel="stylesheet" href="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/css/cartModal.css">
 <script>
   // base64("pk_test_xxx:") — encode on the server
   window.PAYMONGO_PUBLIC_KEY_B64 = "<?= base64_encode($_ENV['PAYMONGO_PUBLIC_KEY'] . ':') ?>";
 </script>
-<script src="../public/js/cartModal.js"></script>
+<script src="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/js/cartModal.js"></script>
 <script src="https://js.paymongo.com/v1/paymongo.js"></script>
+
+
 
 
 </body>
