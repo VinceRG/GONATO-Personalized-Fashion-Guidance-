@@ -1,35 +1,68 @@
 <?php
 // Controller/registerControl.php
+
+require_once __DIR__ . '/../../vendor/autoload.php'; // Composer autoload for PHPMailer
 require_once __DIR__ . '/../Model/registerfunc.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 class RegisterController {
     private $userModel;
-    
+    const EMAIL_VERIFY_EXPIRY = 1800; // 30 minutes
+
     public function __construct() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
         $this->userModel = new User();
     }
 
     /**
-     * Main index method - handles both page display and form submission
+     * Main index method - handles page display, email verify link, and form submit
      */
     public function index() {
-        // Handle AJAX requests for checking username/email existence
-        if ($this->isAjaxRequest()) {
-            $this->handleAjaxCheck();
+        // 1) User clicked verification link in email
+        if (isset($_GET['verify_email'])) {
+            $this->handleVerifyEmailLink();
             return;
         }
 
-        // Initialize variables for the view
+        // 2) AJAX requests (username/email check or sendVerifyEmail)
+        if ($this->isAjaxRequest() && isset($_GET['action'])) {
+            $action = $_GET['action'];
+
+            if ($action === 'sendVerifyEmail') {
+                $this->ajaxSendVerificationEmail();
+            } else { // default: availability check
+                $this->handleAjaxCheck();
+            }
+            return;
+        }
+
+        // 3) Normal request – show form / handle final registration submit
         $error = "";
         $success = "";
         $formData = [];
+        $verifyStatus = $_GET['verify'] ?? ''; // used by JS to show alerts
 
-        // Handle form submission
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$this->isAjaxRequest()) {
             $result = $this->processRegistration($_POST);
-            
+
             if ($result['success']) {
                 $success = $result['message'];
+
+                // clear temp registration session
+                unset(
+                    $_SESSION['register_email'],
+                    $_SESSION['register_firstname'],
+                    $_SESSION['register_lastname'],
+                    $_SESSION['register_username'],
+                    $_SESSION['register_verify_token'],
+                    $_SESSION['register_verify_expires'],
+                    $_SESSION['register_email_verified']
+                );
+
                 header('Location: index.php?page=login&registered=1');
                 exit;
             } else {
@@ -38,14 +71,168 @@ class RegisterController {
             }
         }
 
-        // Load the view
         require_once __DIR__ . '/../View/register.php';
     }
 
     /**
-     * Process registration form submission
+     * AJAX: send verification email after Step 1
+     */
+    private function ajaxSendVerificationEmail() {
+        header('Content-Type: application/json');
+
+        try {
+            $firstname = $this->sanitizeInput($_POST['firstname'] ?? '');
+            $lastname  = $this->sanitizeInput($_POST['lastname'] ?? '');
+            $username  = $this->sanitizeInput($_POST['username'] ?? '');
+            $email     = $this->sanitizeInput($_POST['email'] ?? '');
+
+            if (empty($firstname) || empty($lastname) || empty($username) || empty($email)) {
+                echo json_encode(['success' => false, 'message' => 'Please fill in all fields in Step 1.']);
+                return;
+            }
+
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                echo json_encode(['success' => false, 'message' => 'Invalid email address.']);
+                return;
+            }
+
+            if ($this->userModel->usernameExists($username)) {
+                echo json_encode(['success' => false, 'message' => 'Username is already taken.']);
+                return;
+            }
+
+            if ($this->userModel->emailExists($email)) {
+                echo json_encode(['success' => false, 'message' => 'Email is already registered.']);
+                return;
+            }
+
+            // create token & store minimal data in session
+            $token   = bin2hex(random_bytes(32));
+            $expires = time() + self::EMAIL_VERIFY_EXPIRY;
+
+            $_SESSION['register_email']          = $email;
+            $_SESSION['register_firstname']      = $firstname;
+            $_SESSION['register_lastname']       = $lastname;
+            $_SESSION['register_username']       = $username;
+            $_SESSION['register_verify_token']   = $token;
+            $_SESSION['register_verify_expires'] = $expires;
+            $_SESSION['register_email_verified'] = false;
+
+            $mailResult = $this->sendVerificationEmail($email, $firstname, $token);
+
+            if (!$mailResult['success']) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Failed to send verification email. Please try again later.'
+                ]);
+                return;
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'We sent a verification link to your email. Please check your inbox.'
+            ]);
+        } catch (\Throwable $e) {
+            error_log('ajaxSendVerificationEmail error: ' . $e->getMessage());
+            echo json_encode([
+                'success' => false,
+                'message' => 'Unexpected error while sending verification email.'
+            ]);
+        }
+    }
+
+    /**
+     * When user clicks the email link
+     */
+    private function handleVerifyEmailLink() {
+        $token = $this->sanitizeInput($_GET['verify_email'] ?? '');
+
+        $sessionToken   = $_SESSION['register_verify_token']   ?? '';
+        $sessionExpires = $_SESSION['register_verify_expires'] ?? 0;
+
+        if ($token && $token === $sessionToken && time() <= $sessionExpires) {
+            $_SESSION['register_email_verified'] = true;
+            header('Location: index.php?page=register&verify=success&step=2');
+        } else {
+            header('Location: index.php?page=register&verify=failed&step=1');
+        }
+        exit;
+    }
+
+    /**
+     * Send verification email using PHPMailer
+     */
+    private function sendVerificationEmail($email, $firstname, $token) {
+        $mail = new PHPMailer(true);
+
+        try {
+            // ==== SMTP CONFIG – CHANGE THESE ====
+            $mail->isSMTP();
+            $mail->Host       = 'smtp.gmail.com';
+            $mail->SMTPAuth   = true;
+           $mail->Username   = 'amarelle2025@gmail.com';
+            $mail->Password   = 'hdzk sgjm jnbx kipl';   // TODO: change (App Password)
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port       = 587;
+
+            $mail->setFrom('amarelle2025@gmail.com', 'Amarelle');
+            $mail->addAddress($email, $firstname);
+
+            $mail->isHTML(true);
+            $mail->Subject = 'Verify your email address';
+
+            // Your base URL (match your screenshot)
+           $protocol  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+$host      = $_SERVER['HTTP_HOST']; 
+$scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') . '/';
+
+$baseUrl = $protocol . $host . $scriptDir;
+
+$verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($token);
+
+            $mail->Body = '
+                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+                    <h2 style="color:#16a34a;text-align:center;">Amarelle</h2>
+                    <h3 style="text-align:center;">Verify your email address</h3>
+                    <p>Hi ' . htmlspecialchars($firstname) . ',</p>
+                    <p>Please confirm that you want to use this email address for your Amarelle account.
+                       Once it\'s done, your account will be activated.</p>
+                    <p style="text-align:center;margin:30px 0;">
+                        <a href="' . $verifyLink . '" 
+                           style="background:#16a34a;color:#fff;padding:12px 24px;
+                                  text-decoration:none;border-radius:4px;display:inline-block;">
+                            Verify my email
+                        </a>
+                    </p>
+                    <p style="font-size:12px;color:#777;text-align:center;">
+                        Or paste this link into your browser:<br>' . $verifyLink . '
+                    </p>
+                </div>
+            ';
+
+            $mail->AltBody = "Hi {$firstname},\n\nPlease verify your account by visiting this link:\n{$verifyLink}\n";
+
+            $mail->send();
+            return ['success' => true, 'error' => null];
+
+        } catch (Exception $e) {
+            error_log('Verification email error: ' . $mail->ErrorInfo);
+            return ['success' => false, 'error' => $mail->ErrorInfo];
+        }
+    }
+
+    /**
+     * Process registration form submission (final submit on Step 3)
      */
     private function processRegistration($postData) {
+        // Require verified email before completing registration
+        if (empty($_SESSION['register_email_verified']) || $_SESSION['register_email_verified'] !== true) {
+            return [
+                'success' => false,
+                'message' => 'Please verify your email address first by using the link we sent.'
+            ];
+        }
+
         /*
         |--------------------------------------------------------------------------
         |  STEP 1: Validate Terms and Conditions Acceptance
@@ -97,6 +284,14 @@ class RegisterController {
         $contact_num = $this->sanitizeInput($postData['contact_num'] ?? '');
         $password = $postData['password'] ?? '';
         $confirmPassword = $postData['confirmPassword'] ?? '';
+
+        // Make sure they are using the same email that was verified
+        if ($email !== ($_SESSION['register_email'] ?? '')) {
+            return [
+                'success' => false,
+                'message' => 'Email does not match the verified email. Please use the same email address.'
+            ];
+        }
 
         // Address fields
         $street_address = $this->sanitizeInput($postData['street_address'] ?? '');
@@ -167,7 +362,7 @@ class RegisterController {
                     'message' => 'Registration failed. Please try again.'
                 ];
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log('Registration error: ' . $e->getMessage());
             return [
                 'success' => false,
@@ -183,6 +378,8 @@ class RegisterController {
         $firstname, $lastname, $username, $email, 
         $addressData, $contact_num, $password, $confirmPassword
     ) {
+        // === your existing validation code, unchanged ===
+
         // First name validation
         if (empty($firstname) || strlen($firstname) < 2 || strlen($firstname) > 50) {
             return ['valid' => false, 'error' => 'Invalid first name.'];
@@ -284,7 +481,7 @@ class RegisterController {
     }
 
     /**
-     * AJAX username/email check
+     * AJAX username/email check (unchanged)
      */
     private function handleAjaxCheck() {
         header('Content-Type: application/json');
@@ -303,7 +500,7 @@ class RegisterController {
                     $response['exists'] = $this->userModel->emailExists($email);
                 }
             }
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             error_log('AJAX check error: ' . $e->getMessage());
             $response['error'] = 'Error checking availability';
             http_response_code(500);
@@ -324,4 +521,3 @@ class RegisterController {
         return trim(htmlspecialchars($input, ENT_QUOTES, 'UTF-8'));
     }
 }
-?>
