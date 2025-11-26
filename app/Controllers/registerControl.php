@@ -182,8 +182,13 @@ class RegisterController {
             $mail->Subject = 'Verify your email address';
 
             // Your base URL (match your screenshot)
-            $baseUrl    = 'https://localhost/';
-            $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($token);
+           $protocol  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+$host      = $_SERVER['HTTP_HOST']; 
+$scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') . '/';
+
+$baseUrl = $protocol . $host . $scriptDir;
+
+$verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($token);
 
             $mail->Body = '
                 <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
