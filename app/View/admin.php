@@ -151,7 +151,7 @@
   </div>
 </section>
 
-<script>
+<!-- <script>
 let allUsers = [];
 
 // Fetch users from the admin API
@@ -229,7 +229,7 @@ async function toggleUserStatus(userId, isLocked) {
 
 // Load users on page load
 window.addEventListener('DOMContentLoaded', loadUsers);
-</script>
+</script> -->
 
 
       <!-- ORDERS SECTION -->

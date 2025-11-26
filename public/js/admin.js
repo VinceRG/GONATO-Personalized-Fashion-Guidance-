@@ -19,7 +19,7 @@ let currentEditInventoryId = null; // track edit mode
 let openedColorFromInventory = false;
 let productPage = 1;
 let productPageSize = 5;   // how many products per page
-
+let allUsers = [];
 let inventoryPage = 1;
 let inventoryPageSize = 5; // variants per page
 let inventoryItems = [];   // holds current product's inventory
@@ -400,25 +400,29 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
   }
 });
 async function toggleUserStatus(userId, isLocked) {
-  try {
-    const res = await fetch(`index.php?api=admin&action=users&id=${userId}&toggle-lock`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isLocked: !isLocked })
-    });
+    try {
+        const res = await fetch(
+            `index.php?api=admin&action=users&id=${userId}&toggle-lock=1`,
+            {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ isLocked })
+            }
+        );
 
-    const result = await res.json();
-    if (result.success) {
-      alert(result.message); // shows "User account unlocked successfully."
-      await loadUsers();
-    } else {
-      alert('Failed to update user status: ' + result.message);
+        const result = await res.json();
+
+        if (result.success) {
+            await loadUsers();
+        } else {
+            alert(result.message || "Failed to update user status");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("Error toggling lock status");
     }
-  } catch (err) {
-    console.error(err);
-    alert('Error updating user status');
-  }
 }
+
 
 // ==================== INVENTORY TAB ====================
 async function openInventoryManager(productId, productName) {
@@ -838,6 +842,103 @@ async function saveColor() {
     showNotification('Failed to add color: ' + error.message, 'error');
   }
 }
+
+// ==================== USERS TAB ====================
+async function loadUsers() {
+  try {
+    const res = await fetch(`${API_BASE}&action=users`, {
+      credentials: 'include', // send session cookies for admin auth
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to fetch users (HTTP ${res.status})`);
+    }
+
+    allUsers = await res.json();
+    renderUsers(allUsers);
+  } catch (err) {
+    console.error('loadUsers error:', err);
+    alert('Error loading users. Make sure you are logged in as admin.');
+  }
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('userTableBody');
+  tbody.innerHTML = '';
+
+  if (!Array.isArray(users) || users.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;">No users found</td>
+      </tr>
+    `;
+    return;
+  }
+
+  users.forEach(user => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${user.USERNAME}</td>
+      <td>${user.EMAIL}</td>
+      <td>${new Date(user.CREATED_AT).toLocaleDateString()}</td>
+      <td>${user.IS_LOCKED ? 'Locked' : 'Active'}</td>
+      <td>
+        <button class="btn btn-sm" onclick="toggleUserStatus(${user.USER_ID}, ${user.IS_LOCKED})">
+          ${user.IS_LOCKED ? 'Unlock' : 'Lock'}
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filterUsers() {
+  const searchTerm   = document.getElementById('userSearch').value.toLowerCase();
+  const statusFilter = document.getElementById('statusFilter').value; // "active" | "locked" | ""
+
+  const filtered = allUsers.filter(user => {
+    const matchesSearch =
+      user.USERNAME.toLowerCase().includes(searchTerm) ||
+      user.EMAIL.toLowerCase().includes(searchTerm);
+
+    let matchesStatus = true;
+    if (statusFilter === 'active') {
+      matchesStatus = !user.IS_LOCKED;
+    } else if (statusFilter === 'locked') {
+      matchesStatus = !!user.IS_LOCKED;
+    }
+
+    return matchesSearch && matchesStatus;
+  });
+
+  renderUsers(filtered);
+}
+
+async function toggleUserStatus(userId, isLocked) {
+  try {
+    const res = await fetch(
+      `${API_BASE}&action=users&id=${userId}&toggle-lock=1`,
+      {
+        method: 'PATCH', // matches AdminApiController
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isLocked }) // send current state; backend flips it
+      }
+    );
+
+    const result = await res.json();
+
+    if (result.success) {
+      await loadUsers(); // refresh table
+    } else {
+      alert(result.message || 'Failed to update user status');
+    }
+  } catch (err) {
+    console.error('toggleUserStatus error:', err);
+    alert('Error toggling lock status');
+  }
+}
+
 
 
 // ==================== BODY SHAPES ====================

@@ -126,15 +126,15 @@ private function checkAdminAuth()
                 }
             }
 
-            // ============= USERS ROUTES =================
-            elseif ($action === 'users') {
-                if ($method === 'GET' && !$id) {
-                    $this->adminController->getUsers();
-                } elseif ($method === 'PATCH' && $id && isset($_GET['toggle-lock'])) {
-                    $data = json_decode(file_get_contents('php://input'), true);
-                    $this->adminController->toggleUserLock((int)$id, $data);
-                }
-            }
+// ============= USERS ROUTES =================
+elseif ($action === 'users') {
+    if ($method === 'GET' && !$id) {
+        $this->adminController->getUsers();
+    } elseif (in_array($method, ['PATCH', 'POST']) && $id && isset($_GET['toggle-lock'])) {
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $this->adminController->toggleUserLock((int)$id, $data);
+    }
+}
 
             // ============= ORDERS ROUTES ================
             elseif ($action === 'orders') {

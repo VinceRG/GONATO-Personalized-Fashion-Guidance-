@@ -1,7 +1,7 @@
 <?php 
 // We assume $catalogProducts is provided by FeaturesController
 
-$imageBasePath = '../public/image/';
+    $imageBasePath = 'public/image/';
 ?>
 
 <div class="subsection">
