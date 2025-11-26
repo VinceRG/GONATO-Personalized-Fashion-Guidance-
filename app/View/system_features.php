@@ -76,6 +76,84 @@
       }, 3000);
     </script>
   <?php endif; ?>
+  <?php
+  // Flash messages from analysis controllers (body + color)
+  $flashSuccess = $_SESSION['successMessage']      ?? '';
+  $flashError   = $_SESSION['errorMessage']        ?? '';
+
+  // Stored analysis results (used in cards + modals)
+  $bodyShapeResult = $_SESSION['bodyShapeResult']     ?? null;
+  $colorResult     = $_SESSION['colorAnalysisResult'] ?? null;
+
+  // One-time modal triggers (set by controllers after analysis)
+  $showBodyModal  = $_SESSION['show_body_modal']  ?? false;
+  $showColorModal = $_SESSION['show_color_modal'] ?? false;
+
+  // NEW: keep account modal open after profile update
+  $keepProfileOpen = $_SESSION['keep_profile_open'] ?? false;
+
+  // Map to variables used below
+  $successMessage = $flashSuccess;
+  $errorMessage   = $flashError;
+
+  // Clear only flash + flags (results stay for inline display)
+  unset($_SESSION['successMessage'], $_SESSION['errorMessage']);
+  unset($_SESSION['show_body_modal'], $_SESSION['show_color_modal']);
+  unset($_SESSION['keep_profile_open']); // clear this one-time flag
+
+  // ================= RECOMMENDATIONS LOGIC =================
+
+  // Where your product images are stored (adjust if different)
+  $productImageBasePath = "uploads/products/";
+
+  $recommendations = [];
+
+  // Make sure we have a logged-in user & a DB connection ($pdo or whatever you use)
+  if (!empty($user['USER_ID']) && isset($pdo)) {
+
+      $userId = (int)$user['USER_ID'];
+
+      $sql = "
+          SELECT 
+              p.PRODUCT_ID,
+              p.PRODUCT_NAME,
+              p.DESCRIPTION,
+              p.PRICE,
+              p.IMAGE_FILE,
+              bs.BODY_TYPE,
+              s.SEASON_TYPE,
+              c.COLOR_VALUE,
+              i.SIZE,
+              i.QUANTITY
+          FROM users u
+          JOIN products p
+              ON p.BODY_SHAPE_ID = u.BODY_SHAPE_ID          -- match fit
+          JOIN inventory i
+              ON i.PRODUCT_ID = p.PRODUCT_ID
+          JOIN colors c
+              ON c.COLOR_ID = i.COLOR_ID
+          JOIN seasons s
+              ON c.SEASON_ID = s.SEASON_ID                  -- match color season
+          LEFT JOIN body_shapes bs
+              ON bs.BODY_SHAPE_ID = u.BODY_SHAPE_ID
+          WHERE 
+              u.USER_ID        = :user_id
+              AND u.SEASON_ID IS NOT NULL
+              AND u.BODY_SHAPE_ID IS NOT NULL
+              AND c.SEASON_ID   = u.SEASON_ID               -- only colors for user's season
+              AND i.QUANTITY    > 0                         -- in stock
+          ORDER BY 
+              p.CREATED_AT DESC,
+              p.PRODUCT_NAME
+          LIMIT 8
+      ";
+
+      $stmt = $pdo->prepare($sql);
+      $stmt->execute(['user_id' => $userId]);
+      $recommendations = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+  }
+?>
+
 
   <div class="results-container">
     <aside class="sidebar" id="appSidebar" aria-expanded="true">
@@ -131,10 +209,10 @@
           </div>
 
           <div class="shop-controls">
-            <button class="cart-button" onclick="openCart()">
-              <i class="bi bi-bag"></i>
-              <span class="cart-count">0</span>
-            </button>
+<button class="cart-button" type="button" onclick="openCart()">
+  <i class="bi bi-cart"></i>
+  <span class="cart-count" id="cartCount"></span>
+</button>
           </div>
         </div>
 
@@ -143,75 +221,49 @@
           <p class="section-subtitle">Based on your color and body analysis results.</p>
 
           <div class="clothes-grid">
-            <div class="clothes-item">
-              <img src="images/recommend1.jpg" alt="Recommended Outfit 1">
-              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Soft Beige Blazer</span>
-                <span class="price">₱1,899</span>
-              </div>
-            </div>
+  <?php if (!empty($recommendations)): ?>
+    <?php foreach ($recommendations as $item): ?>
+      <div class="clothes-item">
+        <img
+          src="<?= htmlspecialchars($productImageBasePath . $item['IMAGE_FILE']) ?>"
+          alt="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
+        >
 
-            <div class="clothes-item">
-              <img src="images/recommend2.jpg" alt="Recommended Outfit 2">
-              <button class="add-to-cart"><i class="bi bi-heart"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Classic White Dress</span>
-                <span class="price">₱2,150</span>
-              </div>
-            </div>
-          </div>
+        <!-- Heart / add-to-cart button (wired with data-attributes if you want JS to use them) -->
+        <button
+          class="add-to-cart"
+          data-product-id="<?= (int)$item['PRODUCT_ID'] ?>"
+          data-product-name="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
+          data-price="<?= htmlspecialchars($item['PRICE']) ?>"
+          data-size="<?= htmlspecialchars($item['SIZE']) ?>"
+          data-color="<?= htmlspecialchars($item['COLOR_VALUE'] ?? '') ?>"
+        >
+          <i class="bi bi-heart"></i>
+        </button>
+
+        <div class="clothes-caption">
+          <span class="title">
+            <?= htmlspecialchars($item['PRODUCT_NAME']) ?>
+          </span>
+          <span class="price">
+            ₱<?= number_format($item['PRICE'], 2) ?>
+          </span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p class="section-subtitle" style="grid-column: 1 / -1; margin-top: 1rem;">
+      No personalized items yet. Complete your
+      <a href="#features" style="text-decoration: underline;">color and body shape analysis</a>
+      to unlock outfit recommendations.
+    </p>
+  <?php endif; ?>
+</div>
+
         </div>
 
-        <div class="subsection">
-          <div class="filter-bar">
-            <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
-            <select id="categoryFilter" onchange="filterProducts()">
-              <option value="">All Categories</option>
-              <option value="Dresses">Dresses</option>
-              <option value="Tops">Tops</option>
-              <option value="Bottoms">Bottoms</option>
-            </select>
-          </div>
+      <?php include 'catalog.php'; ?>
 
-          <div class="clothes-grid">
-            <div class="clothes-item catalog-item" data-category="Tops">
-              <img src="images/item1.jpg" alt="Clothing Item 1">
-              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Summer Linen Top</span>
-                <span class="price">₱999</span>
-              </div>
-            </div>
-
-            <div class="clothes-item catalog-item" data-category="Bottoms">
-              <img src="images/item2.jpg" alt="Clothing Item 2">
-              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Flowy Midi Skirt</span>
-                <span class="price">₱1,250</span>
-              </div>
-            </div>
-
-            <div class="clothes-item catalog-item" data-category="Bottoms">
-              <img src="images/item3.jpg" alt="Clothing Item 3">
-              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Tan Trousers</span>
-                <span class="price">₱1,799</span>
-              </div>
-            </div>
-
-            <div class="clothes-item catalog-item" data-category="Tops">
-              <img src="images/item1.jpg" alt="Clothing Item 4">
-              <button class="add-to-cart"><i class="bi bi-bag-plus"></i></button>
-              <div class="clothes-caption">
-                <span class="title">Summer Linen Top</span>
-                <span class="price">₱999</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section id="features" class="content-section">
@@ -344,6 +396,13 @@
       </section>
     </div>
   </div>
+
+  <!-- Toast Notification -->
+<div id="toast" class="toast hidden">
+  <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
+  <span id="toastMessage"></span>
+</div>
+
 
   <!-- USER PROFILE MODAL -->
   <div class="overlay"
@@ -1184,6 +1243,16 @@
       if (overlay) overlay.classList.add('hidden');
     }
   </script>
+<?php include __DIR__ . '/cartModal.php'; ?>
+
+<link rel="stylesheet" href="../public/css/cartModal.css">
+<script>
+  // base64("pk_test_xxx:") — encode on the server
+  window.PAYMONGO_PUBLIC_KEY_B64 = "<?= base64_encode($_ENV['PAYMONGO_PUBLIC_KEY'] . ':') ?>";
+</script>
+<script src="../public/js/cartModal.js"></script>
+<script src="https://js.paymongo.com/v1/paymongo.js"></script>
+
 
 </body>
 </html>

@@ -68,7 +68,7 @@
           <th>Image</th>
           <th>Product Name</th>
           <th>Description</th>
-          <th>Category</th>
+          <th>Body Shape</th>
           <th>Price</th>
           <th>Actions</th>
         </tr>
@@ -77,7 +77,10 @@
         <!-- Populated by JS -->
       </tbody>
     </table>
+
   </div>
+      <div id="productPagination" class="pagination-controls"></div>
+
 </section>
 <!-- INVENTORY SECTION -->
 <section id="inventory" class="content-section">
@@ -106,7 +109,10 @@
         <!-- Populated by JS -->
       </tbody>
     </table>
+
   </div>
+      <div id="inventoryPagination" class="pagination-controls"></div>
+
 </section>
 
       <!-- USERS SECTION -->
@@ -145,7 +151,7 @@
   </div>
 </section>
 
-<script>
+<!-- <script>
 let allUsers = [];
 
 // Fetch users from the admin API
@@ -223,7 +229,7 @@ async function toggleUserStatus(userId, isLocked) {
 
 // Load users on page load
 window.addEventListener('DOMContentLoaded', loadUsers);
-</script>
+</script> -->
 
 
       <!-- ORDERS SECTION -->
@@ -267,38 +273,58 @@ window.addEventListener('DOMContentLoaded', loadUsers);
       </section>
     </div>
   </div>
-
-  <!-- PRODUCT MODAL (Replace your existing one) -->
 <div id="productModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
       <h2 class="modal-title" id="productModalTitle">Add Product</h2>
       <button class="close-modal" onclick="closeProductModal()">&times;</button>
     </div>
-    <form id="productForm">
+
+    <form 
+      id="productForm" 
+      method="POST"
+      enctype="multipart/form-data"
+    >
       <div class="form-group">
         <label>Product Name *</label>
-        <input type="text" id="productName" required>
+        <input type="text" id="productName" name="productName" required>
       </div>
       
       <div class="form-group">
         <label>Description</label>
-        <textarea id="productDescription" rows="3"></textarea>
+        <textarea id="productDescription" name="productDescription" rows="3"></textarea>
       </div>
       
       <div class="form-group">
         <label>Body Shape *</label>
-        <select id="bodyShapeSelect" required>
+        <select id="bodyShapeSelect" name="bodyShapeSelect" required>
           <option value="">Select Body Shape</option>
-          <!-- Populated by JS -->
+          <!-- filled by JS -->
         </select>
       </div>
-      
+
+      <!-- ❌ Season removed from product form -->
+
       <div class="form-group">
         <label>Price ($) *</label>
-        <input type="number" id="productPrice" step="0.01" min="0" required>
+        <input type="text" id="productPrice" name="productPrice" step="0.01" min="0" required>
       </div>
-      
+
+      <div class="form-group" id="currentImageContainer" style="display:none;">
+        <label>Current Image</label>
+        <img id="currentProductImage" src="" alt="Current Product Image"
+             style="max-width: 150px; height: auto; margin-bottom: 10px;">
+      </div>
+
+      <div class="form-group">
+        <label>Product Image *</label>
+        <!-- IMPORTANT: name must be product_image -->
+        <input type="file" id="productImage" name="product_image" accept="image/*" required>
+        <small class="form-text text-muted">
+          Max file size: 2MB. Accepted formats: JPG, PNG, GIF.
+        </small>
+      </div>
+
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
         <button type="submit" class="btn">Save Product</button>
@@ -307,45 +333,51 @@ window.addEventListener('DOMContentLoaded', loadUsers);
   </div>
 </div>
 
+
 <!-- INVENTORY MODAL (Replace your existing one) -->
 <div id="inventoryModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 id="inventoryModalTitle">Add Variant</h2>
+      <h2 class="modal-title" id="inventoryModalTitle">Add Variant</h2>
       <button class="close-modal" onclick="closeInventoryModal()">&times;</button>
     </div>
+
     <form id="inventoryForm">
-      <input type="hidden" id="inventoryId">
-      
       <div class="form-group">
-        <label>Size *</label>
-        <select id="inventorySize" required>
+        <label>Size</label>
+        <select id="inventorySize" name="inventorySize" required>
           <option value="">Select Size</option>
-          <option value="S">Small</option>
-          <option value="M">Medium</option>
-          <option value="L">Large</option>
+          <option value="S">Small (S)</option>
+          <option value="M">Medium (M)</option>
+          <option value="L">Large (L)</option>
         </select>
       </div>
-      
+
+
       <div class="form-group">
-        <label>Color *</label>
-        <div style="display: flex; gap: 0.5rem; align-items: center;">
-          <select id="inventoryColor" required style="flex: 1;">
-            <option value="">Select Color</option>
-            <!-- Populated by JS -->
+        <label>Season</label>
+        <select id="inventorySeasonFilter">
+          <option value="">Select Season</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Color</label>
+        <div style="display:flex; gap:8px;">
+          <select id="inventoryColor" name="inventoryColor" required>
+            <!-- populated by JS -->
           </select>
-          <button type="button" class="btn" onclick="openAddColorModal()" title="Add New Color"
-            style="padding: 0.75rem 1rem; white-space: nowrap; flex-shrink: 0;">
-            <i class="bi bi-plus-circle"></i> Add
+          <button type="button" class="btn btn-secondary" onclick="openAddColorModalFromInventory()">
+            Add Color
           </button>
         </div>
       </div>
-      
+
       <div class="form-group">
-        <label>Quantity *</label>
-        <input type="number" id="inventoryQuantity" min="0" required>
+        <label>Quantity</label>
+        <input type="number" id="inventoryQuantity" name="inventoryQuantity" min="0" required>
       </div>
-      
+
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeInventoryModal()">Cancel</button>
         <button type="submit" class="btn">Save Variant</button>
@@ -353,6 +385,8 @@ window.addEventListener('DOMContentLoaded', loadUsers);
     </form>
   </div>
 </div>
+
+
   <!-- ORDER MODAL -->
   <div id="orderModal" class="modal">
     <div class="modal-content">
@@ -384,26 +418,34 @@ window.addEventListener('DOMContentLoaded', loadUsers);
   </div>
 </div>
 
-
-  <!-- ADD COLOR MODAL -->
-  <div id="addColorModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 class="modal-title">Add New Color</h2>
-        <button class="close-modal" onclick="closeAddColorModal()">&times;</button>
-      </div>
-      <form id="addColorForm">
-        <div class="form-group">
-          <label>Color Name</label>
-          <input type="text" id="newColorName" placeholder="e.g., Red, Navy Blue, Forest Green" required>
-        </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-secondary" onclick="closeAddColorModal()">Cancel</button>
-          <button type="submit" class="btn">Save Color</button>
-        </div>
-      </form>
+<div id="addColorModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">Add New Color</h2>
+      <button class="close-modal" onclick="closeAddColorModal()">&times;</button>
     </div>
+    <form id="addColorForm">
+      <div class="form-group">
+        <label>Color Name</label>
+        <input type="text" id="newColorName" placeholder="e.g., Red, Navy Blue, Forest Green" required>
+      </div>
+
+      <div class="form-group">
+        <label>Season *</label>
+        <select id="newColorSeason" required>
+          <option value="">Select Season</option>
+          <!-- filled by JS from seasons[] -->
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeAddColorModal()">Cancel</button>
+        <button type="submit" class="btn">Save Color</button>
+      </div>
+    </form>
   </div>
+</div>
+
   <script src="public/js/admin.js"></script>
   <script>
   window.openInventoryManager = async function(productId, productName) {
