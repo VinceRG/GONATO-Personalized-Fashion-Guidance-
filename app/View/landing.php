@@ -31,8 +31,12 @@
             }, 4200);
         </script>
     <?php endif; ?>
+    
     <nav>
-        <div class="nav-brand">[Logo] Amarelle</div>
+        <div class="nav-brand">
+            <img src="public/image/amarelle.png" alt="Amarelle Logo" class="brand-logo" style="height: 50px; width: auto; margin-right: 10px; vertical-align: middle;">
+            Amarelle
+        </div>
         <div class="nav-links">
             <a href="index.php?page=features" class="nav-link">Features</a>
             <div class="nav-auth">
@@ -100,44 +104,48 @@
         </div>
     </section>
 
-    <footer>
-        <div class="footer-container">
-            <div class="footer-brand">
-                <h2>Amarelle</h2>
-                <p>Your Personal Fashion Intelligence</p>
+    <footer style="background: #1C1917; color: #E7E5E4; padding: 5rem 2rem; font-family: 'Lexend', sans-serif; width: 100%; text-align: center;">
+        
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3rem; max-width: 100%; margin: 0 auto;">
+
+            <div class="footer-brand" style="display: flex; align-items: center; gap: 12px; justify-content: center;">
+                <img src="public/image/amarelle.png" alt="Amarelle Logo" style="height: 65px; width: auto; filter: brightness(0) invert(1);">
+                <h2 style="font-family: 'Lexend', sans-serif; font-size: 1.8rem; font-weight: 500; margin: 0; color: #F5F5F4; letter-spacing: 1px;">Amarelle</h2>
             </div>
 
-            <div class="footer-links">
-                <a href="#">About</a>
-                <a href="#">Features</a>
-                <a href="#">Contact</a>
-                <a href="#">Privacy Policy</a>
+            <div class="footer-links" style="display: flex; flex-direction: row; gap: 3rem; justify-content: center; align-items: center; width: 100%; flex-wrap: wrap;">
+                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">ABOUT</a>
+                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">FEATURES</a>
+                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">CONTACT</a>
+                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">COOKIES</a>
+                <a href="index.php?page=policy" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">PRIVACY POLICY</a>
             </div>
 
-            <div class="footer-socials">
-                <a href="#" aria-label="Instagram">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                    </svg>
-                </a>
-                <a href="#" aria-label="Facebook">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                    </svg>
-                </a>
-                <a href="#" aria-label="Twitter">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-                    </svg>
-                </a>
-            </div>
-        </div>
+            <div class="footer-payments" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
+                
+                <span style="font-size: 0.75rem; color: #78716C; letter-spacing: 0.5px;">We accept various credit & debit cards</span>
+                
+                <div style="display: flex; gap: 15px; align-items: center;">
 
-        <div class="footer-bottom">
-            <p>© 2025 Amarelle. All rights reserved.</p>
+                    <img src="public/image/ub.svg" alt="Union Bank" style="height: 30px; width: 30; opacity: 0.8;">
+
+                    <svg viewBox="0 0 32 20" width="45" height="25" xmlns="http://www.w3.org/2000/svg" style="opacity: 0.8;">
+                        <circle cx="11" cy="10" r="8" fill="#EB001B"/>
+                        <circle cx="21" cy="10" r="8" fill="#F79E1B"/>
+                        <path d="M16 10a7.9 7.9 0 0 1 2.3 5.7 7.9 7.9 0 0 1-2.3-5.7 7.9 7.9 0 0 1 2.3 5.7A7.9 7.9 0 0 1 16 10z" fill="#FF5F00"/>
+                    </svg>
+
+                    <img src="public/image/pnb.svg" alt="Union Bank" style="height: 30px; width: 30; opacity: 0.8;">
+
+                </div>
+
+            </div>
+
+            <div style="font-size: 0.7rem; color: #57534E; margin-top: 1rem; font-weight: 300;">
+                <p>© 2025 Amarelle. All rights reserved.</p>
+            </div>
         </div>
     </footer>
+    
 </body>
 </html>

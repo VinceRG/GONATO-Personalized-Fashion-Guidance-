@@ -14,8 +14,7 @@
     <body>
         
         <div class="header">
-            <a href="index.php?page=landing" class="logo-link">
-                <div class="logo">Amarelle</div>
+            <a href="index.php?page=landing" class="logo-link"><img src="public/image/amarelle.png" alt="Amarelle Logo" class="brand-logo" style="height: 50px; width: auto; margin-right: 10px; vertical-align: middle;">
             </a>
         </div>
 
