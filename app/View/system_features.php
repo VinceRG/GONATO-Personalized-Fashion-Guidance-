@@ -712,124 +712,179 @@
           </div>
          
           <div class="sub-tab-content active" id="orders">
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001234</span>
-                <span class="order-status status-processing">Processing</span>
+  <?php if (!empty($ordersByTab['orders'])): ?>
+    <?php foreach ($ordersByTab['orders'] as $order): ?>
+      <?php
+        $orderId    = (int)$order['ORDER_ID'];
+        $statusText = mapStatusLabel($order['STATUS']);
+        $statusCls  = mapStatusClass($order['STATUS']);
+      ?>
+      <div class="order-card">
+        <div class="order-header">
+          <span class="order-number">
+            <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
+          </span>
+          <span class="order-status <?= htmlspecialchars($statusCls); ?>">
+            <?= htmlspecialchars($statusText); ?>
+          </span>
+        </div>
+
+        <div class="order-body">
+          <?php if (!empty($orderItems[$orderId])): ?>
+            <?php foreach ($orderItems[$orderId] as $item): ?>
+              <div class="order-item">
+                <span class="item-name">
+                  <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
+                  <?php if (!empty($item['COLOR_NAME'])): ?>
+                    (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
+                     <?= htmlspecialchars($item['SIZE']); ?>)
+                  <?php else: ?>
+                    (<?= htmlspecialchars($item['SIZE']); ?>)
+                  <?php endif; ?>
+                </span>
+                <span class="item-price">
+                  ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
+                  × <?= (int)$item['QUANTITY']; ?>
+                </span>
               </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Elegant Silk Blouse</span>
-                  <span class="item-price">₱2,500</span>
-                </div>
-                <div class="order-item">
-                  <span class="item-name">Classic Denim Jeans</span>
-                  <span class="item-price">₱1,800</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Ordered: Oct 20, 2025</span>
-                <span class="order-total">Total: ₱4,300</span>
-              </div>
-            </div>
-           
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001235</span>
-                <span class="order-status status-processing">Processing</span>
-              </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Summer Dress</span>
-                  <span class="item-price">₱3,200</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Ordered: Oct 22, 2025</span>
-                <span class="order-total">Total: ₱3,200</span>
-              </div>
-            </div>
-          </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p class="empty-state">No items found for this order.</p>
+          <?php endif; ?>
+        </div>
+
+        <div class="order-footer">
+          <span class="order-date">
+            Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
+          </span>
+          <span class="order-total">
+            Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
+          </span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p class="empty-state">You don’t have active orders yet.</p>
+  <?php endif; ?>
+</div>
+
          
           <div class="sub-tab-content" id="to-receive">
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001230</span>
-                <span class="order-status status-shipping">Shipping</span>
+  <?php if (!empty($ordersByTab['to_receive'])): ?>
+    <?php foreach ($ordersByTab['to_receive'] as $order): ?>
+      <?php
+        $orderId    = (int)$order['ORDER_ID'];
+        $statusText = mapStatusLabel($order['STATUS']);
+        $statusCls  = mapStatusClass($order['STATUS']);
+      ?>
+      <div class="order-card">
+        <div class="order-header">
+          <span class="order-number">
+            <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
+          </span>
+          <span class="order-status <?= htmlspecialchars($statusCls); ?>">
+            <?= htmlspecialchars($statusText); ?>
+          </span>
+        </div>
+
+        <div class="order-body">
+          <?php if (!empty($orderItems[$orderId])): ?>
+            <?php foreach ($orderItems[$orderId] as $item): ?>
+              <div class="order-item">
+                <span class="item-name">
+                  <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
+                  <?php if (!empty($item['COLOR_NAME'])): ?>
+                    (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
+                     <?= htmlspecialchars($item['SIZE']); ?>)
+                  <?php else: ?>
+                    (<?= htmlspecialchars($item['SIZE']); ?>)
+                  <?php endif; ?>
+                </span>
+                <span class="item-price">
+                  ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
+                  × <?= (int)$item['QUANTITY']; ?>
+                </span>
               </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Leather Handbag</span>
-                  <span class="item-price">₱4,500</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Est. Arrival: Oct 26, 2025</span>
-                <span class="order-total">Total: ₱4,500</span>
-              </div>
-            </div>
-           
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001228</span>
-                <span class="order-status status-shipping">Shipping</span>
-              </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Casual Sneakers</span>
-                  <span class="item-price">₱2,800</span>
-                </div>
-                <div class="order-item">
-                  <span class="item-name">Cotton T-Shirt</span>
-                  <span class="item-price">₱890</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Est. Arrival: Oct 28, 2025</span>
-                <span class="order-total">Total: ₱3,690</span>
-              </div>
-            </div>
-          </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p class="empty-state">No items found for this order.</p>
+          <?php endif; ?>
+        </div>
+
+        <div class="order-footer">
+          <!-- For to-receive, you might later show ETA column -->
+          <span class="order-date">
+            Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
+          </span>
+          <span class="order-total">
+            Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
+          </span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p class="empty-state">No orders are currently on the way.</p>
+  <?php endif; ?>
+</div>
+
          
           <div class="sub-tab-content" id="history">
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001220</span>
-                <span class="order-status status-completed">Completed</span>
+  <?php if (!empty($ordersByTab['history'])): ?>
+    <?php foreach ($ordersByTab['history'] as $order): ?>
+      <?php
+        $orderId    = (int)$order['ORDER_ID'];
+        $statusText = mapStatusLabel($order['STATUS']);
+        $statusCls  = mapStatusClass($order['STATUS']);
+      ?>
+      <div class="order-card">
+        <div class="order-header">
+          <span class="order-number">
+            <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
+          </span>
+          <span class="order-status <?= htmlspecialchars($statusCls); ?>">
+            <?= htmlspecialchars($statusText); ?>
+          </span>
+        </div>
+
+        <div class="order-body">
+          <?php if (!empty($orderItems[$orderId])): ?>
+            <?php foreach ($orderItems[$orderId] as $item): ?>
+              <div class="order-item">
+                <span class="item-name">
+                  <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
+                  <?php if (!empty($item['COLOR_NAME'])): ?>
+                    (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
+                     <?= htmlspecialchars($item['SIZE']); ?>)
+                  <?php else: ?>
+                    (<?= htmlspecialchars($item['SIZE']); ?>)
+                  <?php endif; ?>
+                </span>
+                <span class="item-price">
+                  ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
+                  × <?= (int)$item['QUANTITY']; ?>
+                </span>
               </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Designer Sunglasses</span>
-                  <span class="item-price">₱1,500</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Delivered: Oct 15, 2025</span>
-                <span class="order-total">Total: ₱1,500</span>
-              </div>
-            </div>
-           
-            <div class="order-card">
-              <div class="order-header">
-                <span class="order-number">#001215</span>
-                <span class="order-status status-completed">Completed</span>
-              </div>
-              <div class="order-body">
-                <div class="order-item">
-                  <span class="item-name">Wool Scarf</span>
-                  <span class="item-price">₱1,200</span>
-                </div>
-                <div class="order-item">
-                  <span class="item-name">Winter Coat</span>
-                  <span class="item-price">₱5,500</span>
-                </div>
-              </div>
-              <div class="order-footer">
-                <span class="order-date">Delivered: Oct 10, 2025</span>
-                <span class="order-total">Total: ₱6,700</span>
-              </div>
-            </div>
-          </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p class="empty-state">No items found for this order.</p>
+          <?php endif; ?>
+        </div>
+
+        <div class="order-footer">
+          <span class="order-date">
+            Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
+          </span>
+          <span class="order-total">
+            Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
+          </span>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  <?php else: ?>
+    <p class="empty-state">You don’t have any past orders yet.</p>
+  <?php endif; ?>
+</div>
+
         </div> <!-- end purchases tab -->
       </div> <!-- end modal-body -->
     </div> <!-- end modal -->
@@ -1299,6 +1354,47 @@
     }
   </script>
 <?php include __DIR__ . '/cartModal.php'; ?>
+<?php
+// Map DB status to CSS class used in your design
+function mapStatusClass(string $status): string {
+    $status = strtolower($status);
+
+    switch ($status) {
+        case 'pending':
+        case 'processing':
+        case 'paid':
+            return 'status-processing';  // orange-ish in your current design
+        case 'shipped':
+        case 'out_for_delivery':
+            return 'status-shipping';    // blue-ish
+        case 'delivered':
+        case 'completed':
+            return 'status-completed';   // green
+        case 'cancelled':
+        case 'canceled':
+            return 'status-cancelled';   // if you add CSS for this
+        default:
+            return 'status-processing';
+    }
+}
+
+// Map DB status to human-readable text
+function mapStatusLabel(string $status): string {
+    $status = strtolower($status);
+
+    return match ($status) {
+        'pending'            => 'Pending',
+        'processing'         => 'Processing',
+        'paid'               => 'Paid',
+        'shipped'            => 'Shipped',
+        'out_for_delivery'   => 'To Receive',
+        'delivered'          => 'Completed',
+        'completed'          => 'Completed',
+        'cancelled', 'canceled' => 'Cancelled',
+        default              => ucfirst($status),
+    };
+}
+?>
 
 
 <link rel="stylesheet" href="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/css/cartModal.css">

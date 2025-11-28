@@ -229,3 +229,68 @@ if ($hasColorDb && !$hasColorSession) {
         'palette' => []
     ];
 }
+// ---------------------------------------------------------------------
+// 5) ORDERS / PURCHASES DATA FOR PROFILE MODAL
+// ---------------------------------------------------------------------
+
+$ordersByTab = [
+    'orders'     => [],  // "Orders" sub-tab
+    'to_receive' => [],  // "To Receive" sub-tab
+    'history'    => [],  // "Order History" sub-tab
+];
+
+$orderItems = []; // [ORDER_ID => [items...]]
+
+// 1) Get all orders of this user
+$orderSql = "SELECT * FROM orders WHERE USER_ID = ? ORDER BY ORDER_DATE DESC";
+$stmt = $conn->prepare($orderSql);
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$orderResult = $stmt->get_result();
+
+while ($row = $orderResult->fetch_assoc()) {
+    $status = strtolower($row['STATUS']);
+
+    // Decide which sub-tab the order belongs to
+    if (in_array($status, ['pending', 'processing', 'paid'])) {
+        $bucket = 'orders';            // Active orders
+    } elseif (in_array($status, ['shipped', 'out_for_delivery'])) {
+        $bucket = 'to_receive';        // On the way
+    } else {
+        // delivered, completed, cancelled, etc.
+        $bucket = 'history';
+    }
+
+    $ordersByTab[$bucket][] = $row;
+}
+
+$stmt->close();
+
+// 2) For each order, load its items (simple N+1 approach, OK for small counts)
+$itemSql = "SELECT 
+                oi.*, 
+                p.PRODUCT_NAME, 
+                c.COLOR_VALUE
+            FROM order_items oi
+            JOIN products p ON p.PRODUCT_ID = oi.PRODUCT_ID
+            LEFT JOIN colors c ON c.COLOR_ID = oi.COLOR_ID
+            WHERE oi.ORDER_ID = ?";
+
+$stmtItem = $conn->prepare($itemSql);
+
+foreach (['orders', 'to_receive', 'history'] as $tabKey) {
+    foreach ($ordersByTab[$tabKey] as $order) {
+        $orderId = (int)$order['ORDER_ID'];
+
+        $stmtItem->bind_param("i", $orderId);
+        $stmtItem->execute();
+        $itemsResult = $stmtItem->get_result();
+
+        while ($item = $itemsResult->fetch_assoc()) {
+            $orderItems[$orderId][] = $item;
+        }
+    }
+}
+
+$stmtItem->close();
+
