@@ -9,7 +9,7 @@ use PHPMailer\PHPMailer\Exception;
 
 class RegisterController {
     private $userModel;
-    const EMAIL_VERIFY_EXPIRY = 1800; // 30 minutes
+    const EMAIL_VERIFY_EXPIRY = 120; 
 
     public function __construct() {
         if (session_status() === PHP_SESSION_NONE) {
@@ -18,9 +18,9 @@ class RegisterController {
         $this->userModel = new User();
     }
 
-    /**
-     * Main index method - handles page display, email verify link, and form submit
-     */
+   
+
+
     public function index() {
         // 1) User clicked verification link in email
         if (isset($_GET['verify_email'])) {
@@ -34,17 +34,39 @@ class RegisterController {
 
             if ($action === 'sendVerifyEmail') {
                 $this->ajaxSendVerificationEmail();
-            } else { // default: availability check
+            } else {
                 $this->handleAjaxCheck();
             }
             return;
         }
 
         // 3) Normal request – show form / handle final registration submit
-        $error = "";
-        $success = "";
+        // 3) Normal request – show form / handle final registration submit
+        $error    = "";
+        $success  = "";
         $formData = [];
-        $verifyStatus = $_GET['verify'] ?? ''; // used by JS to show alerts
+
+        // GET request: decide kung pre-fill or fresh
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            if (isset($_GET['verify']) && $_GET['verify'] === 'success') {
+                // galing sa verification link → prefill Step 1 using session
+                $formData['firstname'] = $_SESSION['register_firstname'] ?? '';
+                $formData['lastname']  = $_SESSION['register_lastname'] ?? '';
+                $formData['username']  = $_SESSION['register_username'] ?? '';
+                $formData['email']     = $_SESSION['register_email'] ?? '';
+            } else {
+                // normal open ng register page → CLEAR old temp data
+                unset(
+                    $_SESSION['register_email'],
+                    $_SESSION['register_firstname'],
+                    $_SESSION['register_lastname'],
+                    $_SESSION['register_username'],
+                    $_SESSION['register_verify_token'],
+                    $_SESSION['register_verify_expires'],
+                    $_SESSION['register_email_verified']
+                );
+            }
+        }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST' && !$this->isAjaxRequest()) {
             $result = $this->processRegistration($_POST);
@@ -62,89 +84,108 @@ class RegisterController {
                     $_SESSION['register_verify_expires'],
                     $_SESSION['register_email_verified']
                 );
-
-                header('Location: index.php?page=login&registered=1');
-                exit;
             } else {
-                $error = $result['message'];
+                $error    = $result['message'];
                 $formData = $_POST;
             }
         }
 
         require_once __DIR__ . '/../View/register.php';
-    }
 
+    }
     /**
      * AJAX: send verification email after Step 1
      */
-    private function ajaxSendVerificationEmail() {
-        header('Content-Type: application/json');
+    /**
+ * AJAX: send verification email after Step 1
+ */
+private function ajaxSendVerificationEmail() {
+    header('Content-Type: application/json');
 
-        try {
-            $firstname = $this->sanitizeInput($_POST['firstname'] ?? '');
-            $lastname  = $this->sanitizeInput($_POST['lastname'] ?? '');
-            $username  = $this->sanitizeInput($_POST['username'] ?? '');
-            $email     = $this->sanitizeInput($_POST['email'] ?? '');
+    try {
+        $firstname = $this->sanitizeInput($_POST['firstname'] ?? '');
+        $lastname  = $this->sanitizeInput($_POST['lastname'] ?? '');
+        $username  = $this->sanitizeInput($_POST['username'] ?? '');
+        $email     = $this->sanitizeInput($_POST['email'] ?? '');
 
-            if (empty($firstname) || empty($lastname) || empty($username) || empty($email)) {
-                echo json_encode(['success' => false, 'message' => 'Please fill in all fields in Step 1.']);
-                return;
-            }
+        if (empty($firstname) || empty($lastname) || empty($username) || empty($email)) {
+            echo json_encode(['success' => false, 'message' => 'Please fill in all fields in Step 1.']);
+            return;
+        }
 
-            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                echo json_encode(['success' => false, 'message' => 'Invalid email address.']);
-                return;
-            }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            echo json_encode(['success' => false, 'message' => 'Invalid email address.']);
+            return;
+        }
 
-            if ($this->userModel->usernameExists($username)) {
-                echo json_encode(['success' => false, 'message' => 'Username is already taken.']);
-                return;
-            }
+        if ($this->userModel->usernameExists($username)) {
+            echo json_encode(['success' => false, 'message' => 'Username is already taken.']);
+            return;
+        }
 
-            if ($this->userModel->emailExists($email)) {
-                echo json_encode(['success' => false, 'message' => 'Email is already registered.']);
-                return;
-            }
+        if ($this->userModel->emailExists($email)) {
+            echo json_encode(['success' => false, 'message' => 'Email is already registered.']);
+            return;
+        }
 
-            // create token & store minimal data in session
-            $token   = bin2hex(random_bytes(32));
-            $expires = time() + self::EMAIL_VERIFY_EXPIRY;
+        // 🔒 NEW: huwag mag-resend kung may existing token pa na valid
+        $existingEmail   = $_SESSION['register_email']          ?? null;
+        $existingToken   = $_SESSION['register_verify_token']   ?? null;
+        $existingExpires = $_SESSION['register_verify_expires'] ?? 0;
 
-            $_SESSION['register_email']          = $email;
-            $_SESSION['register_firstname']      = $firstname;
-            $_SESSION['register_lastname']       = $lastname;
-            $_SESSION['register_username']       = $username;
-            $_SESSION['register_verify_token']   = $token;
-            $_SESSION['register_verify_expires'] = $expires;
-            $_SESSION['register_email_verified'] = false;
-
-            $mailResult = $this->sendVerificationEmail($email, $firstname, $token);
-
-            if (!$mailResult['success']) {
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'Failed to send verification email. Please try again later.'
-                ]);
-                return;
-            }
-
+        if ($existingEmail === $email && !empty($existingToken) && time() <= $existingExpires) {
             echo json_encode([
                 'success' => true,
-                'message' => 'We sent a verification link to your email. Please check your inbox.'
+                'message' => 'We already sent a verification link to this email. Please check your inbox or spam folder.'
             ]);
-        } catch (\Throwable $e) {
-            error_log('ajaxSendVerificationEmail error: ' . $e->getMessage());
+            return;
+        }
+
+        // create token & store minimal data in session
+        $token   = bin2hex(random_bytes(32));
+        $expires = time() + self::EMAIL_VERIFY_EXPIRY; // 120 seconds (2 mins)
+
+        $_SESSION['register_email']          = $email;
+        $_SESSION['register_firstname']      = $firstname;
+        $_SESSION['register_lastname']       = $lastname;
+        $_SESSION['register_username']       = $username;
+        $_SESSION['register_verify_token']   = $token;
+        $_SESSION['register_verify_expires'] = $expires;
+        $_SESSION['register_email_verified'] = false;
+
+        $mailResult = $this->sendVerificationEmail($email, $firstname, $token);
+
+        if (!$mailResult['success']) {
             echo json_encode([
                 'success' => false,
-                'message' => 'Unexpected error while sending verification email.'
+                'message' => 'Failed to send verification email. Please try again later.'
             ]);
+            return;
         }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'We sent a verification link to your email. Please open your inbox and click the button there.'
+        ]);
+    } catch (\Throwable $e) {
+        error_log('ajaxSendVerificationEmail error: ' . $e->getMessage());
+        echo json_encode([
+            'success' => false,
+            'message' => 'Unexpected error while sending verification email.'
+        ]);
     }
+}
+
 
     /**
      * When user clicks the email link
+     * We only set the session flag and redirect back to register.php
      */
     private function handleVerifyEmailLink() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $token = $this->sanitizeInput($_GET['verify_email'] ?? '');
 
         $sessionToken   = $_SESSION['register_verify_token']   ?? '';
@@ -152,9 +193,9 @@ class RegisterController {
 
         if ($token && $token === $sessionToken && time() <= $sessionExpires) {
             $_SESSION['register_email_verified'] = true;
-            header('Location: index.php?page=register&verify=success&step=2');
+            header('Location: index.php?page=register&verify=success');
         } else {
-            header('Location: index.php?page=register&verify=failed&step=1');
+            header('Location: index.php?page=register&verify=failed');
         }
         exit;
     }
@@ -166,12 +207,11 @@ class RegisterController {
         $mail = new PHPMailer(true);
 
         try {
-            // ==== SMTP CONFIG – CHANGE THESE ====
             $mail->isSMTP();
             $mail->Host       = 'smtp.gmail.com';
             $mail->SMTPAuth   = true;
-           $mail->Username   = 'amarelle2025@gmail.com';
-            $mail->Password   = 'hdzk sgjm jnbx kipl';   // TODO: change (App Password)
+            $mail->Username   = 'amarelle2025@gmail.com';
+            $mail->Password   = 'hdzk sgjm jnbx kipl';   // app password
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port       = 587;
 
@@ -181,33 +221,59 @@ class RegisterController {
             $mail->isHTML(true);
             $mail->Subject = 'Verify your email address';
 
-            // Your base URL (match your screenshot)
-           $protocol  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-$host      = $_SERVER['HTTP_HOST']; 
-$scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') . '/';
+            $protocol  = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+            $host      = $_SERVER['HTTP_HOST'];
+            $scriptDir = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\') . '/';
+            $baseUrl   = $protocol . $host . $scriptDir;
 
-$baseUrl = $protocol . $host . $scriptDir;
-
-$verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($token);
+            $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($token);
 
             $mail->Body = '
-                <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-                    <h2 style="color:#16a34a;text-align:center;">Amarelle</h2>
-                    <h3 style="text-align:center;">Verify your email address</h3>
-                    <p>Hi ' . htmlspecialchars($firstname) . ',</p>
-                    <p>Please confirm that you want to use this email address for your Amarelle account.
-                       Once it\'s done, your account will be activated.</p>
-                    <p style="text-align:center;margin:30px 0;">
-                        <a href="' . $verifyLink . '" 
-                           style="background:#16a34a;color:#fff;padding:12px 24px;
-                                  text-decoration:none;border-radius:4px;display:inline-block;">
-                            Verify my email
-                        </a>
-                    </p>
-                    <p style="font-size:12px;color:#777;text-align:center;">
-                        Or paste this link into your browser:<br>' . $verifyLink . '
-                    </p>
-                </div>
+                <div style="max-width:600px;margin:0 auto;padding:20px;
+            font-family:Minion, Times New Roman, Times, serif;">
+
+    <h2 style="color:#1C1917;text-align:center;margin-bottom:4px;">
+        Amarelle
+    </h2>
+
+    <h3 style="text-align:center;margin-top:0;font-weight:500;">
+        Verify your email address
+    </h3>
+
+    <!-- paragraph font changed to LEXEND -->
+    <div style="font-family:Lexend, Segoe UI, sans-serif;font-size:15px;line-height:1.6;color:#333;">
+
+        <p>Hi <strong>'. htmlspecialchars($firstname) .'</strong>,</p>
+
+        <p>
+            Please confirm that you want to use this email address for your Amarelle account.
+            This verification link will only be valid for <strong>2 minutes</strong>.
+        </p>
+
+        <p style="text-align:center;margin:35px 0;">
+            <a href="'. $verifyLink .'"
+               style="
+                    background:#000;
+                    color:#fff;
+                    padding:12px 28px;
+                    text-decoration:none;
+                    border-radius:6px;
+                    font-weight:600;
+                    display:inline-block;
+                    font-family:Lexend,Segoe UI,sans-serif;
+               ">
+                Verify my email
+            </a>
+        </p>
+
+        <p style="font-size:13px;color:#777;text-align:center;margin-top:30px;">
+            If the button doesnt work, copy and paste this link into your browser:<br><br>
+            <span style="color:#555;word-break:break-all;">'. $verifyLink .'</span>
+        </p>
+
+    </div>
+</div>
+
             ';
 
             $mail->AltBody = "Hi {$firstname},\n\nPlease verify your account by visiting this link:\n{$verifyLink}\n";
@@ -221,11 +287,7 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
         }
     }
 
-    /**
-     * Process registration form submission (final submit on Step 3)
-     */
     private function processRegistration($postData) {
-        // Require verified email before completing registration
         if (empty($_SESSION['register_email_verified']) || $_SESSION['register_email_verified'] !== true) {
             return [
                 'success' => false,
@@ -233,11 +295,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             ];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        |  STEP 1: Validate Terms and Conditions Acceptance
-        |--------------------------------------------------------------------------
-        */
         if (!isset($postData['terms']) || $postData['terms'] !== 'on') {
             return [
                 'success' => false,
@@ -245,12 +302,7 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             ];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        |  STEP 2: Validate reCAPTCHA
-        |--------------------------------------------------------------------------
-        */
-        $recaptchaSecret = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC"; 
+        $recaptchaSecret   = "6LeCugUsAAAAAPih7SIRz0eeTuJ19s6LJVpUcgKC";
         $recaptchaResponse = $postData['g-recaptcha-response'] ?? '';
 
         if (empty($recaptchaResponse)) {
@@ -272,20 +324,14 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             ];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        |  STEP 3: Collect and sanitize input data
-        |--------------------------------------------------------------------------
-        */
-        $firstname = $this->sanitizeInput($postData['firstname'] ?? '');
-        $lastname = $this->sanitizeInput($postData['lastname'] ?? '');
-        $username = $this->sanitizeInput($postData['username'] ?? '');
-        $email = $this->sanitizeInput($postData['email'] ?? '');
-        $contact_num = $this->sanitizeInput($postData['contact_num'] ?? '');
-        $password = $postData['password'] ?? '';
+        $firstname       = $this->sanitizeInput($postData['firstname'] ?? '');
+        $lastname        = $this->sanitizeInput($postData['lastname'] ?? '');
+        $username        = $this->sanitizeInput($postData['username'] ?? '');
+        $email           = $this->sanitizeInput($postData['email'] ?? '');
+        $contact_num     = $this->sanitizeInput($postData['contact_num'] ?? '');
+        $password        = $postData['password'] ?? '';
         $confirmPassword = $postData['confirmPassword'] ?? '';
 
-        // Make sure they are using the same email that was verified
         if ($email !== ($_SESSION['register_email'] ?? '')) {
             return [
                 'success' => false,
@@ -293,45 +339,51 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             ];
         }
 
-        // Address fields
         $street_address = $this->sanitizeInput($postData['street_address'] ?? '');
-        $apartment = $this->sanitizeInput($postData['apartment'] ?? '');
-        $province = $this->sanitizeInput($postData['province'] ?? '');
-        $city = $this->sanitizeInput($postData['city'] ?? '');
-        $barangay = $this->sanitizeInput($postData['barangay'] ?? '');
-        $postal_code = $this->sanitizeInput($postData['postal_code'] ?? '');
+        $apartment      = $this->sanitizeInput($postData['apartment'] ?? '');
+        $region      = $this->sanitizeInput($postData['region'] ?? '');
+        $province       = $this->sanitizeInput($postData['province'] ?? '');
+        $city           = $this->sanitizeInput($postData['city'] ?? '');
+        $barangay       = $this->sanitizeInput($postData['barangay'] ?? '');
+        $postal_code    = $this->sanitizeInput($postData['postal_code'] ?? '');
+
 
         $addressData = [
-            'street_address' => $street_address,
-            'apartment' => $apartment,
-            'province' => $province,
-            'city' => $city,
-            'barangay' => $barangay,
-            'postal_code' => $postal_code
-        ];
+            'region'         => $region, 
+    'street_address' => $street_address,
+    'apartment'      => $apartment,
+    'province'       => $province,
+    'city'           => $city,
+    'barangay'       => $barangay,
+    'postal_code'    => $postal_code,
+    'latitude'       => $latitude,
+    'longitude'      => $longitude
+];
 
-        /*
-        |--------------------------------------------------------------------------
-        |  STEP 4: Validate all registration data
-        |--------------------------------------------------------------------------
-        */
+
         $validationResult = $this->validateRegistrationData(
-            $firstname, $lastname, $username, $email, 
-            $addressData, $contact_num, $password, $confirmPassword
-        );
+    $firstname, $lastname, $username, $email,
+    $addressData, $contact_num, $password, $confirmPassword
+);
 
-        if (!$validationResult['valid']) {
-            return [
-                'success' => false,
-                'message' => $validationResult['error']
-            ];
-        }
+if (!$validationResult['valid']) {
+    return [
+        'success' => false,
+        'message' => $validationResult['error']
+    ];
+}
 
-        /*
-        |--------------------------------------------------------------------------
-        |  STEP 5: Check username/email availability
-        |--------------------------------------------------------------------------
-        */
+// ✅ External address validation with Service Objects
+// $serviceObjectsResult = $this->validateAddressWithServiceObjects($addressData);
+// if (!$serviceObjectsResult['valid']) {
+//     return [
+//         'success' => false,
+//         'message' => $serviceObjectsResult['message']
+//     ];
+// }
+
+        
+
         if ($this->userModel->usernameExists($username)) {
             return ['success' => false, 'message' => 'Username is already taken.'];
         }
@@ -340,14 +392,9 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             return ['success' => false, 'message' => 'Email is already registered.'];
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        |  STEP 6: Register user
-        |--------------------------------------------------------------------------
-        */
         try {
             $registered = $this->userModel->register(
-                $firstname, $lastname, $username, 
+                $firstname, $lastname, $username,
                 $email, $addressData, $contact_num, $password
             );
 
@@ -371,16 +418,10 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
         }
     }
 
-    /**
-     * Validate all registration data server-side
-     */
     private function validateRegistrationData(
-        $firstname, $lastname, $username, $email, 
+        $firstname, $lastname, $username, $email,
         $addressData, $contact_num, $password, $confirmPassword
     ) {
-        // === your existing validation code, unchanged ===
-
-        // First name validation
         if (empty($firstname) || strlen($firstname) < 2 || strlen($firstname) > 50) {
             return ['valid' => false, 'error' => 'Invalid first name.'];
         }
@@ -388,7 +429,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             return ['valid' => false, 'error' => 'First name contains invalid characters.'];
         }
 
-        // Last name validation
         if (empty($lastname) || strlen($lastname) < 2 || strlen($lastname) > 50) {
             return ['valid' => false, 'error' => 'Invalid last name.'];
         }
@@ -396,7 +436,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             return ['valid' => false, 'error' => 'Last name contains invalid characters.'];
         }
 
-        // Username validation
         if (empty($username) || strlen($username) < 3 || strlen($username) > 20) {
             return ['valid' => false, 'error' => 'Username must be 3-20 characters.'];
         }
@@ -404,7 +443,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             return ['valid' => false, 'error' => 'Username can only contain letters, numbers, and underscores.'];
         }
 
-        // Email validation
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return ['valid' => false, 'error' => 'Invalid email address.'];
         }
@@ -412,13 +450,12 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             return ['valid' => false, 'error' => 'Email is too long.'];
         }
 
-        // Address validation
         $street_address = $addressData['street_address'];
-        $province = $addressData['province'];
-        $city = $addressData['city'];
-        $barangay = $addressData['barangay'];
-        $postal_code = $addressData['postal_code'];
-        $apartment = $addressData['apartment'];
+        $province       = $addressData['province'];
+        $city           = $addressData['city'];
+        $barangay       = $addressData['barangay'];
+        $postal_code    = $addressData['postal_code'];
+        $apartment      = $addressData['apartment'];
 
         if (empty($street_address) || strlen($street_address) < 5 || strlen($street_address) > 150) {
             return ['valid' => false, 'error' => 'Street address must be 5-150 characters.'];
@@ -442,7 +479,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             return ['valid' => false, 'error' => 'Apartment/Suite must not exceed 50 characters.'];
         }
 
-        // Contact number validation
         if (!preg_match("/^[0-9]{11}$/", $contact_num)) {
             return ['valid' => false, 'error' => 'Contact number must be exactly 11 digits.'];
         }
@@ -450,7 +486,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
             return ['valid' => false, 'error' => 'Invalid Philippine mobile number format (must start with 09).'];
         }
 
-        // Password validation
         if (empty($password)) {
             return ['valid' => false, 'error' => 'Password is required.'];
         }
@@ -472,7 +507,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
         if (!preg_match("/[!@#$%^&*(),.?\":{}|<>]/", $password)) {
             return ['valid' => false, 'error' => 'Password must contain a special character.'];
         }
-
         if ($password !== $confirmPassword) {
             return ['valid' => false, 'error' => 'Passwords do not match.'];
         }
@@ -480,9 +514,6 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
         return ['valid' => true, 'error' => ''];
     }
 
-    /**
-     * AJAX username/email check (unchanged)
-     */
     private function handleAjaxCheck() {
         header('Content-Type: application/json');
         
@@ -510,13 +541,11 @@ $verifyLink = $baseUrl . 'index.php?page=register&verify_email=' . urlencode($to
         exit;
     }
 
-    /** Check if request is AJAX */
     private function isAjaxRequest() {
-        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) &&
                strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
     }
 
-    /** Clean input */
     private function sanitizeInput($input) {
         return trim(htmlspecialchars($input, ENT_QUOTES, 'UTF-8'));
     }

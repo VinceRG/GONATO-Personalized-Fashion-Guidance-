@@ -1,211 +1,450 @@
-    <!DOCTYPE html>
-    <html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Sign Up - Amarelle</title>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
-        <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-        <link rel="stylesheet" href="public/css/register.css">
-        
-    </head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Amarelle</title>
 
-    <body>
-        
-        <div class="header">
-            <a href="index.php?page=landing" class="logo-link">
-                <div class="logo">Amarelle</div>
-            </a>
-        </div>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <link rel="stylesheet" href="public/css/register.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-        <div class="content">
-            <h1>Join Amarelle</h1>
+    <style>
+  .readonly-select {
+    pointer-events: none;        
+    background-color: #f9fafb;
+    color: #6b7280;
+}
+        .message {
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+        .message.success {
+            background: #e6f8ec;
+            color: #166534;
+            border: 1px solid #16a34a33;
+        }
+        .message.error {
+            background: #fee2e2;
+            color: #b91c1c;
+            border: 1px solid #b91c1c33;
+        }
 
-            <form action="" method="POST" class="register-form" id="registerForm">
-                <div class="progress-indicator">
-                    <div class="progress-line" id="progressLine"></div>
-                    <div class="progress-step active" data-step="1">
-                        <div class="progress-step-circle">1</div>
-                        <div class="progress-step-label">Personal Info</div>
-                    </div>
-                    <div class="progress-step" data-step="2">
-                        <div class="progress-step-circle">2</div>
-                        <div class="progress-step-label">Address & Contact</div>
-                    </div>
-                    <div class="progress-step" data-step="3">
-                        <div class="progress-step-circle">3</div>
-                        <div class="progress-step-label">Security</div>
-                    </div>
-                </div>
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        .popup-overlay.show {
+            display: flex;
+        }
+        .popup-card {
+            background: #f4f3ee;
+            border-radius: 20px;
+            max-width: 420px;
+            width: 90%;
+            padding: 26px 28px 22px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+            text-align: center;
+            position: relative;
+            font-family: 'Lexend', sans-serif;
+        }
+        .popup-icon-circle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            color: #fff;
+            font-size: 30px;
+        }
+        .popup-icon-success {
+            background: linear-gradient(135deg,#1d9bf0,#0d71d5);
+        }
+        .popup-icon-error {
+            background: linear-gradient(135deg,#f97373,#ef4444);
+        }
+        .popup-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #111827;
+        }
+        .popup-message {
+            font-size: 0.9rem;
+            color: #4b5563;
+            margin-bottom: 18px;
+        }
+        .popup-close-x {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            border: none;
+            background: transparent;
+            font-size: 1.1rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        .popup-btn {
+            border: none;
+            padding: 10px 28px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: #fff;
+        }
+        .popup-btn-success {
+            background: linear-gradient(135deg,#1d9bf0,#0d71d5);
+        }
+        .popup-btn-error {
+            background: linear-gradient(135deg,#f97373,#ef4444);
+        }
 
-                <div class="form-step active" data-step="1">
-                    <?php if (!empty($error)) : ?>
-                        <div class="message error">
-                            <?php echo htmlspecialchars($error); ?>
-                        </div>
-                    <?php endif; ?>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="firstname">First Name</label>
-                            <input type="text" id="firstname" name="firstname" placeholder="Enter your first name">
-                            <span class="error-message" id="firstname-error"></span>
-                        </div>
+        .btn-disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
 
-                        <div class="form-group">
-                            <label for="lastname">Last Name</label>
-                            <input type="text" id="lastname" name="lastname" placeholder="Enter your last name">
-                            <span class="error-message" id="lastname-error"></span>
-                        </div>
-                    </div>
+<?php
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    $error    = $GLOBALS['error']   ?? '';
+    $success  = $GLOBALS['success'] ?? '';
+    $formData = $GLOBALS['formData'] ?? [];
+?>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="username">Username</label>
-                            <input type="text" id="username" name="username" placeholder="Choose a username">
-                            <span class="error-message" id="username-error"></span>
-                        </div>
+<body data-email-verified="<?= !empty($_SESSION['register_email_verified']) ? '1' : '0' ?>">
+    <div id="toast-root"></div>
 
-                        <div class="form-group">
-                            <label for="email">Email</label>
-                            <input type="email" id="email" name="email" placeholder="Enter your email address">
-                            <span class="error-message" id="email-error"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-buttons">
-                        <button type="button" class="btn btn-primary btn-full" id="nextStep1">Next</button>
-                    </div>
-                </div>
-                <script>
-    window.REGISTER_START_STEP = <?= isset($startStep) ? (int)$startStep : 1 ?>;
-</script>
-
-                <div class="form-step" data-step="2">
-                    <div class="address-section">
-                        <h3>Address</h3>
-
-                        <div class="form-group">
-                            <label for="street_address">Street Address / House Number</label>
-                            <input type="text" id="street_address" name="street_address" placeholder="e.g., 123 Main St or Unit 4B">
-                            <span class="error-message" id="street_address-error"></span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="apartment">Apartment, Suite, or Floor <span class="optional">(Optional)</span></label>
-                            <input type="text" id="apartment" name="apartment" placeholder="e.g., Apt 2B, Floor 3">
-                            <span class="error-message" id="apartment-error"></span>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="province">Province</label>
-                                <select id="province" name="province">
-                                    <option value="">Select Province</option>
-                                    <option value="Metro Manila">Metro Manila</option>
-                                    <option value="Cavite">Cavite</option>
-                                    <option value="Laguna">Laguna</option>
-                                    <option value="Bulacan">Bulacan</option>
-                                    <option value="Rizal">Rizal</option>
-                                </select>
-                                <span class="error-message" id="province-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="city">City / Town</label>
-                                <select id="city" name="city">
-                                    <option value="">Select City</option>
-                                </select>
-                                <span class="error-message" id="city-error"></span>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="barangay">Barangay</label>
-                            <select id="barangay" name="barangay">
-                                <option value="">Select Barangay</option>
-                            </select>
-                            <span class="error-message" id="barangay-error"></span>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="postal_code">Postal / ZIP Code</label>
-                            <input type="text" id="postal_code" name="postal_code" placeholder="e.g., 1101" maxlength="10">
-                            <span class="error-message" id="postal_code-error"></span>
-                        </div>
-                   
-                    <div class="form-group">
-                        <label for="contact_num">Contact Number</label>
-                        <input type="text" id="contact_num" name="contact_num" maxlength="11" placeholder="09XX XXX XXXX" value="0">
-                        <span class="error-message" id="contact_num-error"></span>
-                    </div>
-                     </div>
-
-
-                    <div class="form-buttons">
-                        <button type="button" class="btn btn-secondary" id="prevStep2">Back</button>
-                        <button type="button" class="btn btn-primary" id="nextStep2">Next</button>
-                    </div>
-                </div>
-
-
-<div class="form-step" data-step="3">
-
-    <div class="form-row">
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="Create a strong password">
-            <div class="password-requirements" id="password-requirements">
-                <div id="req-length">At least 8 characters</div>
-                <div id="req-uppercase">One uppercase letter</div>
-                <div id="req-lowercase">One lowercase letter</div>
-                <div id="req-number">One number</div>
-                <div id="req-special">One special character</div>
-            </div>
-            <span class="error-message" id="password-error"></span>
-        </div>
-
-        <div class="form-group">
-            <label for="confirmPassword">Confirm Password</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter your password">
-            <span class="error-message" id="confirmPassword-error"></span>
+    <div id="popupOverlay" class="popup-overlay">
+        <div class="popup-card">
+            <button class="popup-close-x" id="popupCloseX">&times;</button>
+            <div id="popupIcon" class="popup-icon-circle popup-icon-success">✓</div>
+            <div class="popup-title" id="popupTitle">Message</div>
+            <p class="popup-message" id="popupMessage">...</p>
+            <button class="popup-btn popup-btn-success" id="popupOkBtn">Continue</button>
         </div>
     </div>
 
-<div class="form-group">
+    <div class="header">
+        <a href="index.php?page=landing" class="logo-link">
+            <div class="logo">Amarelle</div>
+        </a>
+    </div>
 
-<p class="terms-text" style = "justify-content: center;">
-        <input type="checkbox" id="termsCheckbox" name="terms">
-        <label for="termsCheckbox">
-            By creating your account or signing in, you agree to our 
-            <a id="privacyLink">Privacy Policy</a> &
-            <a id="termsLink">Cookies and Consent</a> 
-        </label>
-    </p>
-    <span class="error-message" id="termsCheckbox-error"></span>
-    <div class="g-recaptcha" data-sitekey="6LeCugUsAAAAAMevrBVqSjs6AG8SsQZ8qrJGvjDZ"></div>
-    <span class="error-message" id="recaptcha-error"></span>
+    <div class="content">
+        <h1>Join Amarelle</h1>
 
+        <?php if (!empty($success)) : ?>
+            <div class="message success">
+                <?= htmlspecialchars($success) ?>
+            </div>
+        <?php endif; ?>
 
-    
-    
+        <?php if (!empty($error)) : ?>
+            <div class="message error">
+                <?= htmlspecialchars($error) ?>
+            </div>
+        <?php endif; ?>
+
+        <form action="" method="POST" class="register-form" id="registerForm">
+            <div class="progress-indicator">
+                <div class="progress-line" id="progressLine"></div>
+
+                <div class="progress-step active" data-step="1">
+                    <div class="progress-step-circle">1</div>
+                    <div class="progress-step-label">Personal Info</div>
+                </div>
+
+                <div class="progress-step" data-step="2">
+                    <div class="progress-step-circle">2</div>
+                    <div class="progress-step-label">Address & Contact</div>
+                </div>
+
+                <div class="progress-step" data-step="3">
+                    <div class="progress-step-circle">3</div>
+                    <div class="progress-step-label">Security</div>
+                </div>
+            </div>
+
+            <!-- STEP 1 -->
+            <div class="form-step active" data-step="1">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="firstname">First Name</label>
+                        <input
+                            type="text"
+                            id="firstname"
+                            name="firstname"
+                            placeholder="Enter your first name"
+                            value="<?= htmlspecialchars($formData['firstname'] ?? ($_SESSION['register_firstname'] ?? '')) ?>"
+                        >
+                        <span class="error-message" id="firstname-error"></span>
                     </div>
-    <div class="form-buttons">
-        <button type="button" class="btn btn-secondary" id="prevStep3">Back</button>
-        <button type="submit" class="btn btn-primary" id="createAccountBtn">Create Account</button>
+
+                    <div class="form-group">
+                        <label for="lastname">Last Name</label>
+                        <input
+                            type="text"
+                            id="lastname"
+                            name="lastname"
+                            placeholder="Enter your last name"
+                            value="<?= htmlspecialchars($formData['lastname'] ?? ($_SESSION['register_lastname'] ?? '')) ?>"
+                        >
+                        <span class="error-message" id="lastname-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            placeholder="Choose a username"
+                            value="<?= htmlspecialchars($formData['username'] ?? ($_SESSION['register_username'] ?? '')) ?>"
+                        >
+                        <span class="error-message" id="username-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email address"
+                            value="<?= htmlspecialchars($formData['email'] ?? ($_SESSION['register_email'] ?? '')) ?>"
+                        >
+                        <span class="error-message" id="email-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" id="verifyEmailBtn">
+                        Verify Email
+                    </button>
+
+                    <button type="button" class="btn btn-primary btn-full btn-disabled" id="nextStep1" disabled>
+                        Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2 -->
+<div class="form-step" data-step="2">
+    <div class="address-section">
+        <h3>Address</h3>
+
+        
+
+        <!-- SEARCH + MAP
+        <div class="form-group">
+            <label for="address_search">Search Address (OpenStreetMap)</label>
+            <input
+                type="text"
+                id="address_search"
+                placeholder="Type street, city or place..."
+                autocomplete="off"
+            >
+            <button type="button" class="btn btn-secondary" id="addressSearchBtn" style="margin-top:8px;">
+                Search on map
+            </button>
+            <span class="hint" style="font-size:0.8rem;">
+                Tip: Type a more complete address (street + city) so we can auto-fill province, city and barangay.
+            </span>
+        </div>
+
+        <div class="form-group">
+            <div id="map" style="width:100%;height:260px;border-radius:12px;margin-top:8px;"></div>
+        </div> -->
+
+        <!-- Hidden: lat / lng (sent to PHP)
+        <input
+            type="hidden"
+            id="latitude"
+            name="latitude"
+            value="<?= htmlspecialchars($formData['latitude'] ?? '', ENT_QUOTES) ?>"
+        >
+        <input
+            type="hidden"
+            id="longitude"
+            name="longitude"
+            value="<?= htmlspecialchars($formData['longitude'] ?? '', ENT_QUOTES) ?>"
+        > -->
+
+        <!-- NORMAL ADDRESS FIELDS -->
+        <div class="form-group">
+            <label for="street_address">Street Address / House Number</label>
+            <input
+                type="text"
+                id="street_address"
+                name="street_address"
+                placeholder="e.g., 123 Main St or Unit 4B"
+                value="<?= htmlspecialchars($formData['street_address'] ?? '', ENT_QUOTES) ?>"
+            >
+            <span class="error-message" id="street_address-error"></span>
+        </div>
+        
+        <div class="form-group">
+            <label for="contact_num">Contact Number</label>
+            <input
+                type="text"
+                id="contact_num"
+                name="contact_num"
+                maxlength="11"
+                placeholder="09XX XXX XXXX"
+                value="<?= htmlspecialchars($formData['contact_num'] ?? '0', ENT_QUOTES) ?>"
+            >
+            <span class="error-message" id="contact_num-error"></span>
+        </div>
+
+
+    <!-- Region -->
+<div class="form-group">
+    <label for="regionSelect">Region</label>
+    <select id="regionSelect" name="region" class="select-input">
+        <option value="">Select Region</option>
+        <option value="Metro Manila">Metro Manila</option>
+        <option value="North Luzon">North Luzon</option>
+        <option value="South Luzon">South Luzon</option>
+        <option value="Visayas">Visayas</option>
+        <option value="Mindanao">Mindanao</option>
+    </select>
+    <span class="error-message" id="region-error"></span>
+</div>
+
+<div class="form-row">
+    <!-- Province -->
+    <div class="form-group" style="flex:1;">
+        <label for="province">Province</label>
+        <select id="province" name="province" class="select-input">
+            <option value="">Select Province</option>
+        </select>
+        <span class="error-message" id="province-error"></span>
+    </div>
+
+    <!-- City / Municipality -->
+    <div class="form-group" style="flex:1;">
+        <label for="city">City / Town</label>
+        <select id="city" name="city" class="select-input">
+            <option value="">Select City / Municipality</option>
+        </select>
+        <span class="error-message" id="city-error"></span>
     </div>
 </div>
 
-                <p>
-                    Already have an account?
-                    <a href="index.php?page=login">Login here</a>
-                </p>
-            </form>
+<!-- Barangay -->
+<div class="form-group">
+    <label for="barangay">Barangay</label>
+    <select id="barangay" name="barangay" class="select-input">
+        <option value="">Select Barangay</option>
+    </select>
+    <span class="error-message" id="barangay-error"></span>
+</div>
+
+
+        <div class="form-group">
+            <label for="postal_code">Postal / ZIP Code</label>
+            <input
+                type="text"
+                id="postal_code"
+                name="postal_code"
+                placeholder="e.g., 1101"
+                maxlength="10"
+                value="<?= htmlspecialchars($formData['postal_code'] ?? '', ENT_QUOTES) ?>"
+            >
+            <span class="error-message" id="postal_code-error"></span>
         </div>
 
-        <div class="footer">
-            <p>© 2025 Amarelle. All rights reserved.</p>
-        </div>
+    </div>
+
+    <div class="form-buttons">
+        <button type="button" class="btn btn-secondary" id="prevStep2">Back</button>
+        <button type="button" class="btn btn-primary" id="nextStep2">Next</button>
+    </div>
+</div>
+
+
+            <!-- STEP 3 -->
+            <div class="form-step" data-step="3">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            placeholder="Create a strong password"
+                        >
+                        <div class="password-requirements" id="password-requirements">
+                            <div id="req-length">At least 8 characters</div>
+                            <div id="req-uppercase">One uppercase letter</div>
+                            <div id="req-lowercase">One lowercase letter</div>
+                            <div id="req-number">One number</div>
+                            <div id="req-special">One special character</div>
+                        </div>
+                        <span class="error-message" id="password-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            placeholder="Re-enter your password"
+                        >
+                        <span class="error-message" id="confirmPassword-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <p class="terms-text" style="justify-content: center;">
+                        <input type="checkbox" id="termsCheckbox" name="terms">
+                        <label for="termsCheckbox">
+                            By creating your account or signing in, you agree to our
+                            <a id="privacyLink">Privacy Policy</a> &
+                            <a id="termsLink">Cookies and Consent</a>
+                        </label>
+                    </p>
+                    <span class="error-message" id="termsCheckbox-error"></span>
+
+                    <div class="g-recaptcha" data-sitekey="6LeCugUsAAAAAMevrBVqSjs6AG8SsQZ8qrJGvjDZ"></div>
+                    <span class="error-message" id="recaptcha-error"></span>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" id="prevStep3">Back</button>
+                    <button type="submit" class="btn btn-primary" id="createAccountBtn">Create Account</button>
+                </div>
+            </div>
+
+            <p>
+                Already have an account?
+                <a href="index.php?page=login">Login here</a>
+            </p>
+        </form>
+    </div>
+
+    <div class="footer">
+        <p>© 2025 Amarelle. All rights reserved.</p>
+    </div>
 
         <div id="termsModal" class="modal-overlay">
             <div class="modal-content">
@@ -391,6 +630,291 @@
     });
 });
 </script>
+<script src="public/js/register.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+// -------------------------
+// FORM VALIDATION (step 3)
+// -------------------------
+document.addEventListener("DOMContentLoaded", function () {
+    const form = document.getElementById("registerForm");
+
+    if (!form) return;
+
+    form.addEventListener("submit", function (e) {
+        let hasError = false;
+
+        // Clear previous errors
+        document.querySelectorAll(".error-message").forEach(el => el.innerHTML = "");
+
+        // --- Validate Password Strength ---
+        const password = document.getElementById("password").value;
+        const passwordError = document.getElementById("password-error");
+
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+
+        if (!passwordRegex.test(password)) {
+            passwordError.innerHTML =
+                "Password must be at least 8 characters, include uppercase, lowercase, and a number.";
+            hasError = true;
+        }
+
+        // --- Validate Terms and Conditions ---
+        const termsCheckbox = document.getElementById("termsCheckbox");
+        const termsError = document.getElementById("termsCheckbox-error");
+
+        if (!termsCheckbox.checked) {
+            termsError.innerHTML = "You must agree to the Terms and Conditions.";
+            hasError = true;
+        }
+
+        // --- Validate reCAPTCHA ---
+        const recaptchaResponse = grecaptcha.getResponse();
+        const recaptchaError = document.getElementById("recaptcha-error");
+
+        if (recaptchaResponse.length === 0) {
+            recaptchaError.innerHTML = "Please complete the reCAPTCHA verification.";
+            hasError = true;
+        }
+
+        if (hasError) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+
+<script>
+// =======================================
+//  PSGC dynamic address logic
+//  App regions: Metro Manila, N/NL/South Luzon, Visayas, Mindanao
+// =======================================
+const PSGC_API = "https://psgc.gitlab.io/api";
+
+const regionSelect   = document.getElementById("regionSelect");
+const provinceSelect = document.getElementById("province");
+const citySelect     = document.getElementById("city");
+const barangaySelect = document.getElementById("barangay");
+
+// Map your 5 "app regions" to real PSGC region codes
+const APP_REGION_MAP = {
+    "Metro Manila": ["130000000"],                              // NCR
+    "North Luzon": ["010000000","020000000","030000000","140000000"], // Region I, II, III, CAR
+    "South Luzon": ["040000000","170000000","050000000"],       // CALABARZON, MIMAROPA, Bicol
+    "Visayas":     ["060000000","070000000","080000000"],       // Western, Central, Eastern Visayas
+    "Mindanao":    ["090000000","100000000","110000000","120000000","160000000","150000000"] // Mindanao + BARMM
+};
+
+function resetSelect(sel, placeholder) {
+    if (!sel) return;
+    sel.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = placeholder;
+    sel.appendChild(opt);
+}
+
+// ============================
+//  When app Region changes
+// ============================
+async function handleAppRegionChange(appRegion) {
+    resetSelect(provinceSelect, "Select Province");
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+
+    if (!appRegion) {
+        provinceSelect.disabled = false;
+        citySelect.disabled     = true;
+        barangaySelect.disabled = true;
+        return;
+    }
+
+    const regionCodes = APP_REGION_MAP[appRegion] || [];
+
+    // Special case: Metro Manila (NCR - no provinces)
+   if (appRegion === "Metro Manila") {
+    resetSelect(provinceSelect, "Province");
+
+    const opt = document.createElement("option");
+    opt.value = "Metro Manila";
+    opt.textContent = "Metro Manila";
+    opt.selected = true;
+    provinceSelect.appendChild(opt);
+
+    provinceSelect.disabled = false;
+    provinceSelect.classList.add("readonly-select");
+
+    citySelect.disabled     = false;
+    barangaySelect.disabled = true;
+
+    await loadCitiesForNCR();
+    return;
+}
+
+    // Other app regions (North/South Luzon, Visayas, Mindanao)
+   // Other app regions (North/South Luzon, Visayas, Mindanao)
+// temporarily disable while loading
+provinceSelect.disabled = true;
+provinceSelect.classList.remove("readonly-select");
+citySelect.disabled     = true;
+barangaySelect.disabled = true;
+
+// Fetch provinces for each PSGC region in mapping
+const allProvinces = [];
+for (const rCode of regionCodes) {
+    try {
+        const res = await fetch(`${PSGC_API}/regions/${rCode}/provinces/`);
+        if (!res.ok) continue;
+        const provinces = await res.json();
+        provinces.forEach(p => allProvinces.push(p));
+    } catch (e) {
+        console.error("Error loading provinces for region", rCode, e);
+    }
+}
+
+// Sort provinces alphabetically by name
+allProvinces.sort((a,b) => a.name.localeCompare(b.name));
+
+allProvinces.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.name;        // Save province NAME in DB
+    opt.textContent = p.name;
+    opt.dataset.code = p.code; // PSGC code for loading cities
+    provinceSelect.appendChild(opt);
+});
+
+// ✅ now enable province select (if we have items)
+provinceSelect.disabled = allProvinces.length === 0 ? true : false;
+
+}
+
+// ============================
+//  Load cities for normal provinces
+// ============================
+async function loadCitiesFromProvince() {
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+
+    const selected = provinceSelect.selectedOptions[0];
+    if (!selected || !selected.dataset.code) {
+        citySelect.disabled     = true;
+        barangaySelect.disabled = true;
+        return;
+    }
+
+    const provinceCode = selected.dataset.code;
+
+    try {
+        const res = await fetch(`${PSGC_API}/provinces/${provinceCode}/cities-municipalities/`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const cities = await res.json();
+
+        cities.sort((a,b) => a.name.localeCompare(b.name));
+
+        cities.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;        // save city NAME in DB
+            opt.textContent = c.name;
+            opt.dataset.code = c.code; // for barangay loading
+            citySelect.appendChild(opt);
+        });
+
+        citySelect.disabled     = true ? cities.length === 0 : false;
+        barangaySelect.disabled = true;
+    } catch (e) {
+        console.error("Error loading cities:", e);
+    }
+}
+
+// ============================
+//  Load cities for NCR (Metro Manila)
+// ============================
+async function loadCitiesForNCR() {
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+
+    try {
+        const res = await fetch(`${PSGC_API}/regions/130000000/cities-municipalities/`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const cities = await res.json();
+
+        cities.sort((a,b) => a.name.localeCompare(b.name));
+
+        cities.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;        // city in DB
+            opt.textContent = c.name;
+            opt.dataset.code = c.code; // for barangays
+            citySelect.appendChild(opt);
+        });
+
+        citySelect.disabled     = cities.length === 0;
+        barangaySelect.disabled = true;
+    } catch (e) {
+        console.error("Error loading NCR cities:", e);
+    }
+}
+
+// ============================
+//  Load barangays by city
+// ============================
+async function loadBarangaysFromCity() {
+    resetSelect(barangaySelect, "Select Barangay");
+
+    const selected = citySelect.selectedOptions[0];
+    if (!selected || !selected.dataset.code) {
+        barangaySelect.disabled = true;
+        return;
+    }
+
+    const cityCode = selected.dataset.code;
+
+    try {
+        const res = await fetch(`${PSGC_API}/cities-municipalities/${cityCode}/barangays/`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const barangays = await res.json();
+
+        barangays.sort((a,b) => a.name.localeCompare(b.name));
+
+        barangays.forEach(b => {
+            const opt = document.createElement("option");
+            opt.value = b.name;   // barangay NAME in DB
+            opt.textContent = b.name;
+            barangaySelect.appendChild(opt);
+        });
+
+        barangaySelect.disabled = barangays.length === 0;
+    } catch (e) {
+        console.error("Error loading barangays:", e);
+    }
+}
+
+// ============================
+//  Wire events
+// ============================
+document.addEventListener("DOMContentLoaded", function () {
+    if (!regionSelect) return;
+
+    // initial state
+    provinceSelect.disabled = true;
+    citySelect.disabled     = true;
+    barangaySelect.disabled = true;
+
+    regionSelect.addEventListener("change", function () {
+        handleAppRegionChange(this.value);
+    });
+
+    provinceSelect.addEventListener("change", function () {
+        loadCitiesFromProvince();
+    });
+
+    citySelect.addEventListener("change", function () {
+        loadBarangaysFromCity();
+    });
+});
+</script>
+
     </body>
 
     </html>
