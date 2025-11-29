@@ -2310,12 +2310,12 @@ window.confirmLogout = function () {
 </script>
 
 
-<link rel="stylesheet" href="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/css/cartModal.css">
+<link rel="stylesheet" href="public/css/cartModal.css">
 <script>
   // base64("pk_test_xxx:") — encode on the server
   window.PAYMONGO_PUBLIC_KEY_B64 = "<?= base64_encode($_ENV['PAYMONGO_PUBLIC_KEY'] . ':') ?>";
 </script>
-<script src="/AMARELLE/GONATO-Personalized-Fashion-Guidance-/public/js/cartModal.js"></script>
+<script src="public/js/cartModal.js"></script>
 <script src="https://js.paymongo.com/v1/paymongo.js"></script>
 
 

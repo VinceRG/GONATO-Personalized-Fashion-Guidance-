@@ -356,8 +356,7 @@ private function ajaxSendVerificationEmail() {
     'city'           => $city,
     'barangay'       => $barangay,
     'postal_code'    => $postal_code,
-    'latitude'       => $latitude,
-    'longitude'      => $longitude
+    
 ];
 
 
