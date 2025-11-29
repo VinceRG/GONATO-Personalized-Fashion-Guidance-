@@ -43,6 +43,13 @@
             color: #A68763;
         }
 
+        .brand-logo {
+            height: 35px; 
+            width: auto;
+            margin-right: px;
+            vertical-align: middle; 
+        }
+
         .nav-links {
             display: flex;
             gap: 2.2rem;
@@ -435,148 +442,6 @@
             font-weight: 500;
             flex-shrink: 0;
             font-size: 0.8rem;
-        }
-
-        footer {
-            background: linear-gradient(180deg, #1C1917 0%, #0F0E0D 100%);
-            color: #E7E5E4;
-            padding: 5rem 3rem 2rem;
-            border-top: 1px solid rgba(166, 135, 99, 0.2);
-            font-family: 'Lexend', sans-serif;
-            position: relative;
-        }
-
-        footer::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, #A68763, transparent);
-        }
-
-        .footer-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            flex-wrap: wrap;
-            gap: 3rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .footer-brand h2 {
-            font-size: 1.6rem;
-            font-weight: 600;
-            margin-bottom: 0.8rem;
-            color: #F5F5F4;
-            letter-spacing: 1px;
-        }
-
-        .footer-brand p {
-            font-size: 0.95rem;
-            color: #A8A29E;
-            font-weight: 300;
-        }
-
-        .footer-links {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-
-        .footer-links a {
-            color: #D6D3D1;
-            text-decoration: none;
-            font-size: 0.95rem;
-            position: relative;
-            transition: all 0.3s ease;
-            padding-left: 0;
-        }
-
-        .footer-links a::before {
-            content: '';
-            position: absolute;
-            left: -20px;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 2px;
-            background: #A68763;
-            transition: width 0.3s ease;
-        }
-
-        .footer-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            width: 0%;
-            height: 1px;
-            background: #A68763;
-            transition: width 0.3s ease;
-        }
-
-        .footer-links a:hover {
-            color: #F5F5F4;
-            padding-left: 20px;
-        }
-
-        .footer-links a:hover::before {
-            width: 12px;
-        }
-
-        .footer-links a:hover::after {
-            width: 100%;
-        }
-
-        .footer-socials {
-            display: flex;
-            gap: 1.2rem;
-        }
-
-        .footer-socials a {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            background: rgba(166, 135, 99, 0.1);
-            transition: all 0.3s ease;
-            border: 1px solid rgba(166, 135, 99, 0.2);
-        }
-
-        .footer-socials a:hover {
-            background: #A68763;
-            transform: translateY(-3px) rotate(5deg);
-            box-shadow: 0 8px 20px rgba(166, 135, 99, 0.3);
-            border-color: #A68763;
-        }
-
-        .footer-socials a img {
-            width: 20px;
-            height: 20px;
-            opacity: 0.9;
-            transition: all 0.3s ease;
-            filter: brightness(0) invert(1);
-        }
-
-        .footer-socials a:hover img {
-            opacity: 1;
-            transform: scale(1.1);
-        }
-
-        .footer-bottom {
-            text-align: center;
-            margin-top: 4rem;
-            font-size: 0.85rem;
-            color: #78716C;
-            border-top: 1px solid rgba(166, 135, 99, 0.15);
-            padding-top: 2rem;
-            font-weight: 300;
         }
 
         @media (max-width: 768px) {

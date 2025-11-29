@@ -12,6 +12,28 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
+
+.terms-text {
+    font-size: 12px;
+    text-align: center;
+    color: #555;
+    margin-top: 10px;
+    line-height: 1.5;
+}
+        h1 {
+    font-family: 'Minion', 'Times New Roman', Times, serif;
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 300;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+    text-align: center;
+}
+
+p {
+    margin-bottom: 2.5rem;
+    color: grey;
+}
         /* Enhanced Message Styles */
         .message {
             padding: 12px 16px;
@@ -137,7 +159,7 @@
 
         /* Form Group Spacing */
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: -1rem;
         }
 
         /* Password Wrapper */
@@ -334,13 +356,14 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
 </div>
 
 <div class="header">
-    <a href="index.php?page=landing" class="logo-link">
-        <div class="logo">Amarelle</div>
-    </a>
+    <a href="index.php?page=landing" class="logo-link"><img src="public/image/amarelle.png" alt="Amarelle Logo" class="brand-logo" style="height: 50px; width: auto; margin-right: 10px; vertical-align: middle;">
+</a>
 </div>
 
 <div class="content">
-    <h1>Sign In</h1>
+
+    <h1>Welcome back!</h1>
+    <p>Please enter your details.</p>
 
     <form id="loginForm" action="index.php?page=login" method="POST">
 
