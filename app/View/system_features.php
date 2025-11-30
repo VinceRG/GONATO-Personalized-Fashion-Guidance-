@@ -21,6 +21,563 @@
       margin-top: 4px;
       line-height: 1.4;
     }
+
+    /* Overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    /* Modal Container */
+    .modal {
+      background: #ffffff;
+      border-radius: 20px;
+      max-width: 640px;
+      width: 95%;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      color: #0f172a;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Header */
+    .modal-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+
+    .header-main {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    /* Bigger avatar, clickable (for change photo) */
+    .header-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .header-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .header-initials {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #A68763;
+      color: #f9fafb;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .header-avatar.editing::after {
+      content: "Change";
+      position: absolute;
+      inset: 0;
+      background: #A68763;
+      color: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    /* Name + username */
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .header-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0;
+      color: #0f172a;
+    }
+
+    .header-username {
+      font-size: 0.9rem;
+      color: #6b7280;
+    }
+
+    /* Right side of header */
+    .header-right {
+      display: flex;
+      align-items: first baseline;
+      gap: 0.75rem;
+    }
+
+    /* View Orders button in header */
+    .btn-view-orders-header {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      padding: 0.7rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #111827;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .btn-view-orders-header:hover {
+      background: #2D2D2D;
+      color: #D7C9AE;
+    }
+
+    /* Close button */
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: #9ca3af;
+      padding: 4px;
+      border-radius: 50%;
+      transition: 0.15s;
+    }
+
+    .close-btn:hover {
+      background: #D10000;
+      color: #EAE0D2;
+    }
+
+    /* Edit row (under header) */
+    .edit-row {
+      padding: 0.75rem 0 0;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-edit-profile {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      cursor: pointer;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .btn-edit-profile:hover:not(:disabled) {
+      background: #2D2D2D;
+      color: #D7C9AE;
+    }
+
+    /* Body */
+    .modal-body {
+      padding: 2rem;
+      max-height: 75vh;
+      overflow-y: auto;
+    }
+
+    /* Basic form styles */
+
+    .address-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label,
+    .input-wrapper label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      transition: 0.15s;
+      color: #111827;
+      background: #f9fafb;
+    }
+
+    input:disabled,
+    textarea:disabled,
+    select:disabled {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: #111827;
+      background: #ffffff;
+    }
+
+    /* Username row */
+    .form-row {
+      margin-bottom: 1.5rem;
+    }
+
+    .username-display {
+      position: relative;
+    }
+
+    .url-domain {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 0.9rem;
+    }
+
+    .username-display input {
+      padding-left: 45px;
+      font-weight: 600;
+    }
+
+    .username-display input i {
+      size: 50px;
+    }
+
+    /* Grid for first/last name */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Email icon */
+    .input-with-icon {
+      position: relative;
+    }
+
+    .input-with-icon i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+    }
+
+    .input-with-icon input {
+      padding-left: 38px;
+    }
+
+    /* Address selects & validation */
+    .address-select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      background: #f9fafb;
+      color: #111827;
+    }
+
+    .address-group {
+      position: relative;
+    }
+
+    .field-error {
+      display: none;
+      font-size: 0.75rem;
+      color: #b91c1c;
+      margin-top: 0.25rem;
+    }
+
+    .address-group.has-error .field-error {
+      display: block;
+    }
+
+    /* Style profile card */
+    .info-card-rect {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-top: 1.25rem;
+      background: #eae0d2;
+    }
+
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .info-card-header h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .info-empty {
+      font-size: 0.85rem;
+      color: #6b7280;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn-rect-secondary {
+      border: 1px solid #e5e7eb;
+      background: #ffffff;
+      border-radius: 6px;
+      padding: 0.4rem 0.9rem;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .btn-rect-secondary:hover {
+      background: #2D2D2D;
+      color: #eae0d2;
+    }
+
+    .info-item-clean {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      padding: 0.2rem 0;
+    }
+
+    .info-label {
+      color: #6b7280;
+    }
+
+    .info-value {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    /* Footer: hidden until editing */
+    .modal-footer {
+      margin-top: 1.5rem;
+      display: none; /* shown via JS in edit mode */
+      justify-content: flex-end;
+      gap: 0.75rem;
+      border-top: 1px solid #e5e7eb;
+      padding-top: 1.25rem;
+    }
+
+    .btn-cancel {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      color: #4b5563;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 0.7rem 1.5rem;
+      border-radius: 6px;
+    }
+
+    .btn-cancel:hover {
+      background: #f3f4f6;
+    }
+
+    .btn-save {
+      background: #111827;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      padding: 0.7rem 1.6rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .btn-save:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .btn-save:not(:disabled):hover {
+      background: #000000;
+    }
+
+    /* Purchases view */
+    .view-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .btn-back {
+      background: none;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 500;
+    }
+
+    .btn-back:hover {
+      color: #111827;
+    }
+
+    /* Sub-tabs */
+    .sub-tabs {
+      display: inline-flex;
+      gap: 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 1rem;
+      width: 95%;
+    }
+
+    .sub-tab-btn {
+      border: none;
+      background: transparent;
+      padding: 0.65rem 1rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #6b7280;
+      border-radius: 6px 6px 0 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+    }
+
+    .sub-tab-btn i {
+      font-size: 0.9rem;
+    }
+
+    .sub-tab-btn.active {
+      color: #111827;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-bottom-color: #ffffff;
+    }
+
+    .sub-tab-content {
+      display: none;
+    }
+
+    .sub-tab-content.active {
+      display: block;
+    }
+
+    /* Order cards */
+    .order-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 1rem 1.1rem;
+      background: #ffffff;
+      margin-bottom: 1rem;
+    }
+
+    .order-header,
+    .order-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .order-header {
+      margin-bottom: 0.75rem;
+      color: #4b5563;
+    }
+
+    .order-footer {
+      margin-top: 0.75rem;
+      color: #6b7280;
+    }
+
+    .order-body {
+      border-top: 1px dashed #e5e7eb;
+      border-bottom: 1px dashed #e5e7eb;
+      padding: 0.75rem 0;
+    }
+
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      padding: 0.2rem 0;
+    }
+
+    .item-name {
+      color: #111827;
+    }
+
+    .item-price {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .order-number {
+      font-weight: 600;
+    }
+
+    .order-total {
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .order-status {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+    }
+
+    .status-processing {
+      color: #d97706;
+      background: #fffbeb;
+    }
+
+    .status-completed {
+      color: #059669;
+      background: #ecfdf5;
+    }
+
   </style>
 </head>
 
@@ -199,10 +756,10 @@
 
 
           <div class="shop-controls">
-<button class="cart-button" type="button" onclick="openCart()">
-  <i class="bi bi-cart"></i>
-  <span class="cart-count" id="cartCount"></span>
-</button>
+            <button class="cart-button" type="button" onclick="openCart()">
+              <i class="bi bi-cart"></i>
+              <span class="cart-count" id="cartCount"></span>
+            </button>
           </div>
         </div>
 
@@ -415,480 +972,409 @@
 
 
 
-  <!-- USER PROFILE MODAL -->
-  <div class="overlay"
-       id="userProfileOverlay"
-       data-keep-open="<?= $keepProfileOpen ? '1' : '0' ?>">
+<!-- USER PROFILE MODAL -->
+<div class="overlay" id="userProfileOverlay" data-keep-open="<?= $keepProfileOpen ? '1' : '0' ?>">
 
-
-    <div class="modal">
-      <div class="modal-header">
-        <div class="tabs">
-          <button class="tab-btn active" data-tab="account">
-            <i class="bi bi-person"></i> Account
-          </button>
-          <button class="tab-btn" data-tab="purchases">
-            <i class="bi bi-bag"></i> Purchases
-          </button>
+  <div class="modal">
+    <!-- HEADER -->
+    <div class="modal-header">
+      <!-- LEFT: Avatar + name + username -->
+      <div class="header-main">
+        <div class="header-avatar">
+          <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
+            <img src="<?= htmlspecialchars($profileImagePath) ?>" alt="Profile">
+          <?php else: ?>
+            <div class="header-initials"><?= htmlspecialchars($userInitials) ?></div>
+          <?php endif; ?>
         </div>
+
+        <div class="header-text">
+          <h3 class="header-name">
+            <?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
+          </h3>
+          <span class="header-username">@<?= htmlspecialchars($user['USERNAME']); ?></span>
+        </div>
+      </div>
+
+      <!-- RIGHT: View orders + close -->
+      <div class="header-right">
+        <button type="button" class="btn-view-orders-header" onclick="toggleViews('purchases')">
+          View Orders
+        </button>
+
         <button class="close-btn" onclick="closeUserProfile()">
-          <i class="bi bi-x"></i>
+          <i class="bi bi-x-circle"></i>
         </button>
       </div>
 
+      <!-- Hidden file input for avatar change -->
+      <input
+        type="file"
+        id="profile_image"
+        name="profile_image"
+        accept="image/*"
+        style="display:none;"
+      >
+    </div>
 
-      <div class="modal-body">
-        <!-- ACCOUNT TAB -->
-        <div class="tab-content active" id="account">
-          <div class="section-header">
-            <p class="section-title">Account Information</p>
+    <!-- BODY -->
+    <div class="modal-body">
+
+      <!-- ACCOUNT VIEW -->
+      <div id="account-view">
+        <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
+
+          <!-- USERNAME -->
+          <div class="form-row">
+            <div class="input-wrapper">
+              <label>Username</label>
+              <div class="username-display">
+                <span class="url-domain"><i class="bi bi-person"></i></span>
+                <input
+                  type="text"
+                  name="username"
+                  id="username"
+                  value="<?= htmlspecialchars($user['USERNAME']); ?>"
+                  required
+                  disabled
+                >
+              </div>
+            </div>
           </div>
 
+          <!-- NAMES -->
+          <div class="form-grid">
+            <div class="form-group">
+              <label>First name</label>
+              <input
+                type="text"
+                name="first_name"
+                id="first_name"
+                value="<?= htmlspecialchars($user['FIRST_NAME']); ?>"
+                required
+                disabled
+              >
+            </div>
+            <div class="form-group">
+              <label>Last name</label>
+              <input
+                type="text"
+                name="last_name"
+                id="last_name"
+                value="<?= htmlspecialchars($user['LAST_NAME']); ?>"
+                required
+                disabled
+              >
+            </div>
+          </div>
 
-          <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
-            <div class="profile-section">
-              <div class="profile-avatar">
-                <?php if (!empty($user['PROFILE_IMAGE']) && file_exists("uploads/profile_images/" . $user['PROFILE_IMAGE'])): ?>
-                  <img id="avatar-img"
-                       src="<?= htmlspecialchars($profileImagePath) ?>"
-                       alt="Profile Picture"
-                       style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                <?php else: ?>
-                  <img id="avatar-img"
-                       src="<?= htmlspecialchars($profileImagePath) ?>"
-                       alt="Profile Picture"
-                       style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: <?= empty($user['PROFILE_IMAGE']) ? 'none' : 'block' ?>;">
-                  <div class="avatar-initials" style="<?= empty($user['PROFILE_IMAGE']) ? '' : 'display:none' ?>">
-                    <?= htmlspecialchars($userInitials) ?>
-                  </div>
-                <?php endif; ?>
+          <!-- EMAIL -->
+          <div class="form-group">
+            <label>Email address</label>
+            <div class="input-with-icon">
+              <i class="bi bi-envelope"></i>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                value="<?= htmlspecialchars($user['EMAIL']); ?>"
+                required
+                disabled
+              >
+            </div>
+          </div>
 
+          <!-- ADDRESS BLOCK -->
+          <div class="form-group">
+            <label>Street Address</label>
+            <input type="text"
+                  name="street_address"
+                  id="street_address"
+                  value="<?= htmlspecialchars($user['STREET_ADDRESS'] ?? ''); ?>"
+                  disabled>
+          </div>
 
-                <button type="button"
-                        class="edit-avatar-btn"
-                        id="edit-avatar-btn"
-                        title="Change Profile Picture"
-                        style="display:none;">
-                  <i class="bi bi-camera"></i>
-                </button>
+          <div class="form-group">
+            <label>Apartment / Unit (optional)</label>
+            <input type="text"
+                  name="apartment"
+                  id="apartment"
+                  value="<?= htmlspecialchars($user['APARTMENT'] ?? ''); ?>"
+                  disabled>
+          </div>
 
-
-                <input type="file"
-                       id="profile_image"
-                       name="profile_image"
-                       accept="image/*"
-                       style="display:none;">
-              </div>
-
-
-              <div class="profile-details">
-                <h2 id="display-name">
-                  <?= htmlspecialchars($user['FIRST_NAME'] . ' ' . $user['LAST_NAME']); ?>
-                </h2>
-                <div class="username" id="display-username">
-                  @<?= htmlspecialchars($user['USERNAME']); ?>
-                </div>
-                <p class="profile-tagline">
-                  Welcome to Amarelle — your personal style space.
-                </p>
-              </div>
+          <!-- PROVINCE | CITY -->
+          <div class="address-grid">
+            <div class="form-group address-group">
+              <label>Province</label>
+              <select
+                name="province"
+                id="province"
+                class="address-select"
+                disabled
+                required
+                data-current-province="<?= htmlspecialchars($user['PROVINCE'] ?? '', ENT_QUOTES) ?>"
+              >
+                <option value="" disabled>Select Province</option>
+                <option value="Metro Manila">Metro Manila</option>
+                <option value="Cavite">Cavite</option>
+                <option value="Laguna">Laguna</option>
+                <option value="Bulacan">Bulacan</option>
+                <option value="Rizal">Rizal</option>
+              </select>
+              <small class="field-error">Province is required.</small>
             </div>
 
+            <div class="form-group address-group">
+              <label>City / Town</label>
+              <select
+                name="city"
+                id="city"
+                class="address-select"
+                disabled
+                required
+                data-current-city="<?= htmlspecialchars($user['CITY'] ?? '', ENT_QUOTES) ?>"
+              >
+                <option value="" disabled>Select City</option>
+              </select>
+              <small class="field-error">City/Town is required.</small>
+            </div>
+          </div>
 
-            <div class="form-grid">
-              <div class="form-group">
-                <label>First Name</label>
-                <input type="text"
-                       name="first_name"
-                       id="first_name"
-                       value="<?= htmlspecialchars($user['FIRST_NAME']); ?>"
-                       disabled
-                       required>
-              </div>
-
-
-              <div class="form-group">
-                <label>Last Name</label>
-                <input type="text"
-                       name="last_name"
-                       id="last_name"
-                       value="<?= htmlspecialchars($user['LAST_NAME']); ?>"
-                       disabled
-                       required>
-              </div>
-
-
-              <div class="form-group">
-                <label>Username</label>
-                <input type="text"
-                       name="username"
-                       id="username"
-                       value="<?= htmlspecialchars($user['USERNAME']); ?>"
-                       disabled
-                       required>
-              </div>
-
-
-              <div class="form-group">
-                <label>Email</label>
-                <input type="email"
-                       name="email"
-                       id="email"
-                       value="<?= htmlspecialchars($user['EMAIL']); ?>"
-                       disabled
-                       required>
-              </div>
-
-
-              <div class="form-group">
-                <label>Street Address</label>
-                <input type="text"
-                       name="street_address"
-                       id="street_address"
-                       value="<?= htmlspecialchars($user['STREET_ADDRESS'] ?? ''); ?>"
-                       disabled>
-              </div>
-
-
-              <div class="form-group">
-                <label>Apartment / Unit (optional)</label>
-                <input type="text"
-                       name="apartment"
-                       id="apartment"
-                       value="<?= htmlspecialchars($user['APARTMENT'] ?? ''); ?>"
-                       disabled>
-              </div>
-
-
-              <div class="form-group address-group">
-                <label>Province</label>
-                <select
-                  name="province"
-                  id="province"
-                  class="address-select"
-                  disabled
-                  required
-                  data-current-province="<?= htmlspecialchars($user['PROVINCE'] ?? '', ENT_QUOTES) ?>"
-                >
-                  <option value="" disabled>Select Province</option>
-                  <option value="Metro Manila">Metro Manila</option>
-                  <option value="Cavite">Cavite</option>
-                  <option value="Laguna">Laguna</option>
-                  <option value="Bulacan">Bulacan</option>
-                  <option value="Rizal">Rizal</option>
-                </select>
-                <small class="field-error">Province is required.</small>
-              </div>
-
-
-              <div class="form-group address-group">
-                <label>City / Town</label>
-                <select
-                  name="city"
-                  id="city"
-                  class="address-select"
-                  disabled
-                  required
-                  data-current-city="<?= htmlspecialchars($user['CITY'] ?? '', ENT_QUOTES) ?>"
-                >
-                  <option value="" disabled>Select City</option>
-                </select>
-                <small class="field-error">City/Town is required.</small>
-              </div>
-
-
-              <div class="form-group address-group">
-                <label>Barangay</label>
-                <select
-                  name="barangay"
-                  id="barangay"
-                  class="address-select"
-                  disabled
-                  required
-                  data-current-barangay="<?= htmlspecialchars($user['BARANGAY'] ?? '', ENT_QUOTES) ?>"
-                >
-                  <option value="" disabled>Select Barangay</option>
-                </select>
-                <small class="field-error">Barangay is required.</small>
-              </div>
-
-
-              <div class="form-group">
-                <label>Postal Code</label>
-                <input type="text"
-                       name="postal_code"
-                       id="postal_code"
-                       value="<?= htmlspecialchars($user['POSTAL_CODE'] ?? ''); ?>"
-                       disabled>
-              </div>
-
-
-              <div class="form-group">
-                <label>Phone Number</label>
-                <input type="text"
-                       name="contacts"
-                       id="contacts"
-                       value="<?= htmlspecialchars($user['CONTACTS']); ?>"
-                       disabled>
-              </div>
+          <!-- BARANGAY | POSTAL CODE -->
+          <div class="address-grid">
+            <div class="form-group address-group">
+              <label>Barangay</label>
+              <select
+                name="barangay"
+                id="barangay"
+                class="address-select"
+                disabled
+                required
+                data-current-barangay="<?= htmlspecialchars($user['BARANGAY'] ?? '', ENT_QUOTES) ?>"
+              >
+                <option value="" disabled>Select Barangay</option>
+              </select>
+              <small class="field-error">Barangay is required.</small>
             </div>
 
-
-            <div class="form-actions">
-              <button type="button" id="editProfileBtn" class="btn btn-secondary">
-                <i class="bi bi-pencil-square"></i> Edit Profile
-              </button>
-
-
-              <button type="submit"
-                      name="update_profile"
-                      id="saveProfileBtn"
-                      class="btn btn-primary"
-                      style="display:none;">
-                <i class="bi bi-save"></i> Save Changes
-              </button>
-
-
-              <button type="button"
-                      id="cancelEditBtn"
-                      class="btn btn-outline"
-                      style="display:none;">
-                <i class="bi bi-x-circle"></i> Cancel
-              </button>
+            <div class="form-group">
+              <label>Postal Code</label>
+              <input type="text"
+                    name="postal_code"
+                    id="postal_code"
+                    value="<?= htmlspecialchars($user['POSTAL_CODE'] ?? ''); ?>"
+                    disabled>
             </div>
-          </form>
+          </div>
 
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text"
+                  name="contacts"
+                  id="contacts"
+                  value="<?= htmlspecialchars($user['CONTACTS']); ?>"
+                  disabled>
+          </div>
 
-          <div class="info-card">
+          <!-- STYLE PROFILE CARD -->
+          <div class="info-card-rect">
             <div class="info-card-header">
               <i class="bi bi-palette"></i>
               <h3>Style Profile</h3>
             </div>
 
-
             <?php if (empty($user['SEASON_TYPE']) && empty($user['BODY_TYPE'])): ?>
               <div class="info-empty">
                 <p>You haven't completed your style analysis yet.</p>
-                <button class="btn" onclick="goToFeatures()">
+                <button type="button" class="btn-rect-secondary" onclick="goToFeatures()">
                   <i class="bi bi-magic"></i> Start Style Analysis
                 </button>
               </div>
             <?php else: ?>
               <?php if (!empty($user['SEASON_TYPE'])): ?>
-                <div class="info-item">
+                <div class="info-item-clean">
                   <span class="info-label">Color Season</span>
-                  <span class="info-value">
-                    <?= htmlspecialchars($user['SEASON_TYPE']); ?>
-                  </span>
+                  <span class="info-value"><?= htmlspecialchars($user['SEASON_TYPE']); ?></span>
                 </div>
               <?php endif; ?>
 
-
               <?php if (!empty($user['BODY_TYPE'])): ?>
-                <div class="info-item">
+                <div class="info-item-clean">
                   <span class="info-label">Body Shape</span>
-                  <span class="info-value">
-                    <?= htmlspecialchars($user['BODY_TYPE']); ?>
-                  </span>
+                  <span class="info-value"><?= htmlspecialchars($user['BODY_TYPE']); ?></span>
                 </div>
               <?php endif; ?>
             <?php endif; ?>
           </div>
-        </div>
 
-
-        <!-- PURCHASES TAB -->
-        <div class="tab-content" id="purchases">
-          <div class="sub-tabs">
-            <button class="sub-tab-btn active" data-subtab="orders">
-              <i class="bi bi-box-seam"></i> Orders
-            </button>
-            <button class="sub-tab-btn" data-subtab="to-receive">
-              <i class="bi bi-truck"></i> To Receive
-            </button>
-            <button class="sub-tab-btn" data-subtab="history">
-              <i class="bi bi-clock-history"></i> Order History
+            <!-- Edit button below -->
+          <div class="edit-row">
+            <button type="button" class="btn-edit-profile" onclick="enableEditing(this)">
+              Edit Profile
             </button>
           </div>
-         
-          <div class="sub-tab-content active" id="orders">
-  <?php if (!empty($ordersByTab['orders'])): ?>
-    <?php foreach ($ordersByTab['orders'] as $order): ?>
-      <?php
-        $orderId    = (int)$order['ORDER_ID'];
-        $statusText = mapStatusLabel($order['STATUS']);
-        $statusCls  = mapStatusClass($order['STATUS']);
-      ?>
-      <div class="order-card">
-        <div class="order-header">
-          <span class="order-number">
-            <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
-          </span>
-          <span class="order-status <?= htmlspecialchars($statusCls); ?>">
-            <?= htmlspecialchars($statusText); ?>
-          </span>
+
+          <!-- FOOTER (only visible in edit mode) -->
+          <div class="modal-footer" id="profileFooter">
+            <button type="button" class="btn-cancel" onclick="cancelEditing()">Cancel</button>
+            <button
+              type="submit"
+              name="update_profile"
+              class="btn-save"
+              id="saveProfileBtn"
+              disabled
+            >
+              Save changes
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- PURCHASES VIEW -->
+      <div id="purchases-view" style="display: none;">
+        <div class="view-header">
+          <button type="button" class="btn-back" onclick="toggleViews('account')">
+            <i class="bi bi-arrow-left"></i> Back to Account
+          </button>
         </div>
 
-        <div class="order-body">
-          <?php if (!empty($orderItems[$orderId])): ?>
-            <?php foreach ($orderItems[$orderId] as $item): ?>
-              <div class="order-item">
-                <span class="item-name">
-                  <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
-                  <?php if (!empty($item['COLOR_NAME'])): ?>
-                    (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
-                     <?= htmlspecialchars($item['SIZE']); ?>)
+        <!-- SUB TABS -->
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" data-subtab="orders">
+            <i class="bi bi-box-seam"></i> Orders
+          </button>
+
+          <button class="sub-tab-btn" data-subtab="history">
+            <i class="bi bi-clock-history"></i> Order History
+          </button>
+        </div>
+
+        <!-- SUB TAB CONTENT: ORDERS -->
+        <div class="sub-tab-content active" id="orders">
+          <?php if (!empty($ordersByTab['orders'])): ?>
+            <?php foreach ($ordersByTab['orders'] as $order): ?>
+              <?php
+                $orderId    = (int)$order['ORDER_ID'];
+                $statusText = mapStatusLabel($order['STATUS']);   // e.g. "Processing", "Confirmed"
+                $statusCls  = mapStatusClass($order['STATUS']);   // e.g. "status-processing"
+              ?>
+              <div class="order-card">
+                <div class="order-header">
+                  <span class="order-number">
+                    <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
+                  </span>
+                  <span class="order-status <?= htmlspecialchars($statusCls); ?>">
+                    <?= htmlspecialchars($statusText); ?>
+                  </span>
+                </div>
+
+                <div class="order-body">
+                  <?php if (!empty($orderItems[$orderId])): ?>
+                    <?php foreach ($orderItems[$orderId] as $item): ?>
+                      <div class="order-item">
+                        <span class="item-name">
+                          <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
+                          <?php if (!empty($item['COLOR_NAME'])): ?>
+                            (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
+                            <?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php else: ?>
+                            (<?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php endif; ?>
+                        </span>
+                        <span class="item-price">
+                          ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
+                          × <?= (int)$item['QUANTITY']; ?>
+                        </span>
+                      </div>
+                    <?php endforeach; ?>
                   <?php else: ?>
-                    (<?= htmlspecialchars($item['SIZE']); ?>)
+                    <p class="empty-state">No items found for this order.</p>
                   <?php endif; ?>
-                </span>
-                <span class="item-price">
-                  ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
-                  × <?= (int)$item['QUANTITY']; ?>
-                </span>
+                </div>
+
+                <div class="order-footer">
+                  <span class="order-date">
+                    Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
+                  </span>
+                  <span class="order-total">
+                    Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
+                  </span>
+                </div>
               </div>
             <?php endforeach; ?>
           <?php else: ?>
-            <p class="empty-state">No items found for this order.</p>
+            <p class="empty-state">You don’t have active orders yet.</p>
           <?php endif; ?>
         </div>
 
-        <div class="order-footer">
-          <span class="order-date">
-            Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
-          </span>
-          <span class="order-total">
-            Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
-          </span>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  <?php else: ?>
-    <p class="empty-state">You don’t have active orders yet.</p>
-  <?php endif; ?>
-</div>
+        <!-- SUB TAB CONTENT: HISTORY -->
+        <div class="sub-tab-content" id="history">
+          <?php if (!empty($ordersByTab['history'])): ?>
+            <?php foreach ($ordersByTab['history'] as $order): ?>
+              <?php
+                $orderId    = (int)$order['ORDER_ID'];
+                $statusText = mapStatusLabel($order['STATUS']);
+                $statusCls  = mapStatusClass($order['STATUS']);
+              ?>
+              <div class="order-card">
+                <div class="order-header">
+                  <span class="order-number">
+                    <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
+                  </span>
+                  <span class="order-status <?= htmlspecialchars($statusCls); ?>">
+                    <?= htmlspecialchars($statusText); ?>
+                  </span>
+                </div>
 
-         
-          <div class="sub-tab-content" id="to-receive">
-  <?php if (!empty($ordersByTab['to_receive'])): ?>
-    <?php foreach ($ordersByTab['to_receive'] as $order): ?>
-      <?php
-        $orderId    = (int)$order['ORDER_ID'];
-        $statusText = mapStatusLabel($order['STATUS']);
-        $statusCls  = mapStatusClass($order['STATUS']);
-      ?>
-      <div class="order-card">
-        <div class="order-header">
-          <span class="order-number">
-            <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
-          </span>
-          <span class="order-status <?= htmlspecialchars($statusCls); ?>">
-            <?= htmlspecialchars($statusText); ?>
-          </span>
-        </div>
-
-        <div class="order-body">
-          <?php if (!empty($orderItems[$orderId])): ?>
-            <?php foreach ($orderItems[$orderId] as $item): ?>
-              <div class="order-item">
-                <span class="item-name">
-                  <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
-                  <?php if (!empty($item['COLOR_NAME'])): ?>
-                    (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
-                     <?= htmlspecialchars($item['SIZE']); ?>)
+                <div class="order-body">
+                  <?php if (!empty($orderItems[$orderId])): ?>
+                    <?php foreach ($orderItems[$orderId] as $item): ?>
+                      <div class="order-item">
+                        <span class="item-name">
+                          <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
+                          <?php if (!empty($item['COLOR_NAME'])): ?>
+                            (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
+                            <?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php else: ?>
+                            (<?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php endif; ?>
+                        </span>
+                        <span class="item-price">
+                          ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
+                          × <?= (int)$item['QUANTITY']; ?>
+                        </span>
+                      </div>
+                    <?php endforeach; ?>
                   <?php else: ?>
-                    (<?= htmlspecialchars($item['SIZE']); ?>)
+                    <p class="empty-state">No items found for this order.</p>
                   <?php endif; ?>
-                </span>
-                <span class="item-price">
-                  ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
-                  × <?= (int)$item['QUANTITY']; ?>
-                </span>
+                </div>
+
+                <div class="order-footer">
+                  <?php
+                    // Optional: show "Delivered" instead of "Ordered" for completed orders
+                    $dateLabel = ($order['STATUS'] === 'delivered') ? 'Delivered:' : 'Ordered:';
+                  ?>
+                  <span class="order-date">
+                    <?= $dateLabel ?> <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
+                  </span>
+                  <span class="order-total">
+                    Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
+                  </span>
+                </div>
               </div>
             <?php endforeach; ?>
           <?php else: ?>
-            <p class="empty-state">No items found for this order.</p>
+            <p class="empty-state">You don’t have any past orders yet.</p>
           <?php endif; ?>
         </div>
-
-        <div class="order-footer">
-          <!-- For to-receive, you might later show ETA column -->
-          <span class="order-date">
-            Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
-          </span>
-          <span class="order-total">
-            Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
-          </span>
-        </div>
       </div>
-    <?php endforeach; ?>
-  <?php else: ?>
-    <p class="empty-state">No orders are currently on the way.</p>
-  <?php endif; ?>
-</div>
 
-         
-          <div class="sub-tab-content" id="history">
-  <?php if (!empty($ordersByTab['history'])): ?>
-    <?php foreach ($ordersByTab['history'] as $order): ?>
-      <?php
-        $orderId    = (int)$order['ORDER_ID'];
-        $statusText = mapStatusLabel($order['STATUS']);
-        $statusCls  = mapStatusClass($order['STATUS']);
-      ?>
-      <div class="order-card">
-        <div class="order-header">
-          <span class="order-number">
-            <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
-          </span>
-          <span class="order-status <?= htmlspecialchars($statusCls); ?>">
-            <?= htmlspecialchars($statusText); ?>
-          </span>
-        </div>
+    </div> <!-- /modal-body -->
+  </div> <!-- /modal -->
+</div> <!-- /overlay -->
 
-        <div class="order-body">
-          <?php if (!empty($orderItems[$orderId])): ?>
-            <?php foreach ($orderItems[$orderId] as $item): ?>
-              <div class="order-item">
-                <span class="item-name">
-                  <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
-                  <?php if (!empty($item['COLOR_NAME'])): ?>
-                    (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
-                     <?= htmlspecialchars($item['SIZE']); ?>)
-                  <?php else: ?>
-                    (<?= htmlspecialchars($item['SIZE']); ?>)
-                  <?php endif; ?>
-                </span>
-                <span class="item-price">
-                  ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
-                  × <?= (int)$item['QUANTITY']; ?>
-                </span>
-              </div>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <p class="empty-state">No items found for this order.</p>
-          <?php endif; ?>
-        </div>
-
-        <div class="order-footer">
-          <span class="order-date">
-            Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
-          </span>
-          <span class="order-total">
-            Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
-          </span>
-        </div>
-      </div>
-    <?php endforeach; ?>
-  <?php else: ?>
-    <p class="empty-state">You don’t have any past orders yet.</p>
-  <?php endif; ?>
-</div>
-
-        </div> <!-- end purchases tab -->
-      </div> <!-- end modal-body -->
-    </div> <!-- end modal -->
-  </div> <!-- end userProfileOverlay -->
 
 
   <!-- ===================== NEW ANALYSIS MODALS ===================== -->
@@ -1395,6 +1881,550 @@ function mapStatusLabel(string $status): string {
     };
 }
 ?>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+  // ============================================
+  // USER PROFILE OVERLAY INITIAL STATE
+  // ============================================
+  const userProfileOverlay = document.getElementById('userProfileOverlay');
+  if (userProfileOverlay) {
+    const shouldKeepOpen = userProfileOverlay.dataset.keepOpen === '1';
+
+    if (shouldKeepOpen) {
+      userProfileOverlay.style.display = 'flex';
+      userProfileOverlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    } else {
+      userProfileOverlay.style.display = 'none';
+      userProfileOverlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  }
+
+  // ============================================
+  // SIDEBAR FUNCTIONALITY
+  // ============================================
+  const sidebar = document.getElementById('appSidebar');
+  const logoutBtn = document.querySelector('.logout-btn');
+
+  if (sidebar) {
+    sidebar.classList.add('collapsed');
+    document.body.classList.add('collapsed-layout');
+    toggleSidebarTopAndFooter(false);
+
+    sidebar.addEventListener('mouseenter', () => {
+      sidebar.classList.remove('collapsed');
+      document.body.classList.remove('collapsed-layout');
+      toggleSidebarTopAndFooter(true);
+    });
+
+    sidebar.addEventListener('mouseleave', () => {
+      sidebar.classList.add('collapsed');
+      document.body.classList.add('collapsed-layout');
+      toggleSidebarTopAndFooter(false);
+    });
+  }
+
+  function toggleSidebarTopAndFooter(show) {
+    if (logoutBtn) logoutBtn.style.display = show ? 'block' : 'none';
+  }
+
+  // ============================================
+  // NAVIGATION FUNCTIONALITY
+  // ============================================
+  const navLinks = Array.from(document.querySelectorAll('.nav-btn'));
+  const sections = Array.from(document.querySelectorAll('.content-section'));
+  const mainContent = document.querySelector('.main-content');
+
+  function navigateToSection(sectionId) {
+    const target = document.querySelector(sectionId);
+    if (!target) return;
+
+    navLinks.forEach(l => l.classList.remove('active'));
+    const correspondingLink = document.querySelector(`a[href="${sectionId}"]`);
+    if (correspondingLink) correspondingLink.classList.add('active');
+
+    sections.forEach(s => s.classList.remove('active'));
+    target.classList.add('active');
+
+    if (mainContent) {
+      mainContent.scrollTo({ top: target.offsetTop, behavior: 'smooth' });
+    }
+    history.replaceState(null, '', sectionId);
+  }
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      navigateToSection(link.getAttribute('href'));
+    });
+  });
+
+  const hash = window.location.hash;
+  if (hash && (hash === '#catalog-shop' || hash === '#features')) {
+    navigateToSection(hash);
+  } else {
+    navigateToSection('#catalog-shop');
+  }
+
+  // ============================================
+  // RECOMMENDATIONS VISIBILITY
+  // ============================================
+  const recommendationsSection = document.getElementById("recommendations");
+  const colorResults = document.getElementById("colorSeasons");
+  const bodyResults = document.getElementById("bodyShapes");
+
+  const hasColor = colorResults && colorResults.classList.contains('show-results');
+  const hasBody = bodyResults && bodyResults.classList.contains('show-results');
+
+  if (recommendationsSection) {
+    recommendationsSection.style.display = (hasColor || hasBody) ? "block" : "none";
+  }
+
+  // ============================================
+  // CART FUNCTIONALITY
+  // ============================================
+  let cartCount = 0;
+  const cartCountElement = document.querySelector('.cart-count');
+  const addToCartButtons = document.querySelectorAll('.add-to-cart');
+
+  addToCartButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      cartCount++;
+      if (cartCountElement) cartCountElement.textContent = cartCount;
+      button.classList.add('added');
+      setTimeout(() => button.classList.remove('added'), 1000);
+    });
+  });
+
+  // ============================================
+  // LOGOUT OVERLAY HANDLERS
+  // ============================================
+  const logoutOverlay = document.getElementById('logoutOverlay');
+  if (logoutOverlay) {
+    logoutOverlay.addEventListener('click', function (event) {
+      if (event.target === logoutOverlay) closeLogoutOverlay();
+    });
+  }
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      const overlay = document.getElementById('logoutOverlay');
+      if (overlay && overlay.style.display === 'flex') closeLogoutOverlay();
+    }
+  });
+
+  // ============================================
+  // USER PROFILE MODAL EVENTS
+  // ============================================
+  if (userProfileOverlay) {
+    userProfileOverlay.addEventListener('click', function (e) {
+      if (e.target === this) closeUserProfile();
+    });
+  }
+
+  // ============================================
+  // TABS (Orders/History)
+  // ============================================
+  const subTabBtns = document.querySelectorAll('.sub-tab-btn');
+  const subTabContents = document.querySelectorAll('.sub-tab-content');
+
+  subTabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const targetSubTab = btn.getAttribute('data-subtab');
+      
+      // Update buttons
+      subTabBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      
+      // Update content
+      subTabContents.forEach(content => {
+        content.classList.remove('active'); // Hide all
+        if (content.id === targetSubTab) {
+            content.classList.add('active'); // Show matching
+        }
+      });
+    });
+  });
+
+  // ============================================
+  // PROFILE IMAGE PREVIEW & CLICK
+  // ============================================
+  const fileInput = document.getElementById('profile_image');
+  const headerAvatar = document.querySelector('.header-avatar');
+  const sidebarPic = document.getElementById('sidebar-profile-pic');
+
+  // Handle clicking the avatar ONLY when editing
+  if(headerAvatar && fileInput) {
+      headerAvatar.addEventListener('click', () => {
+          if(headerAvatar.classList.contains('editing')) {
+              fileInput.click();
+          }
+      });
+  }
+
+  if (fileInput) {
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          // Update Modal Image
+          const imgInsideAvatar = headerAvatar.querySelector('img');
+          if (imgInsideAvatar) {
+             imgInsideAvatar.src = e.target.result;
+          } else {
+             // If it was initials, replace with img
+             headerAvatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+          }
+          
+          // Update Sidebar Image
+          if (sidebarPic) {
+            sidebarPic.innerHTML = `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  // ============================================
+  // CONTACT & POSTAL FORMATTING
+  // ============================================
+  const contactInput = document.getElementById("contacts");
+  if (contactInput) {
+    contactInput.addEventListener("input", function () {
+      let value = this.value.replace(/[^0-9]/g, "");
+      if (value === "") value = "0";
+      if (value[0] !== "0") value = "0" + value;
+      this.value = value;
+    });
+  }
+
+  const postalInput = document.getElementById("postal_code");
+  if (postalInput) {
+    postalInput.addEventListener("input", function () {
+      this.value = this.value.replace(/[^0-9]/g, "");
+    });
+  }
+
+  // ============================================
+  // ADDRESS DATA & CASCADING DROPDOWNS
+  // ============================================
+  const addressData = {
+    "Metro Manila": {
+      "Quezon City": ["Commonwealth", "Fairview", "Batasan Hills"],
+      "Manila": ["Barangay 1", "Barangay 2", "Barangay 3"],
+      "Pasig": ["Rosario", "Ugong", "Manggahan", "Pinagbuhatan", "Malinao"]
+    },
+    "Cavite": {
+      "Bacoor": ["Talaba", "Zapote", "Molino 1", "Molino 2"]
+    },
+    "Laguna": {
+      "Calamba": ["Canlubang", "Real", "Lingga"]
+    },
+    "Bulacan": {
+      "Malolos": ["Tikay", "Mojon", "San Agustin"]
+    },
+    "Rizal": {
+      "Antipolo": ["San Roque", "Dalig", "Cupang"]
+    }
+  };
+
+  const province = document.getElementById("province");
+  const city = document.getElementById("city");
+  const barangay = document.getElementById("barangay");
+
+  // Pre-populate logic
+  if (province && city && barangay) {
+    const currentProvince = province.dataset.currentProvince || "";
+    const currentCity = city.dataset.currentCity || "";
+    const currentBarangay = barangay.dataset.currentBarangay || "";
+
+    if (currentProvince && addressData[currentProvince]) {
+      province.value = currentProvince;
+
+      // Populate Cities
+      city.innerHTML = `<option value="" disabled>Select City</option>`;
+      Object.keys(addressData[currentProvince]).forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        city.appendChild(opt);
+      });
+      if (currentCity) city.value = currentCity;
+
+      // Populate Barangays
+      if (currentCity && addressData[currentProvince][currentCity]) {
+        barangay.innerHTML = `<option value="" disabled>Select Barangay</option>`;
+        addressData[currentProvince][currentCity].forEach(brgy => {
+          const opt = document.createElement("option");
+          opt.value = brgy;
+          opt.textContent = brgy;
+          barangay.appendChild(opt);
+        });
+        if (currentBarangay) barangay.value = currentBarangay;
+      }
+    }
+  }
+
+  function validateSelect(selectEl) {
+    if (!selectEl) return true;
+    const wrapper = selectEl.closest(".address-group");
+    if (!wrapper) return true;
+
+    if (!selectEl.value) {
+      wrapper.classList.add("has-error");
+      return false;
+    } else {
+      wrapper.classList.remove("has-error");
+      return true;
+    }
+  }
+
+  if (province) {
+    province.addEventListener("change", () => {
+      if (!city || !barangay) return;
+      city.innerHTML = `<option value="" disabled selected>Select City</option>`;
+      barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
+      
+      const selectedProv = province.value;
+      if (addressData[selectedProv]) {
+        Object.keys(addressData[selectedProv]).forEach(c => {
+          const opt = document.createElement("option");
+          opt.value = c;
+          opt.textContent = c;
+          city.appendChild(opt);
+        });
+      }
+      validateSelect(province);
+    });
+  }
+
+  if (city) {
+    city.addEventListener("change", () => {
+      if (!province || !barangay) return;
+      barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
+      
+      const selectedProv = province.value;
+      const selectedCity = city.value;
+      if (addressData[selectedProv] && addressData[selectedProv][selectedCity]) {
+        addressData[selectedProv][selectedCity].forEach(brgy => {
+          const opt = document.createElement("option");
+          opt.value = brgy;
+          opt.textContent = brgy;
+          barangay.appendChild(opt);
+        });
+      }
+      validateSelect(city);
+    });
+  }
+
+  if (barangay) {
+    barangay.addEventListener("change", () => validateSelect(barangay));
+  }
+
+  // Validate on submit
+  const profileFormEl = document.getElementById("profileForm");
+  if (profileFormEl) {
+    profileFormEl.addEventListener("submit", function (e) {
+      const ok1 = validateSelect(province);
+      const ok2 = validateSelect(city);
+      const ok3 = validateSelect(barangay);
+      if (!ok1 || !ok2 || !ok3) e.preventDefault();
+    });
+  }
+});
+
+// ============================================
+// GLOBAL FUNCTIONS (Necessary for inline onClick)
+// ============================================
+
+// 1. EDIT PROFILE LOGIC
+let originalProfileValues = {};
+
+window.enableEditing = function(btn) {
+    const form = document.getElementById('profileForm');
+    if (!form) return;
+
+    // Select inputs to enable
+    const fields = form.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select');
+    const saveBtn = document.getElementById('saveProfileBtn');
+    const footer = document.getElementById('profileFooter');
+    const editRow = document.querySelector('.edit-row');
+    const headerAvatar = document.querySelector('.header-avatar');
+
+    // Store original values and enable fields
+    originalProfileValues = {};
+    fields.forEach(el => {
+        if (el.id) originalProfileValues[el.id] = el.value;
+        el.disabled = false;
+        el.style.borderColor = '#A68763';
+    });
+
+    // Toggle UI visibility
+    if (editRow) editRow.style.display = 'none'; // Hide "Edit Profile" button
+    if (footer) footer.style.display = 'flex'; // Show Save/Cancel buttons
+    if (saveBtn) saveBtn.disabled = false;
+    
+    // Allow Avatar editing
+    if (headerAvatar) headerAvatar.classList.add('editing');
+};
+
+window.cancelEditing = function() {
+    const form = document.getElementById('profileForm');
+    if (!form) return;
+
+    const fields = form.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select');
+    const saveBtn = document.getElementById('saveProfileBtn');
+    const footer = document.getElementById('profileFooter');
+    const editRow = document.querySelector('.edit-row');
+    const headerAvatar = document.querySelector('.header-avatar');
+
+    // Restore values and disable fields
+    fields.forEach(el => {
+        if (el.id && originalProfileValues.hasOwnProperty(el.id)) {
+            el.value = originalProfileValues[el.id];
+        }
+        el.disabled = true;
+        el.style.borderColor = '';
+    });
+
+    // Reset file input
+    const fileInput = document.getElementById('profile_image');
+    if (fileInput) fileInput.value = '';
+
+    // Toggle UI visibility
+    if (editRow) editRow.style.display = 'flex';
+    if (footer) footer.style.display = 'none';
+    if (saveBtn) saveBtn.disabled = true;
+
+    // Disable Avatar editing
+    if (headerAvatar) headerAvatar.classList.remove('editing');
+};
+
+
+// 2. TOGGLE VIEWS (Purchases vs Account)
+window.toggleViews = function(viewName) {
+    const accountView = document.getElementById('account-view');
+    const purchasesView = document.getElementById('purchases-view');
+    
+    if(!accountView || !purchasesView) return;
+
+    if (viewName === 'purchases') {
+        accountView.style.display = 'none';
+        purchasesView.style.display = 'block';
+    } else {
+        accountView.style.display = 'block';
+        purchasesView.style.display = 'none';
+    }
+};
+
+// 3. OTHER MODAL FUNCTIONS
+window.openUserProfile = function () {
+  const userProfileOverlay = document.getElementById('userProfileOverlay');
+  if (userProfileOverlay) {
+    userProfileOverlay.style.display = 'flex';
+    userProfileOverlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeUserProfile = function () {
+  const userProfileOverlay = document.getElementById('userProfileOverlay');
+  if (userProfileOverlay) {
+    userProfileOverlay.style.display = 'none';
+    userProfileOverlay.classList.remove('show');
+    document.body.style.overflow = '';
+    // Optional: Reset view to account when closing
+    toggleViews('account');
+    cancelEditing();
+  }
+};
+
+window.goToFeatures = function () {
+  closeUserProfile();
+  // We use the navigateToSection logic via hash or manually
+  const featuresLink = document.querySelector('a[href="#features"]');
+  if(featuresLink) featuresLink.click();
+};
+
+window.toggleAnalysis = function (targetId, show) {
+  const targetElement = document.getElementById(targetId);
+  if (!targetElement) return;
+  const card = targetElement.closest('.option-card');
+  const uploadSection = card.querySelector('.upload-section');
+  const featureList = card.querySelector('.feature-list');
+  if (show) {
+    targetElement.classList.add('show-results');
+    if (uploadSection) uploadSection.classList.add('hidden');
+    if (featureList) featureList.classList.add('hidden');
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    targetElement.classList.remove('show-results');
+    if (uploadSection) uploadSection.classList.remove('hidden');
+    if (featureList) featureList.classList.remove('hidden');
+  }
+};
+
+window.simulateAnalysis = function (targetId) {
+  const button = event.target;
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "Analyzing...";
+  setTimeout(() => {
+    button.disabled = false;
+    button.textContent = originalText;
+    window.toggleAnalysis(targetId, true);
+  }, 1500);
+};
+
+window.filterProducts = function () {
+  const searchInput = document.getElementById('productSearch');
+  const categorySelect = document.getElementById('categoryFilter');
+
+  const query = searchInput ? searchInput.value.toLowerCase() : '';
+  const category = categorySelect ? categorySelect.value : '';
+
+  document.querySelectorAll('.catalog-item').forEach(item => {
+    const titleEl = item.querySelector('.title');
+    const title = titleEl ? titleEl.textContent.toLowerCase() : '';
+    const itemCategory = item.dataset.category || '';
+
+    const matchesName = !query || title.includes(query);
+    const matchesCategory = !category || itemCategory === category;
+
+    item.style.display = (matchesName && matchesCategory) ? 'block' : 'none';
+  });
+};
+
+window.logout = function () {
+  const logoutOverlay = document.getElementById('logoutOverlay');
+  if (logoutOverlay) {
+    logoutOverlay.style.cssText = `display: flex !important; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); z-index: 999999; align-items: center; justify-content: center;`;
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeLogoutOverlay = function () {
+  const logoutOverlay = document.getElementById('logoutOverlay');
+  if (logoutOverlay) {
+    logoutOverlay.style.display = 'none';
+    document.body.style.overflow = '';
+  }
+};
+
+window.confirmLogout = function () {
+  const logoutOverlay = document.getElementById('logoutOverlay');
+  if (logoutOverlay) {
+    logoutOverlay.innerHTML = `<div class="modal" style="max-width: 400px; background:white; padding:2rem; border-radius:15px; text-align:center;">Logging out...</div>`;
+    setTimeout(() => {
+      window.location.href = "index.php?page=login&action=logout";
+    }, 800);
+  }
+};
+</script>
 
 
 <link rel="stylesheet" href="public/css/cartModal.css">

@@ -41,35 +41,53 @@ class User {
     // Extract address fields from array
     $street_address = $addressData['street_address'] ?? '';
     $apartment      = $addressData['apartment'] ?? '';
+    $region         = $addressData['region'] ?? '';     // ✅ NEW
     $province       = $addressData['province'] ?? '';
     $city           = $addressData['city'] ?? '';
     $barangay       = $addressData['barangay'] ?? '';
     $postal_code    = $addressData['postal_code'] ?? '';
 
-    $stmt = $this->conn->prepare("
+    $sql = "
         INSERT INTO users 
-        (FIRST_NAME, LAST_NAME, USERNAME, EMAIL, STREET_ADDRESS, APARTMENT, PROVINCE, CITY, BARANGAY, POSTAL_CODE, CONTACTS, PASSWORD, CREATED_AT)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-    ");
+        (FIRST_NAME, LAST_NAME, USERNAME, EMAIL, 
+         STREET_ADDRESS, APARTMENT, REGION, PROVINCE, CITY, BARANGAY, 
+         POSTAL_CODE, CONTACTS, PASSWORD, CREATED_AT)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    ";
 
+    $stmt = $this->conn->prepare($sql);
+
+    if (!$stmt) {
+        error_log('Prepare failed: ' . $this->conn->error);
+        return false;
+    }
+
+    // 13 string params: must match 13 ? placeholders
     $stmt->bind_param(
-        "ssssssssssss", 
-        $firstname, 
-        $lastname, 
-        $username, 
-        $email, 
+        "sssssssssssss",
+        $firstname,
+        $lastname,
+        $username,
+        $email,
         $street_address,
         $apartment,
+        $region,        // ✅ goes into REGION column
         $province,
         $city,
         $barangay,
         $postal_code,
-        $contact_num, 
+        $contact_num,
         $hashedPassword
     );
 
-    return $stmt->execute();
+    if (!$stmt->execute()) {
+        error_log('Execute failed: ' . $stmt->error);
+        return false;
+    }
+
+    return true;
 }
+
 
 
     /**

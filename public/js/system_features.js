@@ -7,12 +7,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const shouldKeepOpen = userProfileOverlay.dataset.keepOpen === '1';
 
     if (shouldKeepOpen) {
-      // Stay in "User Information" after profile submit
       userProfileOverlay.style.display = 'flex';
       userProfileOverlay.classList.add('show');
       document.body.style.overflow = 'hidden';
     } else {
-      // Default: hidden until user clicks profile
       userProfileOverlay.style.display = 'none';
       userProfileOverlay.classList.remove('show');
       document.body.style.overflow = '';
@@ -133,29 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ============================================
-  // USER PROFILE MODAL
+  // USER PROFILE MODAL EVENTS
   // ============================================
-  window.openUserProfile = function () {
-    if (userProfileOverlay) {
-      userProfileOverlay.style.display = 'flex';
-      userProfileOverlay.classList.add('show');
-      document.body.style.overflow = 'hidden';
-    }
-  };
-
-  window.closeUserProfile = function () {
-    if (userProfileOverlay) {
-      userProfileOverlay.style.display = 'none';
-      userProfileOverlay.classList.remove('show');
-      document.body.style.overflow = '';
-    }
-  };
-
-  window.goToFeatures = function () {
-    closeUserProfile();
-    navigateToSection('#features');
-  };
-
   if (userProfileOverlay) {
     userProfileOverlay.addEventListener('click', function (e) {
       if (e.target === this) closeUserProfile();
@@ -163,59 +140,61 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ============================================
-  // TABS
+  // TABS (Orders/History)
   // ============================================
-  const tabBtns = document.querySelectorAll('.tab-btn');
-  const tabContents = document.querySelectorAll('.tab-content');
-
-  tabBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const targetTab = btn.getAttribute('data-tab');
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      tabContents.forEach(content => {
-        content.classList.remove('active');
-        if (content.id === targetTab) content.classList.add('active');
-      });
-    });
-  });
-
   const subTabBtns = document.querySelectorAll('.sub-tab-btn');
   const subTabContents = document.querySelectorAll('.sub-tab-content');
 
   subTabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const targetSubTab = btn.getAttribute('data-subtab');
+      
+      // Update buttons
       subTabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+      
+      // Update content
       subTabContents.forEach(content => {
-        content.classList.remove('active');
-        if (content.id === targetSubTab) content.classList.add('active');
+        content.classList.remove('active'); // Hide all
+        if (content.id === targetSubTab) {
+            content.classList.add('active'); // Show matching
+        }
       });
     });
   });
 
   // ============================================
-  // PROFILE IMAGE PREVIEW
+  // PROFILE IMAGE PREVIEW & CLICK
   // ============================================
   const fileInput = document.getElementById('profile_image');
-  const avatarImg = document.getElementById('avatar-img');
-  const avatarInitials = document.querySelector('.profile-avatar .avatar-initials');
-  const editAvatarBtn = document.getElementById('edit-avatar-btn');
+  const headerAvatar = document.querySelector('.header-avatar');
+  const sidebarPic = document.getElementById('sidebar-profile-pic');
 
-  if (editAvatarBtn && fileInput) {
-    editAvatarBtn.addEventListener('click', () => fileInput.click());
+  // Handle clicking the avatar ONLY when editing
+  if(headerAvatar && fileInput) {
+      headerAvatar.addEventListener('click', () => {
+          if(headerAvatar.classList.contains('editing')) {
+              fileInput.click();
+          }
+      });
+  }
+
+  if (fileInput) {
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
       if (file) {
         const reader = new FileReader();
         reader.onload = e => {
-          if (avatarImg) {
-            avatarImg.src = e.target.result;
-            avatarImg.style.display = 'block';
+          // Update Modal Image
+          const imgInsideAvatar = headerAvatar.querySelector('img');
+          if (imgInsideAvatar) {
+             imgInsideAvatar.src = e.target.result;
+          } else {
+             // If it was initials, replace with img
+             headerAvatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
           }
-          if (avatarInitials) avatarInitials.style.display = 'none';
-          const sidebarPic = document.getElementById('sidebar-profile-pic');
+          
+          // Update Sidebar Image
           if (sidebarPic) {
             sidebarPic.innerHTML = `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
           }
@@ -272,49 +251,38 @@ document.addEventListener("DOMContentLoaded", () => {
   const city = document.getElementById("city");
   const barangay = document.getElementById("barangay");
 
-  // ========== PRE-POPULATE FROM CURRENT VALUES ==========
-  (function prepopulateAddress() {
-    if (!province || !city || !barangay) return;
-
+  // Pre-populate logic
+  if (province && city && barangay) {
     const currentProvince = province.dataset.currentProvince || "";
     const currentCity = city.dataset.currentCity || "";
     const currentBarangay = barangay.dataset.currentBarangay || "";
 
-    if (!currentProvince || !addressData[currentProvince]) return;
+    if (currentProvince && addressData[currentProvince]) {
+      province.value = currentProvince;
 
-    // 1) Set province value
-    province.value = currentProvince;
-
-    // 2) Populate cities for that province
-    city.innerHTML = `<option value="" disabled>Select City</option>`;
-    Object.keys(addressData[currentProvince]).forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      city.appendChild(opt);
-    });
-
-    // 3) Select saved city (if any)
-    if (currentCity) {
-      city.value = currentCity;
-    }
-
-    // 4) Populate barangays for that city
-    if (currentCity && addressData[currentProvince][currentCity]) {
-      barangay.innerHTML = `<option value="" disabled>Select Barangay</option>`;
-      addressData[currentProvince][currentCity].forEach(brgy => {
+      // Populate Cities
+      city.innerHTML = `<option value="" disabled>Select City</option>`;
+      Object.keys(addressData[currentProvince]).forEach(c => {
         const opt = document.createElement("option");
-        opt.value = brgy;
-        opt.textContent = brgy;
-        barangay.appendChild(opt);
+        opt.value = c;
+        opt.textContent = c;
+        city.appendChild(opt);
       });
+      if (currentCity) city.value = currentCity;
 
-      // 5) Select saved barangay (if any)
-      if (currentBarangay) {
-        barangay.value = currentBarangay;
+      // Populate Barangays
+      if (currentCity && addressData[currentProvince][currentCity]) {
+        barangay.innerHTML = `<option value="" disabled>Select Barangay</option>`;
+        addressData[currentProvince][currentCity].forEach(brgy => {
+          const opt = document.createElement("option");
+          opt.value = brgy;
+          opt.textContent = brgy;
+          barangay.appendChild(opt);
+        });
+        if (currentBarangay) barangay.value = currentBarangay;
       }
     }
-  })();
+  }
 
   function validateSelect(selectEl) {
     if (!selectEl) return true;
@@ -333,10 +301,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (province) {
     province.addEventListener("change", () => {
       if (!city || !barangay) return;
-
       city.innerHTML = `<option value="" disabled selected>Select City</option>`;
       barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
-
+      
       const selectedProv = province.value;
       if (addressData[selectedProv]) {
         Object.keys(addressData[selectedProv]).forEach(c => {
@@ -353,11 +320,10 @@ document.addEventListener("DOMContentLoaded", () => {
   if (city) {
     city.addEventListener("change", () => {
       if (!province || !barangay) return;
-
       barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
+      
       const selectedProv = province.value;
       const selectedCity = city.value;
-
       if (addressData[selectedProv] && addressData[selectedProv][selectedCity]) {
         addressData[selectedProv][selectedCity].forEach(brgy => {
           const opt = document.createElement("option");
@@ -371,81 +337,133 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (barangay) {
-    barangay.addEventListener("change", () => {
-      validateSelect(barangay);
-    });
+    barangay.addEventListener("change", () => validateSelect(barangay));
   }
 
-  // ============================================
-  // VALIDATE ON FORM SUBMIT (province/city/brgy)
-  // ============================================
+  // Validate on submit
   const profileFormEl = document.getElementById("profileForm");
   if (profileFormEl) {
     profileFormEl.addEventListener("submit", function (e) {
       const ok1 = validateSelect(province);
       const ok2 = validateSelect(city);
       const ok3 = validateSelect(barangay);
-
-      if (!ok1 || !ok2 || !ok3) {
-        e.preventDefault();
-      }
-    });
-  }
-
-  // ============================================
-  // EDIT PROFILE UI (ENABLE INPUTS + SELECTS)
-  // ============================================
-  const editProfileBtn = document.getElementById('editProfileBtn');
-  const saveProfileBtn = document.getElementById('saveProfileBtn');
-  const cancelEditBtn = document.getElementById('cancelEditBtn');
-
-  let originalValues = {};
-  const editableFields = profileFormEl
-    ? profileFormEl.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select')
-    : [];
-
-  function setEditMode(isEditing) {
-    editableFields.forEach(el => {
-      // if you want some fields always read-only, skip them here:
-      // if (el.id === 'email' || el.id === 'username') return;
-      el.disabled = !isEditing;
-      el.style.borderColor = isEditing ? '#A68763' : '';
-    });
-
-    if (editProfileBtn) editProfileBtn.style.display = isEditing ? 'none' : 'inline-flex';
-    if (saveProfileBtn) saveProfileBtn.style.display = isEditing ? 'inline-flex' : 'none';
-    if (cancelEditBtn) cancelEditBtn.style.display = isEditing ? 'inline-flex' : 'none';
-    if (editAvatarBtn) editAvatarBtn.style.display = isEditing ? 'block' : 'none';
-  }
-
-  if (editProfileBtn && saveProfileBtn && cancelEditBtn && profileFormEl) {
-    // default view mode
-    setEditMode(false);
-
-    editProfileBtn.addEventListener('click', () => {
-      originalValues = {};
-      editableFields.forEach(el => {
-        if (el.id) originalValues[el.id] = el.value;
-      });
-      setEditMode(true);
-    });
-
-    cancelEditBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      editableFields.forEach(el => {
-        if (el.id && Object.prototype.hasOwnProperty.call(originalValues, el.id)) {
-          el.value = originalValues[el.id];
-        }
-      });
-      if (fileInput) fileInput.value = '';
-      setEditMode(false);
+      if (!ok1 || !ok2 || !ok3) e.preventDefault();
     });
   }
 });
 
 // ============================================
-// GLOBAL FUNCTIONS (OUTSIDE DOMContentLoaded)
+// GLOBAL FUNCTIONS (Necessary for inline onClick)
 // ============================================
+
+// 1. EDIT PROFILE LOGIC
+let originalProfileValues = {};
+
+window.enableEditing = function(btn) {
+    const form = document.getElementById('profileForm');
+    if (!form) return;
+
+    // Select inputs to enable
+    const fields = form.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select');
+    const saveBtn = document.getElementById('saveProfileBtn');
+    const footer = document.getElementById('profileFooter');
+    const editRow = document.querySelector('.edit-row');
+    const headerAvatar = document.querySelector('.header-avatar');
+
+    // Store original values and enable fields
+    originalProfileValues = {};
+    fields.forEach(el => {
+        if (el.id) originalProfileValues[el.id] = el.value;
+        el.disabled = false;
+        el.style.borderColor = '#A68763';
+    });
+
+    // Toggle UI visibility
+    if (editRow) editRow.style.display = 'none'; // Hide "Edit Profile" button
+    if (footer) footer.style.display = 'flex'; // Show Save/Cancel buttons
+    if (saveBtn) saveBtn.disabled = false;
+    
+    // Allow Avatar editing
+    if (headerAvatar) headerAvatar.classList.add('editing');
+};
+
+window.cancelEditing = function() {
+    const form = document.getElementById('profileForm');
+    if (!form) return;
+
+    const fields = form.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select');
+    const saveBtn = document.getElementById('saveProfileBtn');
+    const footer = document.getElementById('profileFooter');
+    const editRow = document.querySelector('.edit-row');
+    const headerAvatar = document.querySelector('.header-avatar');
+
+    // Restore values and disable fields
+    fields.forEach(el => {
+        if (el.id && originalProfileValues.hasOwnProperty(el.id)) {
+            el.value = originalProfileValues[el.id];
+        }
+        el.disabled = true;
+        el.style.borderColor = '';
+    });
+
+    // Reset file input
+    const fileInput = document.getElementById('profile_image');
+    if (fileInput) fileInput.value = '';
+
+    // Toggle UI visibility
+    if (editRow) editRow.style.display = 'flex';
+    if (footer) footer.style.display = 'none';
+    if (saveBtn) saveBtn.disabled = true;
+
+    // Disable Avatar editing
+    if (headerAvatar) headerAvatar.classList.remove('editing');
+};
+
+
+// 2. TOGGLE VIEWS (Purchases vs Account)
+window.toggleViews = function(viewName) {
+    const accountView = document.getElementById('account-view');
+    const purchasesView = document.getElementById('purchases-view');
+    
+    if(!accountView || !purchasesView) return;
+
+    if (viewName === 'purchases') {
+        accountView.style.display = 'none';
+        purchasesView.style.display = 'block';
+    } else {
+        accountView.style.display = 'block';
+        purchasesView.style.display = 'none';
+    }
+};
+
+// 3. OTHER MODAL FUNCTIONS
+window.openUserProfile = function () {
+  const userProfileOverlay = document.getElementById('userProfileOverlay');
+  if (userProfileOverlay) {
+    userProfileOverlay.style.display = 'flex';
+    userProfileOverlay.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+};
+
+window.closeUserProfile = function () {
+  const userProfileOverlay = document.getElementById('userProfileOverlay');
+  if (userProfileOverlay) {
+    userProfileOverlay.style.display = 'none';
+    userProfileOverlay.classList.remove('show');
+    document.body.style.overflow = '';
+    // Optional: Reset view to account when closing
+    toggleViews('account');
+    cancelEditing();
+  }
+};
+
+window.goToFeatures = function () {
+  closeUserProfile();
+  // We use the navigateToSection logic via hash or manually
+  const featuresLink = document.querySelector('a[href="#features"]');
+  if(featuresLink) featuresLink.click();
+};
 
 window.toggleAnalysis = function (targetId, show) {
   const targetElement = document.getElementById(targetId);
