@@ -29,6 +29,10 @@ let currentUsers = [];
 let orderPage = 1;
 let orderPageSize = 5;
 let currentOrders = [];
+let auditLogs = [];
+let displayAuditLogs = [];
+let auditPage = 1;
+let auditPageSize = 5;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadUsers();
   loadOrders();
   initFormHandlers();
-
+  loadAudit();
   initLowStockNotification();   // 🔔 set up bell + fetch
 });
 
@@ -140,7 +144,7 @@ function renderProductsTable() {
       <td>${p.PRODUCT_NAME}</td>
       <td>${p.DESCRIPTION || 'No description'}</td>
       <td>${p.BODY_SHAPE_NAME || 'N/A'}</td>
-      <td>$${parseFloat(p.PRICE).toFixed(2)}</td>
+      <td>₱${parseFloat(p.PRICE).toFixed(2)}</td>
       <td>
         <button class="btn-icon" onclick="openInventoryManager(${p.PRODUCT_ID}, '${safeName}')">
           <i class="bi bi-box-seam"></i>
@@ -165,7 +169,7 @@ function renderProductPagination() {
         productPageSize,
         (p) => {
             productPage = p;
-            renderProducts();
+            renderProductsTable();
             renderProductPagination();
         }
     );
@@ -1239,9 +1243,24 @@ function filterOrders() {
 
 async function viewOrder(orderId) {
   try {
-    const response = await fetch(`${API_BASE}&action=orderDetails&id=${orderId}`);
-    if (!response.ok) throw new Error('Failed to load order details');
-    const orderDetails = await response.json();
+    // ✅ Call the correct route: action=orders with an id
+    const response = await fetch(`${API_BASE}&action=orders&id=${orderId}`, {
+      credentials: 'include',
+    });
+
+    const raw = await response.text();
+    console.log('Order details raw response:', raw);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const orderDetails = JSON.parse(raw);
+
+    if (orderDetails.error) {
+      // In case PHP returns { error: '...' }
+      throw new Error(orderDetails.error);
+    }
 
     const modal = document.getElementById('orderModal');
     const detailsDiv = document.getElementById('orderDetails');
@@ -1251,26 +1270,40 @@ async function viewOrder(orderId) {
         <div class="detail-row"><strong>Order ID:</strong> #${orderDetails.ORDER_ID}</div>
         <div class="detail-row"><strong>Customer:</strong> ${orderDetails.USERNAME || 'N/A'}</div>
         <div class="detail-row"><strong>Email:</strong> ${orderDetails.EMAIL || 'N/A'}</div>
-        <div class="detail-row"><strong>Status:</strong> <span class="badge ${orderDetails.STATUS.toLowerCase()}">${orderDetails.STATUS}</span></div>
+        <div class="detail-row">
+          <strong>Status:</strong>
+          <span class="badge ${orderDetails.STATUS.toLowerCase()}">${orderDetails.STATUS}</span>
+        </div>
         <div class="detail-row"><strong>Total:</strong> $${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}</div>
         <div class="detail-row"><strong>Order Date:</strong> ${new Date(orderDetails.CREATED_AT).toLocaleString()}</div>
         <hr>
         <h3>Order Items</h3>
         <table class="items-table">
           <thead>
-            <tr><th>Product</th><th>Size</th><th>Color</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+            <tr>
+              <th>Product</th>
+              <th>Size</th>
+              <th>Color</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Subtotal</th>
+            </tr>
           </thead>
           <tbody>
-            ${orderDetails.items.map(item => `
-              <tr>
-                <td>${item.PRODUCT_NAME}</td>
-                <td>${item.SIZE}</td>
-                <td>${item.COLOR_VALUE}</td>
-                <td>${item.QUANTITY}</td>
-                <td>$${parseFloat(item.PRICE).toFixed(2)}</td>
-                <td>$${(parseFloat(item.PRICE) * item.QUANTITY).toFixed(2)}</td>
-              </tr>
-            `).join('')}
+            ${
+              (orderDetails.items || [])
+                .map(item => `
+                  <tr>
+                    <td>${item.PRODUCT_NAME}</td>
+                    <td>${item.SIZE}</td>
+                    <td>${item.COLOR_VALUE}</td>
+                    <td>${item.QUANTITY}</td>
+                    <td>₱${parseFloat(item.PRICE || item.UNIT_PRICE).toFixed(2)}</td>
+                    <td>₱${(parseFloat(item.PRICE || item.UNIT_PRICE) * item.QUANTITY).toFixed(2)}</td>
+                  </tr>
+                `)
+                .join('')
+            }
           </tbody>
         </table>
       </div>
@@ -1279,9 +1312,10 @@ async function viewOrder(orderId) {
     modal.style.display = 'block';
   } catch (error) {
     console.error('Error viewing order:', error);
-    showNotification('Failed to load order details', 'error');
+    showNotification('Failed to load order details: ' + error.message, 'error');
   }
 }
+
 
 function closeOrderModal() {
   document.getElementById('orderModal').style.display = 'none';
@@ -1311,10 +1345,7 @@ function logout() {
 }
 
 // === AUDIT TRAIL ===
-let auditLogs = [];
-let displayAuditLogs = [];
-let auditPage = 1;
-let auditPageSize = 10;
+
 
 async function loadAudit() {
   try {

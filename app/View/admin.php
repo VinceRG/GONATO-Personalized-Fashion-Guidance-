@@ -376,7 +376,7 @@ window.addEventListener('DOMContentLoaded', loadUsers);
       <!-- ❌ Season removed from product form -->
 
       <div class="form-group">
-        <label>Price ($) *</label>
+        <label>Price (₱) *</label>
         <input type="text" id="productPrice" name="productPrice" step="0.01" min="0" required>
       </div>
 
