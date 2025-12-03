@@ -29,7 +29,16 @@
   <a href="#inventory" class="nav-btn"><i class="bi bi-box-seam"></i> Inventory</a>
   <a href="#users" class="nav-btn"><i class="bi bi-people"></i> Users</a>
   <a href="#orders" class="nav-btn"><i class="bi bi-cart-check"></i> Orders</a>
+<a 
+  href="#audit" 
+  class="nav-btn" 
+  onclick="switchSection('audit'); loadAudit(); return false;"
+>
+  <i class="bi bi-clipboard-data"></i> Audit Trail
+</a>
+
 </nav>
+
       </div>
 
       <div class="sidebar-footer">
@@ -48,7 +57,25 @@
       </div>
     </div>
 
+    
+
     <div class="main-content">
+
+<div class="top-utils">
+  <button class="icon-btn" id="lowStockBtn" type="button" title="Low stock alerts">
+    <i class="bi bi-bell"></i>
+    <span class="badge" id="lowStockCount" hidden></span>
+  </button>
+
+  <div class="notif-dropdown hidden" id="lowStockDropdown">
+    <div class="notif-header">Low stock alerts</div>
+    <ul id="lowStockList"></ul>
+    <button class="notif-footer-btn" type="button" onclick="switchSection('inventory')">
+      View inventory
+    </button>
+  </div>
+</div>
+
       <!-- PRODUCTS SECTION -->
 <section id="products" class="content-section active">
   <div class="section-header">
@@ -97,14 +124,16 @@
   <div class="data-table">
     <table>
       <thead>
-        <tr>
-          <th>Size</th>
-          <th>Color</th>
-          <th>Quantity</th>
-          <th>Created At</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+      <tr>
+        <th>Product</th>
+        <th>Size</th>
+        <th>Color</th>
+        <th>Quantity</th>
+        <th>Created At</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+
       <tbody id="inventoryTableBody">
         <!-- Populated by JS -->
       </tbody>
@@ -149,6 +178,8 @@
       </tbody>
     </table>
   </div>
+    <div id="userPagination" class="pagination-controls"></div>
+
 </section>
 
 <!-- <script>
@@ -270,7 +301,46 @@ window.addEventListener('DOMContentLoaded', loadUsers);
             </tbody>
           </table>
         </div>
+          <div id="orderPagination" class="pagination-controls"></div>
+
       </section>
+            <!-- AUDIT SECTION -->
+      <section id="audit" class="content-section">
+        <div class="section-header">
+          <div>
+            <div class="section-title"><i>Audit Trail</i></div>
+            <div class="section-subtitle">Track admin actions</div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input 
+            type="text" 
+            id="auditSearch" 
+            placeholder="Search audit logs..." 
+            onkeyup="filterAudit()"
+          >
+        </div>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Description</th>
+                <th>IP Address</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+          <div id="auditPagination" class="pagination-controls"></div>
+      </section>
+
     </div>
   </div>
 <div id="productModal" class="modal">
@@ -306,7 +376,7 @@ window.addEventListener('DOMContentLoaded', loadUsers);
       <!-- ❌ Season removed from product form -->
 
       <div class="form-group">
-        <label>Price ($) *</label>
+        <label>Price (₱) *</label>
         <input type="text" id="productPrice" name="productPrice" step="0.01" min="0" required>
       </div>
 
@@ -446,13 +516,13 @@ window.addEventListener('DOMContentLoaded', loadUsers);
   </div>
 </div>
 
-  <script src="public/js/admin.js"></script>
+    <script src="public/js/admin.js"></script>
   <script>
   window.openInventoryManager = async function(productId, productName) {
     selectedProductId = productId;
     selectedProductName = productName;
-document.getElementById('inventoryProductTitle').textContent = `Inventory - ${decodeURIComponent(productName)}`;
-  document.getElementById('inventorySubtitle').textContent = `Managing stock variants for ${decodeURIComponent(productName)}`;
+    document.getElementById('inventoryProductTitle').textContent = `Inventory - ${decodeURIComponent(productName)}`;
+    document.getElementById('inventorySubtitle').textContent = `Managing stock variants for ${decodeURIComponent(productName)}`;
 
     switchSection('inventory');
     await loadInventory(productId);
@@ -467,7 +537,18 @@ document.getElementById('inventoryProductTitle').textContent = `Inventory - ${de
   window.closeProductModal = closeProductModal;
   window.openAddColorModal = openAddColorModal;
   window.closeAddColorModal = closeAddColorModal;
-</script>
-</body>
 
+
+
+  // ✅ when clicking the Audit nav link, load logs
+  document.addEventListener('DOMContentLoaded', () => {
+    const auditLink = document.querySelector('.nav-links a[href="#audit"]');
+    if (auditLink) {
+      auditLink.addEventListener('click', () => {
+        loadAudit();
+      });
+    }
+  });
+  </script>
+</body>
 </html>

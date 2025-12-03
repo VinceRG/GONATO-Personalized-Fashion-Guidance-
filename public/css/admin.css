@@ -194,6 +194,8 @@
       overflow-y: auto;
       padding: var(--spacing-xlarge) var(--spacing-large); 
       border-radius: 1.5rem;
+  position: relative;              /* 👈 add this */
+
     }
 
     .content-section {
@@ -224,6 +226,8 @@
       justify-content: space-between;
       align-items: center;
       margin-bottom: 2rem;
+        padding-right: 4.5rem;           /* 👈 reserve space for the notif button (~40px + gap) */
+
     }
 
     .section-title {
@@ -861,3 +865,205 @@
         padding: 0.75rem 0.5rem;
       }
     }
+
+/* STICKY BOTTOM PAGINATION – applies to products, inventory, users, orders, audit */
+.pagination-controls {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.35rem;
+  z-index: 999;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+/* Hide pagination for sections that are not active */
+.content-section:not(.active) .pagination-controls {
+  display: none !important;
+}
+
+/* Buttons inside any pagination bar */
+.pagination-controls .btn {
+  background: rgba(255, 255, 255, 0.4);   /* soft glass */
+  backdrop-filter: blur(8px);
+  border: 1px solid #d9d9d9;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  border-radius: 8px;
+  color: var(--color-accent-dark);
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+/* Hover */
+.pagination-controls .btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* Active page (JS uses .active-page already) */
+.pagination-controls .active-page {
+  background: var(--color-accent-dark);
+  color: #fff;
+  border-color: var(--color-accent-dark);
+}
+
+/* Disabled buttons */
+.pagination-controls .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Ellipsis "..." */
+.pagination-controls span {
+  padding: 0.35rem 0.5rem;
+  color: #bbb;
+}
+/* --- Notification Bell & Dropdown --- */
+.top-utils {
+  position: absolute;
+  top: var(--spacing-large);
+  right: var(--spacing-large);
+  z-index: 30;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.icon-btn {
+  position: relative;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  font-size: 1.3rem;
+  color: var(--color-accent-dark);
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.icon-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Red dot badge for count */
+.icon-btn .badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  padding: 0 4px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #dc2626;
+  color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9);
+}
+
+/* Dropdown panel */
+.notif-dropdown {
+  position: absolute;
+  top: 3rem;
+  right: 0;
+  width: 280px;
+  background: rgba(15, 23, 42, 0.96); /* slate-ish */
+  color: #f9fafb;
+  border-radius: 14px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.6);
+  padding: 0.75rem 0;
+  z-index: 60;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.notif-dropdown.hidden {
+  display: none;
+}
+
+.notif-header {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+#lowStockList {
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+}
+
+#lowStockList li {
+  padding: 0.55rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+#lowStockList li::before {
+  content: "•";
+  font-size: 1rem;
+  line-height: 1;
+  color: #f59e0b;
+  margin-top: 2px;
+}
+
+#lowStockList li:hover {
+  background: rgba(30, 64, 175, 0.45);
+}
+
+#lowStockList li.empty {
+  cursor: default;
+  opacity: 0.7;
+}
+
+#lowStockList li.empty::before {
+  content: "✓";
+  color: #22c55e;
+}
+
+/* Footer button */
+.notif-footer-btn {
+  margin: 0.5rem 1rem 0.25rem;
+  width: calc(100% - 2rem);
+  border-radius: 999px;
+  border: none;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  background: #f9fafb;
+  color: #111827;
+  font-weight: 500;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.notif-footer-btn:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.hidden {
+  display: none !important;
+}

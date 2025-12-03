@@ -1,0 +1,6 @@
+API hit: bodyShapes
+API hit: colors
+API hit: products
+API hit: seasons
+API hit: users
+API hit: orders
