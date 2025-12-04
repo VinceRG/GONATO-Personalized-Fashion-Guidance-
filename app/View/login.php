@@ -133,7 +133,7 @@
 
         /* Input Error State */
         input.error {
-            border-color: #F87171;
+            border-color: #161414ff;
             background-color: #FEF2F2;
         }
 
@@ -378,7 +378,7 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
 
 <div class="content">
 
-    <h1>Welcome back!</h1>
+    <h1>Welcome</h1>
     <p>Please enter your details.</p>
 
     <form id="loginForm" action="index.php?page=login" method="POST">

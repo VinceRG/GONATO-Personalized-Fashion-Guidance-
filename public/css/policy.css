@@ -15,32 +15,7 @@ body {
     flex-direction: column;
     position: relative;
     overflow-x: hidden;
-    font-size: 13px; /* base smaller size for entire page */
-}
-
-/* Glow background */
-body::before,
-body::after {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    z-index: 0;
-}
-
-body::before {
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(166, 135, 99, 0.15) 0%, transparent 65%);
-    top: -100px;
-    right: -50px;
-}
-
-body::after {
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(166, 135, 99, 0.12) 0%, transparent 65%);
-    bottom: -100px;
-    left: -50px;
+    font-size: 13px;
 }
 
 /* CONTENT WRAPPER */
@@ -54,28 +29,16 @@ body::after {
     padding: 2rem 1.5rem;
     position: relative;
     z-index: 10;
-    animation: fadeInUp 0.8s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    /* animation removed */
 }
 
 /* PAGE TITLE */
 h1 {
     font-family: 'Minion', 'Times New Roman', Times, serif;
-    font-size: clamp(1.6rem, 3vw, 2.1rem); /* smaller & scalable */
+    font-size: clamp(1.6rem, 3vw, 2.1rem);
     font-weight: 300;
     color: #1a1a1a;
-    margin-bottom: 1.25rem; /* reduced spacing */
+    margin-bottom: 1.25rem;
     letter-spacing: -0.02em;
     text-align: center;
 }
@@ -88,11 +51,11 @@ h1 {
     font-weight: 400;
     color: #1a1a1a;
     letter-spacing: -0.02em;
-    margin: 0.6rem 0 0.3rem; /* tighter spacing */
+    margin: 0.6rem 0 0.3rem;
 }
 
 .terms-text h2 {
-    font-size: 1.1rem; /* smaller */
+    font-size: 1.1rem;
 }
 
 .terms-text h3 {
@@ -108,8 +71,8 @@ form {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(10px);
     border-radius: 16px;
-    padding: 1.8rem 1.5rem; /* reduced padding */
-    width: min(800px, 90vw); /* more usable width for text */
+    padding: 1.8rem 1.5rem;
+    width: min(800px, 90vw);
     border: 1px solid rgba(166, 135, 99, 0.15);
     box-shadow: 0 16px 50px rgba(166, 135, 99, 0.12);
     position: relative;
@@ -126,27 +89,26 @@ form::before {
     background: linear-gradient(90deg, #A68763, #D7C9AE, #A68763);
 }
 
-/* TEXT INSIDE FORM (OUTSIDE SCROLL AREA) */
+/* TEXT INSIDE FORM */
 form p,
 form li {
     font-family: 'Lexend', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 0.85rem; /* smaller, tied to base */
+    font-size: 0.85rem;
     font-weight: 400;
     color: #1a1a1a;
     letter-spacing: -0.02em;
-    margin: 0.4rem 0; /* less spacing */
+    margin: 0.4rem 0;
 }
 
 /* SCROLLABLE TERMS / PRIVACY AREA */
 .terms-text {
-    font-size: 0.8rem;          /* smaller policy text */
-    line-height: 1.4;           /* tighter but readable */
-    max-height: 360px;          /* fits nicely but still scrollable */
+    font-size: 0.8rem;
+    line-height: 1.4;
+    max-height: 360px;
     overflow-y: auto;
-    padding-right: 8px;         /* small padding for scrollbar */
+    padding-right: 8px;
 }
 
-/* Reduce spacing inside policy text */
 .terms-text p {
     margin: 0.35rem 0;
 }
@@ -166,8 +128,8 @@ form li {
     color: #A68763;
     text-decoration: none;
     font-weight: 500;
-    transition: color 0.3s ease;
-    font-size: 0.8rem; /* smaller */
+    font-size: 0.8rem;
+    /* transition removed (to remove animation on hover) */
 }
 
 .back-link:hover {
@@ -175,7 +137,7 @@ form li {
     text-decoration: underline;
 }
 
-/* If you use tabs later, keep them tiny & tidy */
+/* If you use tabs later */
 .tabs {
     display: flex;
     justify-content: center;
@@ -189,11 +151,11 @@ form li {
     cursor: pointer;
     background: rgba(166, 135, 99, 0.1);
     font-weight: 500;
-    transition: all 0.3s ease;
     color: #2D2D2D;
     text-align: center;
     flex: 1;
-    font-size: 0.75rem; /* smaller */
+    font-size: 0.75rem;
+    /* transition removed */
 }
 
 .tab.active {
@@ -209,10 +171,10 @@ form li {
     font-size: 0.8rem;
     line-height: 1.45;
     color: #2D2D2D;
-    transition: opacity 0.3s ease;
+    /* transition removed */
 }
 
-/* SCROLLBAR STYLING (for terms box) */
+/* SCROLLBAR STYLING */
 .terms-text::-webkit-scrollbar,
 .tab-content::-webkit-scrollbar {
     width: 6px;

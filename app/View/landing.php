@@ -38,7 +38,6 @@
             Amarelle
         </div>
         <div class="nav-links">
-            <a href="index.php?page=features" class="nav-link">Features</a>
             <div class="nav-auth">
                 <a href="index.php?page=login" class="nav-login">Login</a>
                 <a href="index.php?page=register" class="nav-cta">Sign Up</a>
@@ -53,11 +52,11 @@
         </p>
         
         <p>
-            <button class="discover-button">Discover your Style</button>
+            <button class="discover-button" onclick="window.location.href='index.php?page=login'">Discover your Style</button>
         </p>
     </section>
 
-    <section class="features">
+    <section class="features" id="features">
         <div class="section-header">
             <h2 class="section-title">Intelligence that knows your style</h2>
             <p class="section-description">
@@ -114,11 +113,16 @@
             </div>
 
             <div class="footer-links" style="display: flex; flex-direction: row; gap: 3rem; justify-content: center; align-items: center; width: 100%; flex-wrap: wrap;">
-                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">ABOUT</a>
-                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">FEATURES</a>
-                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">CONTACT</a>
-                <a href="#" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">COOKIES</a>
-                <a href="index.php?page=policy" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">PRIVACY POLICY</a>
+                <a href="#features" style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">FEATURES</a>
+                <a href="index.php?page=policy#cookies" 
+                style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">
+                COOKIES
+                </a>
+
+                <a href="index.php?page=policy#privacy"
+                style="color: #A8A29E; text-decoration: none; font-size: 0.8rem; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; transition: color 0.3s; white-space: nowrap;">
+                PRIVACY POLICY
+                </a>
             </div>
 
             <div class="footer-payments" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;">
