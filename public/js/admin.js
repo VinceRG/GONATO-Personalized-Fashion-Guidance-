@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initLowStockNotification();   // 🔔 set up bell + fetch
 });
 
+
 // ==================== NAVIGATION ====================
 function initNavigation() {
   const navBtns = document.querySelectorAll('.nav-btn');
@@ -86,6 +87,24 @@ function switchSection(sectionId) {
 
   // no inventory logic here anymore
 }
+
+function buildStatusOptions(currentStatus) {
+  // 🔧 Edit this list to match your ORDERS.STATUS enum
+  const statuses = ['pending', 'delivered'];
+
+  const curr = (currentStatus || '').toLowerCase();
+
+  return statuses
+    .map(status => {
+      const value = status.toLowerCase();
+      const selected = curr === value ? 'selected' : '';
+      const label = status.charAt(0).toUpperCase() + status.slice(1);
+      return `<option value="${value}" ${selected}>${label}</option>`;
+    })
+    .join('');
+}
+
+
 
 // ==================== PRODUCTS TAB ====================
 async function loadProducts() {
@@ -1184,15 +1203,21 @@ function renderOrders() {
 
   pageItems.forEach(order => {
     const row = document.createElement('tr');
-    const statusClass = order.STATUS.toLowerCase();
 
     row.innerHTML = `
       <td>#${order.ORDER_ID}</td>
       <td>${order.USERNAME || 'N/A'}</td>
       <td>${order.ITEM_COUNT || 0} item(s)</td>
       <td>$${parseFloat(order.TOTAL_AMOUNT).toFixed(2)}</td>
-      <td><span class="badge ${statusClass}">${order.STATUS}</span></td>
-      <td>${order.SHIPPING_REQUIRED ? 'Yes' : 'No'}</td>
+      <td>
+      <select
+        class="order-status-select ${order.STATUS.toLowerCase()}"
+        onchange="updateOrderStatusTable(${order.ORDER_ID}, this.value, this)"
+      >
+        ${buildStatusOptions(order.STATUS)}
+      </select>
+
+      </td>
       <td>
         <button class="btn-icon" onclick="viewOrder(${order.ORDER_ID})">
           <i class="bi bi-eye"></i>
@@ -1202,6 +1227,64 @@ function renderOrders() {
     tbody.appendChild(row);
   });
 }
+async function updateOrderStatusTable(orderId, newStatus, selectEl) {
+  if (!newStatus) return;
+
+  // Remember previous status to revert on error
+  const oldOrder = (orders || []).find(o => Number(o.ORDER_ID) === Number(orderId));
+  const oldStatus = oldOrder ? oldOrder.STATUS : null;
+
+  try {
+    const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to update order status');
+    }
+
+    // ✅ Update local arrays so UI stays in sync
+    const updateInArray = (arr) => {
+      if (!Array.isArray(arr)) return;
+      const idx = arr.findIndex(o => Number(o.ORDER_ID) === Number(orderId));
+      if (idx !== -1) {
+        arr[idx].STATUS = newStatus;
+      }
+    };
+
+    updateInArray(orders);
+    updateInArray(currentOrders);
+
+    // update dropdown color class
+    if (selectEl) {
+      selectEl.className = "order-status-select " + newStatus.toLowerCase();
+    }
+
+    renderOrders(); // re-render table with updated statuses
+
+    if (typeof showNotification === 'function') {
+      showNotification('Order status updated', 'success');
+    }
+  } catch (err) {
+    console.error('updateOrderStatusTable error:', err);
+
+    // ⏪ Revert dropdown visually if something failed
+    if (selectEl && oldStatus) {
+      selectEl.value = oldStatus.toLowerCase();
+      selectEl.className = "order-status-select " + oldStatus.toLowerCase();
+    }
+
+    if (typeof showNotification === 'function') {
+      showNotification('Failed to update order status: ' + err.message, 'error');
+    }
+  }
+}
+
 
 function renderOrderPagination() {
     renderPagination(
@@ -1264,20 +1347,34 @@ async function viewOrder(orderId) {
 
     const modal = document.getElementById('orderModal');
     const detailsDiv = document.getElementById('orderDetails');
+    const statusOptions = buildStatusOptions(orderDetails.STATUS);
 
     detailsDiv.innerHTML = `
       <div class="order-details">
         <div class="detail-row"><strong>Order ID:</strong> #${orderDetails.ORDER_ID}</div>
         <div class="detail-row"><strong>Customer:</strong> ${orderDetails.USERNAME || 'N/A'}</div>
         <div class="detail-row"><strong>Email:</strong> ${orderDetails.EMAIL || 'N/A'}</div>
+
         <div class="detail-row">
           <strong>Status:</strong>
-          <span class="badge ${orderDetails.STATUS.toLowerCase()}">${orderDetails.STATUS}</span>
+          <select id="orderStatusSelect" class="order-status-select">
+            ${statusOptions}
+          </select>
+          <button class="btn btn-sm" onclick="updateOrderStatus(${orderDetails.ORDER_ID})">
+            Update
+          </button>
+        </div>
+
+        <div class="detail-row">
+          <strong>Total:</strong> $${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}
+        </div>
+        <div class="detail-row">
+          <strong>Order Date:</strong> ${new Date(orderDetails.CREATED_AT).toLocaleString()}
         </div>
         <div class="detail-row"><strong>Total:</strong> $${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}</div>
         <div class="detail-row"><strong>Order Date:</strong> ${new Date(orderDetails.CREATED_AT).toLocaleString()}</div>
         <hr>
-        <h3>Order Items</h3>
+        <h3 style="margin-top: 20px;">Order Items</h3>
         <table class="items-table">
           <thead>
             <tr>
@@ -1313,6 +1410,37 @@ async function viewOrder(orderId) {
   } catch (error) {
     console.error('Error viewing order:', error);
     showNotification('Failed to load order details: ' + error.message, 'error');
+  }
+}
+async function updateOrderStatus(orderId) {
+  const select = document.getElementById('orderStatusSelect');
+  if (!select) return;
+
+  const newStatus = select.value;
+
+  try {
+    const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to update order status');
+    }
+
+    showNotification('Order status updated', 'success');
+
+    // Refresh the orders list so the badge in the table updates
+    await loadOrders();
+
+    // Optionally: re-open the modal or update only the badge text if you want
+  } catch (err) {
+    console.error('updateOrderStatus error:', err);
+    showNotification('Failed to update order status: ' + err.message, 'error');
   }
 }
 

@@ -276,10 +276,7 @@ window.addEventListener('DOMContentLoaded', loadUsers);
           <input type="text" id="orderSearch" placeholder="Search orders..." onkeyup="filterOrders()">
           <select id="orderStatusFilter" onchange="filterOrders()">
             <option value="">All Status</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="cancelled">Cancelled</option>
             <option value="pending">Pending</option>
-            <option value="shipped">Shipped</option>
             <option value="delivered">Delivered</option>
           </select>
         </div>
@@ -293,7 +290,6 @@ window.addEventListener('DOMContentLoaded', loadUsers);
                 <th>Items</th>
                 <th>Total</th>
                 <th>Status</th>
-                <th>Shipping Required</th>
                 <th>Actions</th>
               </tr>
             </thead>

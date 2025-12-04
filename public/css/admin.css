@@ -609,6 +609,33 @@
       background-color: #396;
     }
 
+/* Base style */
+.order-status-select {
+  padding: 6px 10px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.25s ease-in-out;
+  margin-right: 10px;
+}
+
+/* Individual status colors */
+.order-status-select.pending {
+  background-color: #ffe9a6;
+  color: #7a5600;
+  border-color: #ffcf4d;
+}
+
+.order-status-select.delivered {
+  background-color: #d4f8d4;
+  color: #0b6b0b;
+  border-color: #7be27b;
+}
+
+
+
     /* TABLE */
     .data-table {
       background: white;
