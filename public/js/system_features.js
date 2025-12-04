@@ -166,41 +166,42 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================
   // PROFILE IMAGE PREVIEW & CLICK
   // ============================================
-  const fileInput = document.getElementById('profile_image');
+  const fileInput    = document.getElementById('profile_image');  // ✅ inside the form
   const headerAvatar = document.querySelector('.header-avatar');
-  const sidebarPic = document.getElementById('sidebar-profile-pic');
+  const sidebarPic   = document.getElementById('sidebar-profile-pic');
 
-  // Handle clicking the avatar ONLY when editing
-  if(headerAvatar && fileInput) {
-      headerAvatar.addEventListener('click', () => {
-          if(headerAvatar.classList.contains('editing')) {
-              fileInput.click();
-          }
-      });
+  // Only allow clicking avatar when editing
+  if (headerAvatar && fileInput) {
+    headerAvatar.addEventListener('click', () => {
+      if (headerAvatar.classList.contains('editing')) {
+        fileInput.click();
+      }
+    });
   }
 
   if (fileInput) {
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          // Update Modal Image
-          const imgInsideAvatar = headerAvatar.querySelector('img');
-          if (imgInsideAvatar) {
-             imgInsideAvatar.src = e.target.result;
-          } else {
-             // If it was initials, replace with img
-             headerAvatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
-          }
-          
-          // Update Sidebar Image
-          if (sidebarPic) {
-            sidebarPic.innerHTML = `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-          }
-        };
-        reader.readAsDataURL(file);
-      }
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = e => {
+        // Update modal avatar
+        const imgInsideAvatar = headerAvatar.querySelector('img');
+        if (imgInsideAvatar) {
+          imgInsideAvatar.src = e.target.result;
+        } else {
+          headerAvatar.innerHTML =
+            `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+        }
+
+        // Update sidebar avatar
+        if (sidebarPic) {
+          sidebarPic.innerHTML =
+            `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+        }
+      };
+      reader.readAsDataURL(file);
     });
   }
 

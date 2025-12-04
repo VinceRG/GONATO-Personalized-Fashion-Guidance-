@@ -12,28 +12,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
+        .terms-text {
+            font-size: 12px;
+            text-align: center;
+            color: #555;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
 
-.terms-text {
-    font-size: 12px;
-    text-align: center;
-    color: #555;
-    margin-top: 10px;
-    line-height: 1.5;
-}
         h1 {
-    font-family: 'Minion', 'Times New Roman', Times, serif;
-    font-size: clamp(2.5rem, 5vw, 3.5rem);
-    font-weight: 300;
-    color: #1a1a1a;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em;
-    text-align: center;
-}
+            font-family: 'Minion', 'Times New Roman', Times, serif;
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 300;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+            text-align: center;
+        }
 
-p {
-    margin-bottom: 2.5rem;
-    color: grey;
-}
+        p {
+            margin-bottom: 2.5rem;
+            color: grey;
+        }
+
         /* Enhanced Message Styles */
         .message {
             padding: 12px 16px;
@@ -52,6 +53,7 @@ p {
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -180,7 +182,7 @@ p {
             transform: none;
         }
 
-        /* OTP Modal Improvements */
+        /* OTP & Lock Modal Base Styles */
         .otp-modal {
             display: none;
             position: fixed;
@@ -355,9 +357,23 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
     </div>
 </div>
 
+<!-- ACCOUNT LOCKED MODAL -->
+<div id="lockModal" class="otp-modal">
+    <div class="otp-modal-content">
+        <h2>Account Locked</h2>
+        <p>Your account has been temporarily locked for security reasons due to multiple unsuccessful login attempts.</p>
+        <p>Please contact the administrator at
+            <a href="mailto:amarelle2025@gmail.com">amarelle2025@gmail.com</a>
+            to regain access to your account.
+        </p>
+        <button id="lockOkBtn" class="otp-btn">OK</button>
+    </div>
+</div>
+
 <div class="header">
-    <a href="index.php?page=landing" class="logo-link"><img src="public/image/amarelle.png" alt="Amarelle Logo" class="brand-logo" style="height: 50px; width: auto; margin-right: 10px; vertical-align: middle;">
-</a>
+    <a href="index.php?page=landing" class="logo-link">
+        <img src="public/image/amarelle.png" alt="Amarelle Logo" class="brand-logo" style="height: 50px; width: auto; margin-right: 10px; vertical-align: middle;">
+    </a>
 </div>
 
 <div class="content">
@@ -370,12 +386,6 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
         <?php if (!empty($message)): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($remainingAttempts) && $remainingAttempts > 0 && $remainingAttempts < 3): ?>
-            <div class="message warning">
-                Warning: You have <?php echo $remainingAttempts; ?> attempt(s) remaining before your account is locked.
             </div>
         <?php endif; ?>
 
@@ -445,9 +455,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const verifyBtn  = document.getElementById("verifyOtpBtn");
     const cancelBtn  = document.getElementById("cancelOtpBtn");
 
-    // Open modal after successful username/password (PHP sets this flag)
+    const lockModal  = document.getElementById("lockModal");
+    const lockOkBtn  = document.getElementById("lockOkBtn");
+
+    // Open OTP modal after successful username/password (PHP sets this flag)
     <?php if (!empty($openOtpModal)): ?>
         otpModal.style.display = "flex";
+    <?php endif; ?>
+
+    // Open Account Locked modal when account is locked
+    <?php if (isset($isLocked) && $isLocked): ?>
+        lockModal.style.display = "flex";
     <?php endif; ?>
 
     verifyBtn.addEventListener("click", () => {
@@ -477,6 +495,11 @@ document.addEventListener("DOMContentLoaded", () => {
         otpModal.style.display = "none";
         otpInput.value = "";
         otpError.style.display = "none";
+    });
+
+    // Close lock modal (inputs remain disabled; user must contact admin)
+    lockOkBtn.addEventListener("click", () => {
+        lockModal.style.display = "none";
     });
 });
 </script>

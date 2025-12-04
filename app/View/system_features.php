@@ -969,7 +969,6 @@ $csrfToken = Csrf::getToken();
 
 
 
-
 <!-- USER PROFILE MODAL -->
 <div class="overlay" id="userProfileOverlay" data-keep-open="<?= $keepProfileOpen ? '1' : '0' ?>">
 
@@ -1004,15 +1003,6 @@ $csrfToken = Csrf::getToken();
           <i class="bi bi-x-circle"></i>
         </button>
       </div>
-
-      <!-- Hidden file input for avatar change -->
-      <input
-        type="file"
-        id="profile_image"
-        name="profile_image"
-        accept="image/*"
-        style="display:none;"
-      >
     </div>
 
     <!-- BODY -->
@@ -1021,6 +1011,15 @@ $csrfToken = Csrf::getToken();
       <!-- ACCOUNT VIEW -->
       <div id="account-view">
         <form method="POST" action="" enctype="multipart/form-data" class="profile-form" id="profileForm">
+
+          <!-- ✅ Single hidden file input for avatar change (inside form) -->
+          <input
+            type="file"
+            id="profile_image"
+            name="profile_image"
+            accept="image/*"
+            style="display:none;"
+          >
 
           <!-- USERNAME -->
           <div class="form-row">
@@ -1081,6 +1080,15 @@ $csrfToken = Csrf::getToken();
               >
             </div>
           </div>
+          
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text"
+                  name="contacts"
+                  id="contacts"
+                  value="<?= htmlspecialchars($user['CONTACTS']); ?>"
+                  disabled>
+          </div>
 
           <!-- ADDRESS BLOCK -->
           <div class="form-group">
@@ -1101,77 +1109,69 @@ $csrfToken = Csrf::getToken();
                   disabled>
           </div>
 
-          <!-- PROVINCE | CITY -->
-          <div class="address-grid">
-            <div class="form-group address-group">
-              <label>Province</label>
-              <select
-                name="province"
-                id="province"
-                class="address-select"
-                disabled
-                required
-                data-current-province="<?= htmlspecialchars($user['PROVINCE'] ?? '', ENT_QUOTES) ?>"
-              >
-                <option value="" disabled>Select Province</option>
-                <option value="Metro Manila">Metro Manila</option>
-                <option value="Cavite">Cavite</option>
-                <option value="Laguna">Laguna</option>
-                <option value="Bulacan">Bulacan</option>
-                <option value="Rizal">Rizal</option>
-              </select>
-              <small class="field-error">Province is required.</small>
+          <div class="form-group">
+            <label for="regionSelect">Region</label>
+            <select id="regionSelect" name="region" class="address-select">
+                <option value="">Select Region</option>
+                <option value="Metro Manila" <?= ($user['REGION'] ?? '') === 'Metro Manila' ? 'selected' : '' ?>>Metro Manila</option>
+                <option value="North Luzon" <?= ($user['REGION'] ?? '') === 'North Luzon' ? 'selected' : '' ?>>North Luzon</option>
+                <option value="South Luzon" <?= ($user['REGION'] ?? '') === 'South Luzon' ? 'selected' : '' ?>>South Luzon</option>
+                <option value="Visayas" <?= ($user['REGION'] ?? '') === 'Visayas' ? 'selected' : '' ?>>Visayas</option>
+                <option value="Mindanao" <?= ($user['REGION'] ?? '') === 'Mindanao' ? 'selected' : '' ?>>Mindanao</option>
+            </select>
+            <span class="error-message" id="region-error"></span>
+          </div>
+
+          <div class="form-row">
+            <!-- Province -->
+            <div class="form-group" style="flex:1;">
+                <label for="province">Province</label>
+                <select
+                    id="province"
+                    name="province"
+                    class="address-select"
+                    data-current-province="<?= htmlspecialchars($user['PROVINCE'] ?? '') ?>"
+                >
+                    <option value="">Select Province</option>
+                </select>
+                <span class="error-message" id="province-error"></span>
             </div>
 
-            <div class="form-group address-group">
-              <label>City / Town</label>
-              <select
-                name="city"
-                id="city"
-                class="address-select"
-                disabled
-                required
-                data-current-city="<?= htmlspecialchars($user['CITY'] ?? '', ENT_QUOTES) ?>"
-              >
-                <option value="" disabled>Select City</option>
-              </select>
-              <small class="field-error">City/Town is required.</small>
+            <!-- City / Municipality -->
+            <div class="form-group" style="flex:1;">
+                <label for="city">City / Town</label>
+                <select
+                    id="city"
+                    name="city"
+                    class="address-select"
+                    data-current-city="<?= htmlspecialchars($user['CITY'] ?? '') ?>"
+                >
+                    <option value="">Select City / Municipality</option>
+                </select>
+                <span class="error-message" id="city-error"></span>
             </div>
           </div>
 
-          <!-- BARANGAY | POSTAL CODE -->
-          <div class="address-grid">
-            <div class="form-group address-group">
-              <label>Barangay</label>
-              <select
-                name="barangay"
+          <!-- Barangay -->
+          <div class="form-group">
+            <label for="barangay">Barangay</label>
+            <select
                 id="barangay"
+                name="barangay"
                 class="address-select"
-                disabled
-                required
-                data-current-barangay="<?= htmlspecialchars($user['BARANGAY'] ?? '', ENT_QUOTES) ?>"
-              >
-                <option value="" disabled>Select Barangay</option>
-              </select>
-              <small class="field-error">Barangay is required.</small>
-            </div>
-
-            <div class="form-group">
-              <label>Postal Code</label>
-              <input type="text"
-                    name="postal_code"
-                    id="postal_code"
-                    value="<?= htmlspecialchars($user['POSTAL_CODE'] ?? ''); ?>"
-                    disabled>
-            </div>
+                data-current-barangay="<?= htmlspecialchars($user['BARANGAY'] ?? '') ?>"
+            >
+                <option value="">Select Barangay</option>
+            </select>
+            <span class="error-message" id="barangay-error"></span>
           </div>
 
           <div class="form-group">
-            <label>Phone Number</label>
+            <label>Postal Code</label>
             <input type="text"
-                  name="contacts"
-                  id="contacts"
-                  value="<?= htmlspecialchars($user['CONTACTS']); ?>"
+                  name="postal_code"
+                  id="postal_code"
+                  value="<?= htmlspecialchars($user['POSTAL_CODE'] ?? ''); ?>"
                   disabled>
           </div>
 
@@ -1206,7 +1206,7 @@ $csrfToken = Csrf::getToken();
             <?php endif; ?>
           </div>
 
-            <!-- Edit button below -->
+          <!-- Edit button below -->
           <div class="edit-row">
             <button type="button" class="btn-edit-profile" onclick="enableEditing(this)">
               Edit Profile
@@ -1372,8 +1372,6 @@ $csrfToken = Csrf::getToken();
     </div> <!-- /modal-body -->
   </div> <!-- /modal -->
 </div> <!-- /overlay -->
-
-
 
   <!-- ===================== NEW ANALYSIS MODALS ===================== -->
 
@@ -2442,7 +2440,288 @@ window.confirmLogout = function () {
 <script src="https://js.paymongo.com/v1/paymongo.js"></script>
 
 
+<script>
+// =======================================
+//  PSGC dynamic address logic
+//  App regions: Metro Manila, N/NL/South Luzon, Visayas, Mindanao
+// =======================================
+const PSGC_API = "https://psgc.gitlab.io/api";
 
+const regionSelect   = document.getElementById("regionSelect");
+const provinceSelect = document.getElementById("province");
+const citySelect     = document.getElementById("city");
+const barangaySelect = document.getElementById("barangay");
+
+// Map your 5 "app regions" to real PSGC region codes
+const APP_REGION_MAP = {
+    "Metro Manila": ["130000000"],                              // NCR
+    "North Luzon": ["010000000","020000000","030000000","140000000"], // Region I, II, III, CAR
+    "South Luzon": ["040000000","170000000","050000000"],       // CALABARZON, MIMAROPA, Bicol
+    "Visayas":     ["060000000","070000000","080000000"],       // Western, Central, Eastern Visayas
+    "Mindanao":    ["090000000","100000000","110000000","120000000","160000000","150000000"] // Mindanao + BARMM
+};
+
+function resetSelect(sel, placeholder) {
+    if (!sel) return;
+    sel.innerHTML = "";
+    const opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = placeholder;
+    sel.appendChild(opt);
+}
+
+// ============================
+//  When app Region changes
+// ============================
+async function handleAppRegionChange(appRegion) {
+    resetSelect(provinceSelect, "Select Province");
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+
+    if (!appRegion) {
+        provinceSelect.disabled = false;
+        citySelect.disabled     = true;
+        barangaySelect.disabled = true;
+        return;
+    }
+
+    const regionCodes = APP_REGION_MAP[appRegion] || [];
+
+    // Special case: Metro Manila (NCR - no provinces)
+   if (appRegion === "Metro Manila") {
+    resetSelect(provinceSelect, "Province");
+
+    const opt = document.createElement("option");
+    opt.value = "Metro Manila";
+    opt.textContent = "Metro Manila";
+    opt.selected = true;
+    provinceSelect.appendChild(opt);
+
+    provinceSelect.disabled = false;
+    provinceSelect.classList.add("readonly-select");
+
+    citySelect.disabled     = false;
+    barangaySelect.disabled = true;
+
+    await loadCitiesForNCR();
+    return;
+}
+
+    // Other app regions (North/South Luzon, Visayas, Mindanao)
+   // Other app regions (North/South Luzon, Visayas, Mindanao)
+// temporarily disable while loading
+
+provinceSelect.disabled = true;
+provinceSelect.classList.remove("readonly-select");
+citySelect.disabled     = true;
+barangaySelect.disabled = true;
+
+// Fetch provinces for each PSGC region in mapping
+const allProvinces = [];
+for (const rCode of regionCodes) {
+    try {
+        const res = await fetch(`${PSGC_API}/regions/${rCode}/provinces/`);
+        if (!res.ok) continue;
+        const provinces = await res.json();
+        provinces.forEach(p => allProvinces.push(p));
+    } catch (e) {
+        console.error("Error loading provinces for region", rCode, e);
+    }
+}
+
+// Sort provinces alphabetically by name
+allProvinces.sort((a,b) => a.name.localeCompare(b.name));
+
+allProvinces.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.name;        // Save province NAME in DB
+    opt.textContent = p.name;
+    opt.dataset.code = p.code; // PSGC code for loading cities
+    provinceSelect.appendChild(opt);
+});
+
+// ✅ now enable province select (if we have items)
+provinceSelect.disabled = allProvinces.length === 0 ? true : false;
+
+}
+
+// ============================
+//  Load cities for normal provinces
+// ============================
+async function loadCitiesFromProvince() {
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+
+    const selected = provinceSelect.selectedOptions[0];
+    if (!selected || !selected.dataset.code) {
+        citySelect.disabled     = true;
+        barangaySelect.disabled = true;
+        return;
+    }
+
+    const provinceCode = selected.dataset.code;
+
+    try {
+        const res = await fetch(`${PSGC_API}/provinces/${provinceCode}/cities-municipalities/`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const cities = await res.json();
+
+        cities.sort((a,b) => a.name.localeCompare(b.name));
+
+        cities.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;        // save city NAME in DB
+            opt.textContent = c.name;
+            opt.dataset.code = c.code; // for barangay loading
+            citySelect.appendChild(opt);
+        });
+
+        citySelect.disabled     = true ? cities.length === 0 : false;
+        barangaySelect.disabled = true;
+    } catch (e) {
+        console.error("Error loading cities:", e);
+    }
+}
+
+// ============================
+//  Load cities for NCR (Metro Manila)
+// ============================
+async function loadCitiesForNCR() {
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+
+    try {
+        const res = await fetch(`${PSGC_API}/regions/130000000/cities-municipalities/`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const cities = await res.json();
+
+        cities.sort((a,b) => a.name.localeCompare(b.name));
+
+        cities.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;        // city in DB
+            opt.textContent = c.name;
+            opt.dataset.code = c.code; // for barangays
+            citySelect.appendChild(opt);
+        });
+
+        citySelect.disabled     = cities.length === 0;
+        barangaySelect.disabled = true;
+    } catch (e) {
+        console.error("Error loading NCR cities:", e);
+    }
+}
+
+// ============================
+//  Load barangays by city
+// ============================
+async function loadBarangaysFromCity() {
+    resetSelect(barangaySelect, "Select Barangay");
+
+    const selected = citySelect.selectedOptions[0];
+    if (!selected || !selected.dataset.code) {
+        barangaySelect.disabled = true;
+        return;
+    }
+
+    const cityCode = selected.dataset.code;
+
+    try {
+        const res = await fetch(`${PSGC_API}/cities-municipalities/${cityCode}/barangays/`);
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const barangays = await res.json();
+
+        barangays.sort((a,b) => a.name.localeCompare(b.name));
+
+        barangays.forEach(b => {
+            const opt = document.createElement("option");
+            opt.value = b.name;   // barangay NAME in DB
+            opt.textContent = b.name;
+            barangaySelect.appendChild(opt);
+        });
+
+        barangaySelect.disabled = barangays.length === 0;
+    } catch (e) {
+        console.error("Error loading barangays:", e);
+    }
+}
+
+// ============================
+//  Wire events
+// ============================
+document.addEventListener("DOMContentLoaded", function () {
+    if (!regionSelect) return;
+
+    // initial disabled state (view mode)
+    regionSelect.disabled   = true; 
+    provinceSelect.disabled = true;
+    citySelect.disabled     = true;
+    barangaySelect.disabled = true;
+
+    regionSelect.addEventListener("change", function () {
+        handleAppRegionChange(this.value);
+    });
+
+    provinceSelect.addEventListener("change", function () {
+        loadCitiesFromProvince();
+    });
+
+    citySelect.addEventListener("change", function () {
+        loadBarangaysFromCity();
+    });
+
+    // =============================
+    // PREFILL FROM DB VALUES
+    // =============================
+    (async function prefillAddressFromDb() {
+        const savedRegion   = "<?= addslashes($user['REGION']   ?? '') ?>";
+        const savedProvince = "<?= addslashes($user['PROVINCE'] ?? '') ?>";
+        const savedCity     = "<?= addslashes($user['CITY']     ?? '') ?>";
+        const savedBarangay = "<?= addslashes($user['BARANGAY'] ?? '') ?>";
+
+        if (!savedRegion) return;
+
+        // Show region value
+        regionSelect.value = savedRegion;
+
+        // Load provinces / cities based on region
+        await handleAppRegionChange(savedRegion);
+
+        // Province (for Metro Manila we force the single province)
+        if (savedRegion === "Metro Manila") {
+            provinceSelect.value = "Metro Manila";
+        } else if (savedProvince) {
+            [...provinceSelect.options].forEach(opt => {
+                if (opt.value === savedProvince) opt.selected = true;
+            });
+        }
+
+        await loadCitiesFromProvince();
+
+        // City
+        if (savedCity) {
+            [...citySelect.options].forEach(opt => {
+                if (opt.value === savedCity) opt.selected = true;
+            });
+        }
+
+        await loadBarangaysFromCity();
+
+        // Barangay
+        if (savedBarangay) {
+            [...barangaySelect.options].forEach(opt => {
+                if (opt.value === savedBarangay) opt.selected = true;
+            });
+        }
+
+        // keep them disabled in view mode; enableEditing() will unlock them
+        provinceSelect.disabled = true;
+        citySelect.disabled     = true;
+        barangaySelect.disabled = true;
+    })();
+});
+
+</script>
 
 </body>
 </html>
