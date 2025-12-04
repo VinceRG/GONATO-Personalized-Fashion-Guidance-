@@ -93,16 +93,17 @@
             <i class="bi bi-cart-check"></i> Orders
           </a>
 
-          <!-- Analytics nav triggers Flask analytics + section switch -->
+          <a href="#audit" class="nav-btn"
+             onclick="switchSection('audit'); loadAudit(); return false;">
+            <i class="bi bi-clipboard-data"></i> Audit Trail
+          </a>
+
+           <!-- Analytics nav triggers Flask analytics + section switch -->
           <a href="#analytics" class="nav-btn"
              onclick="switchSection('analytics'); loadFlaskAnalytics(); return false;">
             <i class="bi bi-bar-chart"></i> Analytics
           </a>
 
-          <a href="#audit" class="nav-btn"
-             onclick="switchSection('audit'); loadAudit(); return false;">
-            <i class="bi bi-clipboard-data"></i> Audit Trail
-          </a>
         </nav>
       </div>
 
@@ -280,7 +281,42 @@
         <div id="orderPagination" class="pagination-controls"></div>
       </section>
 
-      <!-- ANALYTICS SECTION -->
+     
+
+      <!-- AUDIT SECTION -->
+      <section id="audit" class="content-section">
+        <div class="section-header">
+          <div>
+            <div class="section-title"><i>Audit Trail</i></div>
+            <div class="section-subtitle">Track admin actions</div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <input type="text" id="auditSearch" placeholder="Search audit logs..." onkeyup="filterAudit()">
+        </div>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Admin</th>
+                <th>Action</th>
+                <th>Description</th>
+                <th>IP Address</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="auditTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="auditPagination" class="pagination-controls"></div>
+      </section>
+
+
+       <!-- ANALYTICS SECTION -->
       <section id="analytics" class="content-section">
         <div class="section-header">
           <div>
@@ -325,38 +361,6 @@
             <canvas id="usageChart"></canvas>
           </div>
         </div>
-      </section>
-
-      <!-- AUDIT SECTION -->
-      <section id="audit" class="content-section">
-        <div class="section-header">
-          <div>
-            <div class="section-title"><i>Audit Trail</i></div>
-            <div class="section-subtitle">Track admin actions</div>
-          </div>
-        </div>
-
-        <div class="filter-bar">
-          <input type="text" id="auditSearch" placeholder="Search audit logs..." onkeyup="filterAudit()">
-        </div>
-
-        <div class="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Admin</th>
-                <th>Action</th>
-                <th>Description</th>
-                <th>IP Address</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody id="auditTableBody">
-              <!-- Populated by JS -->
-            </tbody>
-          </table>
-        </div>
-        <div id="auditPagination" class="pagination-controls"></div>
       </section>
 
     </div> <!-- /.main-content -->
