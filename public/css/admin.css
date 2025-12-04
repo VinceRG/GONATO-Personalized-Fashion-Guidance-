@@ -19,6 +19,54 @@
       --radius-medium: 0.75rem;
       --radius-xlarge: 1.5rem;
     }
+        .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .metric-label {
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .metric-value {
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+
+    .analytics-charts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .chart-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    @media (max-width: 900px) {
+      .metrics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .analytics-charts {
+        grid-template-columns: 1fr;
+      }
+    }
 
     * {
       margin: 0;
