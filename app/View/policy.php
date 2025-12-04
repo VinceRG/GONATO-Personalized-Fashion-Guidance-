@@ -1,6 +1,6 @@
 <?php
 $terms = <<<'HTML'
-<h2>Cookies and Consent</h2>
+<h2 id="cookies">Cookies and Consent</h2>
             
 <p><strong>Last Updated:</strong> Nov 14, 2025</p>
 
@@ -45,7 +45,7 @@ $terms = <<<'HTML'
 HTML;
 
 $privacy = <<<'HTML'
-<h2>Privacy Policy</h2>
+<h2 id="privacy">Privacy Policy</h2>
             
 <p><strong>Last Updated:</strong> Nov 14, 2025</p>
 
@@ -143,8 +143,9 @@ HTML;
             </div>
 
             <p style="text-align:center; margin-top:2rem;">
-                <a href="index.php?page=login" class="back-link">Back to Sign Up</a>
+                <a href="javascript:history.back()" class="back-link">Go Back</a>
             </p>
+
         </form>
     </div>
 </body>
