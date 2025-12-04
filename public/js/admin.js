@@ -33,6 +33,11 @@ let auditLogs = [];
 let displayAuditLogs = [];
 let auditPage = 1;
 let auditPageSize = 5;
+let staffList = [];
+let currentStaff = [];
+let staffPage = 1;
+let staffPageSize = 5;
+
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -41,11 +46,23 @@ document.addEventListener('DOMContentLoaded', () => {
   loadBodyShapes();
   loadSeasons();
   loadProducts();
-  loadUsers();
   loadOrders();
   initFormHandlers();
-  loadAudit();
   initLowStockNotification();   // 🔔 set up bell + fetch
+
+  // Only super_admin should touch Users/Staff/Audit,
+  // and only if the corresponding DOM elements exist
+  if (window.ADMIN_ROLE === 'super_admin') {
+    if (document.getElementById('userTableBody') && typeof loadUsers === 'function') {
+      loadUsers();
+    }
+    if (document.getElementById('staffTableBody') && typeof loadStaff === 'function') {
+      loadStaff();
+    }
+    if (document.getElementById('auditTableBody') && typeof loadAudit === 'function') {
+      loadAudit();
+    }
+  }
 });
 
 
@@ -938,6 +955,10 @@ async function loadUsers() {
 
 function renderUsers() {
   const tbody = document.getElementById('userTableBody');
+    if (!tbody) {
+    console.warn('renderUsers called but #userTableBody not found');
+    return;
+  }
   tbody.innerHTML = '';
 
   const list = currentUsers || [];
@@ -1040,6 +1061,220 @@ async function toggleUserStatus(userId, isLocked) {
   }
 }
 
+// ==================== STAFF TAB ====================
+
+// Load staff list from API
+async function loadStaff() {
+  try {
+    const res = await fetch(`${API_BASE}&action=staff`, {
+      credentials: 'include',
+    });
+
+    if (!res.ok) {
+      // If it's 403, user is not super_admin – just quietly ignore
+      if (res.status === 403) {
+        console.warn('Staff endpoint forbidden for this user');
+        return;
+      }
+      throw new Error(`Failed to fetch staff (HTTP ${res.status})`);
+    }
+
+    staffList = await res.json();
+    currentStaff = staffList.slice();
+    staffPage = 1;
+
+    renderStaff();
+    renderStaffPagination();
+  } catch (err) {
+    console.error('loadStaff error:', err);
+    showNotification('Error loading staff: ' + err.message, 'error');
+  }
+}
+
+function renderStaff() {
+  const tbody = document.getElementById('staffTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  const list = currentStaff || [];
+
+  if (!Array.isArray(list) || list.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;">No staff found</td>
+      </tr>
+    `;
+    return;
+  }
+
+  const start = (staffPage - 1) * staffPageSize;
+  const end = start + staffPageSize;
+  const pageItems = list.slice(start, end);
+
+  pageItems.forEach(s => {
+    const tr = document.createElement('tr');
+    const isActive = Number(s.IS_ACTIVE) === 1;
+
+    tr.innerHTML = `
+      <td>${s.USERNAME}</td>
+      <td>${s.EMAIL || ''}</td>
+      <td>${s.ROLE}</td>
+      <td>${isActive ? 'Active' : 'Inactive'}</td>
+      <td>
+        <button class="btn btn-sm" type="button"
+          onclick="toggleStaffActive(${s.ADMIN_ID}, ${isActive ? 1 : 0})">
+          ${isActive ? 'Deactivate' : 'Activate'}
+        </button>
+        <button class="btn btn-sm" type="button"
+          onclick="deleteStaff(${s.ADMIN_ID})">
+          Delete
+        </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function renderStaffPagination() {
+  const containerId = 'staffPagination';
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  renderPagination(
+    containerId,
+    staffPage,
+    currentStaff.length,
+    staffPageSize,
+    (p) => {
+      staffPage = p;
+      renderStaff();
+      renderStaffPagination();
+    }
+  );
+}
+
+function filterStaff() {
+  const input = document.getElementById('staffSearch');
+  if (!input) return;
+
+  const term = input.value.toLowerCase();
+
+  currentStaff = staffList.filter(s => {
+    const uname = (s.USERNAME || '').toLowerCase();
+    const role  = (s.ROLE || '').toLowerCase();
+    return uname.includes(term) || role.includes(term);
+  });
+
+  staffPage = 1;
+  renderStaff();
+  renderStaffPagination();
+}
+
+async function toggleStaffActive(adminId, isActive) {
+  if (!confirm('Change this staff account status?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ is_active: isActive ? 0 : 1 }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to update staff status');
+    }
+
+    showNotification('Staff status updated', 'success');
+    await loadStaff();
+  } catch (err) {
+    console.error('toggleStaffActive error:', err);
+    showNotification('Error updating staff status: ' + err.message, 'error');
+  }
+}
+
+async function deleteStaff(adminId) {
+  if (!confirm('Are you sure you want to delete this staff account?')) return;
+
+  try {
+    const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to delete staff');
+    }
+
+    showNotification('Staff deleted', 'success');
+    await loadStaff();
+  } catch (err) {
+    console.error('deleteStaff error:', err);
+    showNotification('Error deleting staff: ' + err.message, 'error');
+  }
+}
+
+// ===== STAFF MODAL HANDLERS =====
+
+function openStaffModal() {
+  const modal = document.getElementById('staffModal');
+  const form  = document.getElementById('staffForm');
+  const title = document.getElementById('staffModalTitle');
+
+  if (!modal || !form) return;
+
+  form.reset();
+  if (title) title.textContent = 'Add Staff';
+  modal.style.display = 'block';
+}
+
+function closeStaffModal() {
+  const modal = document.getElementById('staffModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function saveStaff(event) {
+  if (event) event.preventDefault();
+
+  const usernameInput = document.getElementById('staffUsername');
+  const emailInput    = document.getElementById('staffEmail');
+  const passwordInput = document.getElementById('staffPassword');
+  const roleSelect    = document.getElementById('staffRole');
+
+  const username = usernameInput.value.trim();
+  const email    = emailInput.value.trim();
+  const password = passwordInput.value;
+  const role     = roleSelect.value;
+
+if (!username || !email || !password) {
+  showNotification('Username, email, and password are required', 'error');
+  return;
+}
+
+  try {
+    const res = await fetch(`${API_BASE}&action=staff`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ username, email, password, role }),
+    });
+
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to create staff');
+    }
+
+    showNotification('Staff created successfully', 'success');
+    closeStaffModal();
+    await loadStaff();
+  } catch (err) {
+    console.error('saveStaff error:', err);
+    showNotification('Error creating staff: ' + err.message, 'error');
+  }
+}
 
 
 // ==================== BODY SHAPES ====================
@@ -1160,6 +1395,11 @@ function initFormHandlers() {
     e.preventDefault();
     await saveColor();
   });
+
+  const staffForm = document.getElementById('staffForm');
+  if (staffForm) {
+    staffForm.addEventListener('submit', saveStaff);
+  }
 
   // Close modals on outside click
   window.onclick = (event) => {
@@ -1574,3 +1814,5 @@ function filterAudit() {
 // expose to inline HTML
 window.loadAudit = loadAudit;
 window.filterAudit = filterAudit;
+window.openStaffModal = openStaffModal;
+window.filterStaff = filterStaff;

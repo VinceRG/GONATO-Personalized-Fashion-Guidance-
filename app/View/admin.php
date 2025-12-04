@@ -1,3 +1,18 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// basic guard
+if (empty($_SESSION['is_admin']) || empty($_SESSION['admin_id'])) {
+    header('Location: index.php?page=login');
+    exit;
+}
+
+$adminRole     = $_SESSION['admin_role']     ?? 'staff';      // 'super_admin' | 'staff'
+$adminUsername = $_SESSION['admin_username'] ?? '@admin';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -74,8 +89,13 @@
         <div class="profile">
           <div class="profile-pic"><i class="bi bi-shield-check"></i></div>
           <div class="profile-info">
-            <h4>Admin Panel</h4>
-            <p><i>@administrator</i></p>
+            <h4>
+              <?php echo $adminRole === 'super_admin' ? 'Super Admin Panel' : 'Staff Panel'; ?>
+            </h4>
+            <p><i><?php echo htmlspecialchars($adminUsername); ?></i></p>
+            <small style="font-size: 0.8rem; color:#ccc;">
+              <?php echo $adminRole === 'super_admin' ? 'Super Admin' : 'Staff'; ?>
+            </small>
           </div>
         </div>
 
@@ -86,24 +106,31 @@
           <a href="#inventory" class="nav-btn" onclick="switchSection('inventory'); return false;">
             <i class="bi bi-box-seam"></i> Inventory
           </a>
+
+          <?php if ($adminRole === 'super_admin'): ?>
           <a href="#users" class="nav-btn" onclick="switchSection('users'); return false;">
             <i class="bi bi-people"></i> Users
           </a>
+          <?php endif; ?>
+
           <a href="#orders" class="nav-btn" onclick="switchSection('orders'); return false;">
             <i class="bi bi-cart-check"></i> Orders
           </a>
 
-          <a href="#audit" class="nav-btn"
-             onclick="switchSection('audit'); loadAudit(); return false;">
-            <i class="bi bi-clipboard-data"></i> Audit Trail
-          </a>
+          <?php if ($adminRole === 'super_admin'): ?>
+            <a href="#staff" class="nav-btn" onclick="switchSection('staff'); loadStaff(); return false;">
+              <i class="bi bi-person-gear"></i> Staff
+            </a>
+            <a href="#audit" class="nav-btn" onclick="switchSection('audit'); loadAudit(); return false;">
+              <i class="bi bi-clipboard-data"></i> Audit Trail
+            </a>
+          <?php endif; ?>
 
-           <!-- Analytics nav triggers Flask analytics + section switch -->
+          <!-- Analytics nav triggers Flask analytics + section switch -->
           <a href="#analytics" class="nav-btn"
              onclick="switchSection('analytics'); loadFlaskAnalytics(); return false;">
             <i class="bi bi-bar-chart"></i> Analytics
           </a>
-
         </nav>
       </div>
 
@@ -126,7 +153,6 @@
     <!-- MAIN CONTENT -->
     <div class="main-content">
 
-      <!-- Top utils: notifications, etc. -->
       <div class="top-utils">
         <button class="icon-btn" id="lowStockBtn" type="button" title="Low stock alerts">
           <i class="bi bi-bell"></i>
@@ -206,7 +232,8 @@
         <div id="inventoryPagination" class="pagination-controls"></div>
       </section>
 
-      <!-- USERS SECTION -->
+      <!-- USERS SECTION – only for super_admin -->
+      <?php if ($adminRole === 'super_admin'): ?>
       <section id="users" class="content-section">
         <div class="section-header">
           <div>
@@ -242,6 +269,7 @@
         </div>
         <div id="userPagination" class="pagination-controls"></div>
       </section>
+      <?php endif; ?>
 
       <!-- ORDERS SECTION -->
       <section id="orders" class="content-section">
@@ -281,9 +309,48 @@
         <div id="orderPagination" class="pagination-controls"></div>
       </section>
 
-     
+      <!-- STAFF SECTION – only for super_admin -->
+      <?php if ($adminRole === 'super_admin'): ?>
+      <section id="staff" class="content-section">
+        <div class="section-header">
+          <div>
+            <div class="section-title"><i>Staff Management</i></div>
+            <div class="section-subtitle">Create and manage admin staff accounts</div>
+          </div>
+          <button class="btn" type="button" onclick="openStaffModal()">
+            <i class="bi bi-person-plus"></i> Add Staff
+          </button>
+        </div>
 
-      <!-- AUDIT SECTION -->
+        <div class="filter-bar">
+          <input 
+            type="text" 
+            id="staffSearch" 
+            placeholder="Search staff by username or role..." 
+            onkeyup="filterStaff()"
+          >
+        </div>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="staffTableBody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="staffPagination" class="pagination-controls"></div>
+      </section>
+
+      <!-- AUDIT SECTION – only for super_admin -->
       <section id="audit" class="content-section">
         <div class="section-header">
           <div>
@@ -314,9 +381,9 @@
         </div>
         <div id="auditPagination" class="pagination-controls"></div>
       </section>
+      <?php endif; ?>
 
-
-       <!-- ANALYTICS SECTION -->
+      <!-- ANALYTICS SECTION -->
       <section id="analytics" class="content-section">
         <div class="section-header">
           <div>
@@ -366,7 +433,7 @@
     </div> <!-- /.main-content -->
   </div> <!-- /.admin-container -->
 
-  <!-- MODALS (only one of each!) -->
+  <!-- MODALS -->
 
   <!-- PRODUCT MODAL -->
   <div id="productModal" class="modal">
@@ -469,6 +536,46 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeInventoryModal()">Cancel</button>
           <button type="submit" class="btn">Save Variant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- STAFF MODAL -->
+  <div id="staffModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title" id="staffModalTitle">Add Staff</h2>
+        <button class="close-modal" type="button" onclick="closeStaffModal()">&times;</button>
+      </div>
+
+      <form id="staffForm">
+        <div class="form-group">
+          <label>Username *</label>
+          <input type="text" id="staffUsername" name="staffUsername" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="staffEmail" name="staffEmail" required>
+        </div>
+
+        <div class="form-group">
+          <label>Password *</label>
+          <input type="password" id="staffPassword" name="staffPassword" required>
+        </div>
+
+        <div class="form-group">
+          <label>Role</label>
+          <select id="staffRole" name="staffRole">
+            <option value="staff">Staff</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeStaffModal()">Cancel</button>
+          <button type="submit" class="btn">Save</button>
         </div>
       </form>
     </div>
@@ -613,8 +720,8 @@
         );
 
         // ------- Usage by Month Chart -------
-        const usageLabels = data.usageByMonth.labels || [];
-        const usageValues = data.usageByMonth.values || [];
+        const usageLabels = (data.usageByMonth && data.usageByMonth.labels) || [];
+        const usageValues = (data.usageByMonth && data.usageByMonth.values) || [];
 
         if (usageChartInstance) usageChartInstance.destroy();
         usageChartInstance = new Chart(
