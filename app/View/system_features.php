@@ -10,573 +10,623 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="public/js/system_features.js" defer></script>
   <style>
-    /* Ensure hidden utility class exists for the toggling logic */
-    .hidden { display: none !important; }
-
-
-    /* Small helper text for upload rules */
-    .upload-rules {
-      font-size: 0.8rem;
-      color: #666;
-      margin-top: 4px;
-      line-height: 1.4;
-    }
-
-    /* Overlay */
-    .overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(15, 23, 42, 0.35);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-
-    /* Modal Container */
-    .modal {
-      background: #ffffff;
-      border-radius: 20px;
-      max-width: 640px;
-      width: 95%;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      color: #0f172a;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    }
-
-    /* Header */
-    .modal-header {
-      padding: 1.5rem 2rem;
-      border-bottom: 1px solid #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #ffffff;
-    }
-
-    .header-main {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    /* Bigger avatar, clickable (for change photo) */
-    .header-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      overflow: hidden;
-      background: #e5e7eb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .header-avatar img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .header-initials {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #A68763;
-      color: #f9fafb;
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .header-avatar.editing::after {
-      content: "Change";
-      position: absolute;
-      inset: 0;
-      background: #A68763;
-      color: #f9fafb;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    /* Name + username */
-    .header-text {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-
-    .header-name {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin: 0;
-      color: #0f172a;
-    }
-
-    .header-username {
-      font-size: 0.9rem;
-      color: #6b7280;
-    }
-
-    /* Right side of header */
-    .header-right {
-      display: flex;
-      align-items: first baseline;
-      gap: 0.75rem;
-    }
-
-    /* View Orders button in header */
-    .btn-view-orders-header {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      padding: 0.7rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #111827;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-    }
-
-    .btn-view-orders-header:hover {
-      background: #2D2D2D;
-      color: #D7C9AE;
-    }
-
-    /* Close button */
-    .close-btn {
-      background: none;
-      border: none;
-      font-size: 1.25rem;
-      cursor: pointer;
-      color: #9ca3af;
-      padding: 4px;
-      border-radius: 50%;
-      transition: 0.15s;
-    }
-
-    .close-btn:hover {
-      background: #D10000;
-      color: #EAE0D2;
-    }
-
-    /* Edit row (under header) */
-    .edit-row {
-      padding: 0.75rem 0 0;
-      display: flex;
-      justify-content: flex-end;
-    }
-
-    .btn-edit-profile {
-      padding: 0.5rem 1rem;
-      font-size: 0.85rem;
-      border-radius: 6px;
-      border: 1px solid #e5e7eb;
-      background: #f9fafb;
-      cursor: pointer;
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .btn-edit-profile:hover:not(:disabled) {
-      background: #2D2D2D;
-      color: #D7C9AE;
-    }
-
-    /* Body */
-    .modal-body {
-      padding: 2rem;
-      max-height: 75vh;
-      overflow-y: auto;
-    }
-
-    /* Basic form styles */
-
-    .address-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    .form-group {
-      margin-bottom: 1.25rem;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .form-group label,
-    .input-wrapper label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #111827;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
-
-    input[type="text"],
-    input[type="email"],
-    textarea,
-    select {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      transition: 0.15s;
-      color: #111827;
-      background: #f9fafb;
-    }
-
-    input:disabled,
-    textarea:disabled,
-    select:disabled {
-      background: #f3f4f6;
-      color: #9ca3af;
-    }
-
-    input:focus,
-    textarea:focus,
-    select:focus {
-      outline: none;
-      border-color: #111827;
-      background: #ffffff;
-    }
-
-    /* Username row */
-    .form-row {
-      margin-bottom: 1.5rem;
-    }
-
-    .username-display {
-      position: relative;
-    }
-
-    .url-domain {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #9ca3af;
-      font-size: 0.9rem;
-    }
-
-    .username-display input {
-      padding-left: 45px;
-      font-weight: 600;
-    }
-
-    .username-display input i {
-      size: 50px;
-    }
-
-    /* Grid for first/last name */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    /* Email icon */
-    .input-with-icon {
-      position: relative;
-    }
-
-    .input-with-icon i {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #9ca3af;
-    }
-
-    .input-with-icon input {
-      padding-left: 38px;
-    }
-
-    /* Address selects & validation */
-    .address-select {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      border: 1px solid #e5e7eb;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      background: #f9fafb;
-      color: #111827;
-    }
-
-    .address-group {
-      position: relative;
-    }
-
-    .field-error {
-      display: none;
-      font-size: 0.75rem;
-      color: #b91c1c;
-      margin-top: 0.25rem;
-    }
-
-    .address-group.has-error .field-error {
-      display: block;
-    }
-
-    /* Style profile card */
-    .info-card-rect {
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      margin-top: 1.25rem;
-      background: #eae0d2;
-    }
-
-    .info-card-header {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .info-card-header h3 {
-      margin: 0;
-      font-size: 0.95rem;
-      font-weight: 700;
-    }
-
-    .info-empty {
-      font-size: 0.85rem;
-      color: #6b7280;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .btn-rect-secondary {
-      border: 1px solid #e5e7eb;
-      background: #ffffff;
-      border-radius: 6px;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.8rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      cursor: pointer;
-      font-weight: 600;
-    }
-
-    .btn-rect-secondary:hover {
-      background: #2D2D2D;
-      color: #eae0d2;
-    }
-
-    .info-item-clean {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      padding: 0.2rem 0;
-    }
-
-    .info-label {
-      color: #6b7280;
-    }
-
-    .info-value {
-      font-weight: 600;
-      color: #111827;
-    }
-
-    /* Footer: hidden until editing */
-    .modal-footer {
-      margin-top: 1.5rem;
-      display: none; /* shown via JS in edit mode */
-      justify-content: flex-end;
-      gap: 0.75rem;
-      border-top: 1px solid #e5e7eb;
-      padding-top: 1.25rem;
-    }
-
-    .btn-cancel {
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      color: #4b5563;
-      font-weight: 600;
-      cursor: pointer;
-      padding: 0.7rem 1.5rem;
-      border-radius: 6px;
-    }
-
-    .btn-cancel:hover {
-      background: #f3f4f6;
-    }
-
-    .btn-save {
-      background: #111827;
-      color: #ffffff;
-      border: none;
-      border-radius: 6px;
-      padding: 0.7rem 1.6rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.15s;
-    }
-
-    .btn-save:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    .btn-save:not(:disabled):hover {
-      background: #000000;
-    }
-
-    /* Purchases view */
-    .view-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .btn-back {
-      background: none;
-      border: none;
-      color: #6b7280;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-weight: 500;
-    }
-
-    .btn-back:hover {
-      color: #111827;
-    }
-
-    /* Sub-tabs */
-    .sub-tabs {
-      display: inline-flex;
-      gap: 0.5rem;
-      border-bottom: 1px solid #e5e7eb;
-      margin-bottom: 1rem;
-      width: 95%;
-    }
-
-    .sub-tab-btn {
-      border: none;
-      background: transparent;
-      padding: 0.65rem 1rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #6b7280;
-      border-radius: 6px 6px 0 0;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      cursor: pointer;
-    }
-
-    .sub-tab-btn i {
-      font-size: 0.9rem;
-    }
-
-    .sub-tab-btn.active {
-      color: #111827;
-      background: #ffffff;
-      border: 1px solid #e5e7eb;
-      border-bottom-color: #ffffff;
-    }
-
-    .sub-tab-content {
-      display: none;
-    }
-
-    .sub-tab-content.active {
-      display: block;
-    }
-
-    /* Order cards */
-    .order-card {
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
-      padding: 1rem 1.1rem;
-      background: #ffffff;
-      margin-bottom: 1rem;
-    }
-
-    .order-header,
-    .order-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.85rem;
-    }
-
-    .order-header {
-      margin-bottom: 0.75rem;
-      color: #4b5563;
-    }
-
-    .order-footer {
-      margin-top: 0.75rem;
-      color: #6b7280;
-    }
-
-    .order-body {
-      border-top: 1px dashed #e5e7eb;
-      border-bottom: 1px dashed #e5e7eb;
-      padding: 0.75rem 0;
-    }
-
-    .order-item {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.9rem;
-      padding: 0.2rem 0;
-    }
-
-    .item-name {
-      color: #111827;
-    }
-
-    .item-price {
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .order-number {
-      font-weight: 600;
-    }
-
-    .order-total {
-      font-weight: 600;
-      color: #111827;
-    }
-
-    .order-status {
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-    }
-
-    .status-processing {
-      color: #d97706;
-      background: #fffbeb;
-    }
-
-    .status-completed {
-      color: #059669;
-      background: #ecfdf5;
-    }
+      /* Full-screen loading overlay for image analysis */
+      .loading-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65); /* dark semi-transparent */
+        display: none;                      /* hidden by default; use .hidden too if you like */
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        backdrop-filter: blur(2px);
+        font-family: 'Lexend', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .loading-box {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 2rem 2.5rem;
+        text-align: center;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+        max-width: 320px;
+        width: 90%;
+      }
+
+      .loading-spinner {
+        width: 48px;
+        height: 48px;
+        border-radius: 999px;
+        border: 4px solid #e5e7eb;
+        border-top-color: #2D2D2D; /* your dark theme color */
+        animation: spin 0.9s linear infinite;
+        margin: 0 auto 1.25rem;
+      }
+
+      .loading-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 0.35rem;
+        color: #111827;
+      }
+
+      .loading-text {
+        font-size: 0.9rem;
+        color: #6b7280;
+        line-height: 1.5;
+      }
+
+      /* Simple spinner animation */
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+          /* Ensure hidden utility class exists for the toggling logic */
+          .hidden { display: none !important; }
+
+
+          /* Small helper text for upload rules */
+          .upload-rules {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 4px;
+            line-height: 1.4;
+          }
+
+          /* Overlay */
+          .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.35);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+          }
+
+          /* Modal Container */
+          .modal {
+            background: #ffffff;
+            border-radius: 20px;
+            max-width: 640px;
+            width: 95%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            color: #0f172a;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          }
+
+          /* Header */
+          .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ffffff;
+          }
+
+          .header-main {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+          }
+
+          /* Bigger avatar, clickable (for change photo) */
+          .header-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+          }
+
+          .header-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+
+          .header-initials {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #A68763;
+            color: #f9fafb;
+            font-weight: 700;
+            font-size: 1.1rem;
+          }
+
+          .header-avatar.editing::after {
+            content: "Change";
+            position: absolute;
+            inset: 0;
+            background: #A68763;
+            color: #f9fafb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+          }
+
+          /* Name + username */
+          .header-text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+          }
+
+          .header-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+            color: #0f172a;
+          }
+
+          .header-username {
+            font-size: 0.9rem;
+            color: #6b7280;
+          }
+
+          /* Right side of header */
+          .header-right {
+            display: flex;
+            align-items: first baseline;
+            gap: 0.75rem;
+          }
+
+          /* View Orders button in header */
+          .btn-view-orders-header {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            padding: 0.7rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #111827;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+          }
+
+          .btn-view-orders-header:hover {
+            background: #2D2D2D;
+            color: #D7C9AE;
+          }
+
+          /* Close button */
+          .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 4px;
+            border-radius: 50%;
+            transition: 0.15s;
+          }
+
+          .close-btn:hover {
+            background: #D10000;
+            color: #EAE0D2;
+          }
+
+          /* Edit row (under header) */
+          .edit-row {
+            padding: 0.75rem 0 0;
+            display: flex;
+            justify-content: flex-end;
+          }
+
+          .btn-edit-profile {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb;
+            background: #f9fafb;
+            cursor: pointer;
+            font-weight: 600;
+            color: #111827;
+          }
+
+          .btn-edit-profile:hover:not(:disabled) {
+            background: #2D2D2D;
+            color: #D7C9AE;
+          }
+
+          /* Body */
+          .modal-body {
+            padding: 2rem;
+            max-height: 75vh;
+            overflow-y: auto;
+          }
+
+          /* Basic form styles */
+
+          .address-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+          }
+
+          .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+          }
+
+          .form-group label,
+          .input-wrapper label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 0.5rem;
+            display: block;
+          }
+
+          input[type="text"],
+          input[type="email"],
+          textarea,
+          select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: 0.15s;
+            color: #111827;
+            background: #f9fafb;
+          }
+
+          input:disabled,
+          textarea:disabled,
+          select:disabled {
+            background: #f3f4f6;
+            color: #9ca3af;
+          }
+
+          input:focus,
+          textarea:focus,
+          select:focus {
+            outline: none;
+            border-color: #111827;
+            background: #ffffff;
+          }
+
+          /* Username row */
+          .form-row {
+            margin-bottom: 1.5rem;
+          }
+
+          .username-display {
+            position: relative;
+          }
+
+          .url-domain {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 0.9rem;
+          }
+
+          .username-display input {
+            padding-left: 45px;
+            font-weight: 600;
+          }
+
+          .username-display input i {
+            size: 50px;
+          }
+
+          /* Grid for first/last name */
+          .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+          }
+
+          /* Email icon */
+          .input-with-icon {
+            position: relative;
+          }
+
+          .input-with-icon i {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+          }
+
+          .input-with-icon input {
+            padding-left: 38px;
+          }
+
+          /* Address selects & validation */
+          .address-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            background: #f9fafb;
+            color: #111827;
+          }
+
+          .address-group {
+            position: relative;
+          }
+
+          .field-error {
+            display: none;
+            font-size: 0.75rem;
+            color: #b91c1c;
+            margin-top: 0.25rem;
+          }
+
+          .address-group.has-error .field-error {
+            display: block;
+          }
+
+          /* Style profile card */
+          .info-card-rect {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-top: 1.25rem;
+            background: #eae0d2;
+          }
+
+          .info-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+          }
+
+          .info-card-header h3 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+          }
+
+          .info-empty {
+            font-size: 0.85rem;
+            color: #6b7280;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+          }
+
+          .btn-rect-secondary {
+            border: 1px solid #e5e7eb;
+            background: #ffffff;
+            border-radius: 6px;
+            padding: 0.4rem 0.9rem;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            font-weight: 600;
+          }
+
+          .btn-rect-secondary:hover {
+            background: #2D2D2D;
+            color: #eae0d2;
+          }
+
+          .info-item-clean {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 0.2rem 0;
+          }
+
+          .info-label {
+            color: #6b7280;
+          }
+
+          .info-value {
+            font-weight: 600;
+            color: #111827;
+          }
+
+          /* Footer: hidden until editing */
+          .modal-footer {
+            margin-top: 1.5rem;
+            display: none; /* shown via JS in edit mode */
+            justify-content: flex-end;
+            gap: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 1.25rem;
+          }
+
+          .btn-cancel {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            color: #4b5563;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.7rem 1.5rem;
+            border-radius: 6px;
+          }
+
+          .btn-cancel:hover {
+            background: #f3f4f6;
+          }
+
+          .btn-save {
+            background: #111827;
+            color: #ffffff;
+            border: none;
+            border-radius: 6px;
+            padding: 0.7rem 1.6rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.15s;
+          }
+
+          .btn-save:disabled {
+            opacity: 0.5;
+            cursor: default;
+          }
+
+          .btn-save:not(:disabled):hover {
+            background: #000000;
+          }
+
+          /* Purchases view */
+          .view-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+          }
+
+          .btn-back {
+            background: none;
+            border: none;
+            color: #6b7280;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 500;
+          }
+
+          .btn-back:hover {
+            color: #111827;
+          }
+
+          /* Sub-tabs */
+          .sub-tabs {
+            display: inline-flex;
+            gap: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 1rem;
+            width: 95%;
+          }
+
+          .sub-tab-btn {
+            border: none;
+            background: transparent;
+            padding: 0.65rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6b7280;
+            border-radius: 6px 6px 0 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            cursor: pointer;
+          }
+
+          .sub-tab-btn i {
+            font-size: 0.9rem;
+          }
+
+          .sub-tab-btn.active {
+            color: #111827;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-bottom-color: #ffffff;
+          }
+
+          .sub-tab-content {
+            display: none;
+          }
+
+          .sub-tab-content.active {
+            display: block;
+          }
+
+          /* Order cards */
+          .order-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            padding: 1rem 1.1rem;
+            background: #ffffff;
+            margin-bottom: 1rem;
+          }
+
+          .order-header,
+          .order-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+          }
+
+          .order-header {
+            margin-bottom: 0.75rem;
+            color: #4b5563;
+          }
+
+          .order-footer {
+            margin-top: 0.75rem;
+            color: #6b7280;
+          }
+
+          .order-body {
+            border-top: 1px dashed #e5e7eb;
+            border-bottom: 1px dashed #e5e7eb;
+            padding: 0.75rem 0;
+          }
+
+          .order-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            padding: 0.2rem 0;
+          }
+
+          .item-name {
+            color: #111827;
+          }
+
+          .item-price {
+            font-weight: 600;
+            color: #111827;
+          }
+
+          .order-number {
+            font-weight: 600;
+          }
+
+          .order-total {
+            font-weight: 600;
+            color: #111827;
+          }
+
+          .order-status {
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+          }
+
+          .status-processing {
+            color: #d97706;
+            background: #fffbeb;
+          }
+
+          .status-completed {
+            color: #059669;
+            background: #ecfdf5;
+          }
 
   </style>
 </head>
@@ -584,6 +634,8 @@
 
 <body>
 <?php
+require_once './app/Helpers/Csrf.php';
+$csrfToken = Csrf::getToken();
   // Flash messages from analysis controllers (body + color)
   $flashSuccess = $_SESSION['successMessage']      ?? '';
   $flashError   = $_SESSION['errorMessage']        ?? '';
@@ -643,61 +695,7 @@
       }, 3000);
     </script>
   <?php endif; ?>
-  <?php
-  // ================= RECOMMENDATIONS LOGIC =================
-
-  // Where your product images are stored (adjust if different)
-  $productImageBasePath = "uploads/products/";
-
-  $recommendations = [];
-
-  // Make sure we have a logged-in user & a DB connection ($pdo or whatever you use)
-  if (!empty($user['USER_ID']) && isset($pdo)) {
-
-      $userId = (int)$user['USER_ID'];
-
-      $sql = "
-          SELECT
-              p.PRODUCT_ID,
-              p.PRODUCT_NAME,
-              p.DESCRIPTION,
-              p.PRICE,
-              p.IMAGE_FILE,
-              bs.BODY_TYPE,
-              s.SEASON_TYPE,
-              c.COLOR_VALUE,
-              i.SIZE,
-              i.QUANTITY
-          FROM users u
-          JOIN products p
-              ON p.BODY_SHAPE_ID = u.BODY_SHAPE_ID
-          JOIN inventory i
-              ON i.PRODUCT_ID = p.PRODUCT_ID
-          JOIN colors c
-              ON c.COLOR_ID = i.COLOR_ID
-          JOIN seasons s
-              ON c.SEASON_ID = s.SEASON_ID
-          LEFT JOIN body_shapes bs
-              ON bs.BODY_SHAPE_ID = u.BODY_SHAPE_ID
-          WHERE
-              u.USER_ID        = :user_id
-              AND u.SEASON_ID IS NOT NULL
-              AND u.BODY_SHAPE_ID IS NOT NULL
-              AND c.SEASON_ID   = u.SEASON_ID
-              AND i.QUANTITY    > 0
-          ORDER BY
-              p.CREATED_AT DESC,
-              p.PRODUCT_NAME
-          LIMIT 8
-      ";
-
-      $stmt = $pdo->prepare($sql);
-      $stmt->execute(['user_id' => $userId]);
-      $recommendations = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-  }
-?>
-
-
+  
   <div class="results-container">
     <aside class="sidebar" id="appSidebar" aria-expanded="true">
       <div>
@@ -747,78 +745,75 @@
 
 
     <div class="main-content">
-      <section id="catalog-shop" class="content-section active">
-        <div class="shop-header">
-          <div>
-            <h2 class="section-title"><i>Shopping Catalog</i></h2>
-            <p class="section-subtitle">Find your perfect outfit below or explore personalized picks.</p>
-          </div>
+<section id="catalog-shop" class="content-section active">
+  <div class="shop-header">
+    <div>
+      <h2 class="section-title"><i>Shopping Catalog</i></h2>
+      <p class="section-subtitle">Find your perfect outfit below or explore personalized picks.</p>
+    </div>
 
+    <div class="shop-controls">
+      <button class="cart-button" type="button" onclick="openCart()">
+        <i class="bi bi-cart"></i>
+        <span class="cart-count" id="cartCount"></span>
+      </button>
+    </div>
+  </div>
 
-          <div class="shop-controls">
-            <button class="cart-button" type="button" onclick="openCart()">
-              <i class="bi bi-cart"></i>
-              <span class="cart-count" id="cartCount"></span>
+  <?php
+    // base path for product images (same as your catalog)
+    $imageBasePath = 'public/image/';
+  ?>
+
+  <?php if (!empty($bodyShape) && !empty($season) && !empty($recommendedProducts)): ?>
+    <!-- RECOMMENDATIONS ONLY SHOWN WHEN USER HAS BOTH ANALYSES -->
+    <div id="recommendations" class="subsection">
+      <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
+      <p class="section-subtitle">Based on your color and body analysis results.</p>
+
+      <div class="clothes-grid">
+        <?php foreach ($recommendedProducts as $product): ?>
+          <div 
+            class="clothes-item catalog-item"
+            data-product-id="<?= (int)$product['PRODUCT_ID'] ?>"
+            data-name="<?= htmlspecialchars($product['PRODUCT_NAME']) ?>"
+            data-price="<?= htmlspecialchars($product['PRICE']) ?>"
+          >
+            <img
+              src="<?= $imageBasePath . htmlspecialchars($product['IMAGE_FILE']) ?>"
+              alt="<?= htmlspecialchars($product['PRODUCT_NAME']) ?>"
+            >
+
+            <button class="add-to-cart"
+                    onclick="openVariantModal(<?= (int)$product['PRODUCT_ID'] ?>)">
+              <i class="bi bi-bag-plus"></i>
             </button>
+
+            <div class="clothes-caption">
+              <span class="title"><?= htmlspecialchars($product['PRODUCT_NAME']) ?></span>
+              <span class="price">₱<?= number_format($product['PRICE'], 2) ?></span>
+            </div>
+
+            <?php if (!empty($bodyShape) || !empty($season)): ?>
+              <div class="recommendation-tags">
+                <?php if (!empty($bodyShape)): ?>
+                  <p class="tag">Perfect for <?= htmlspecialchars($bodyShape) ?> body shapes</p>
+                <?php endif; ?>
+                <?php if (!empty($season)): ?>
+                  <p class="tag">Matches your <?= htmlspecialchars($season) ?> palette</p>
+                <?php endif; ?>
+              </div>
+            <?php endif; ?>
           </div>
-        </div>
-
-
-        <div id="recommendations" class="subsection">
-          <h3 class="section-title" style="font-size: 1.8rem;">Recommended for You</h3>
-          <p class="section-subtitle">Based on your color and body analysis results.</p>
-
-
-          <div class="clothes-grid">
-  <?php if (!empty($recommendations)): ?>
-    <?php foreach ($recommendations as $item): ?>
-      <div class="clothes-item">
-        <img
-          src="<?= htmlspecialchars($productImageBasePath . $item['IMAGE_FILE']) ?>"
-          alt="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
-        >
-
-
-        <!-- Heart / add-to-cart button (wired with data-attributes if you want JS to use them) -->
-        <button
-          class="add-to-cart"
-          data-product-id="<?= (int)$item['PRODUCT_ID'] ?>"
-          data-product-name="<?= htmlspecialchars($item['PRODUCT_NAME']) ?>"
-          data-price="<?= htmlspecialchars($item['PRICE']) ?>"
-          data-size="<?= htmlspecialchars($item['SIZE']) ?>"
-          data-color="<?= htmlspecialchars($item['COLOR_VALUE'] ?? '') ?>"
-        >
-          <i class="bi bi-heart"></i>
-        </button>
-
-
-        <div class="clothes-caption">
-          <span class="title">
-            <?= htmlspecialchars($item['PRODUCT_NAME']) ?>
-          </span>
-          <span class="price">
-            ₱<?= number_format($item['PRICE'], 2) ?>
-          </span>
-        </div>
+        <?php endforeach; ?>
       </div>
-    <?php endforeach; ?>
-  <?php else: ?>
-    <p class="section-subtitle" style="grid-column: 1 / -1; margin-top: 1rem;">
-      No personalized items yet. Complete your
-      <a href="#features" style="text-decoration: underline;">color and body shape analysis</a>
-      to unlock outfit recommendations.
-    </p>
+    </div>
   <?php endif; ?>
-</div>
 
+  <!-- Always show main catalog -->
+  <?php include 'catalog.php'; ?>
+</section>
 
-        </div>
-
-
-      <?php include 'catalog.php'; ?>
-
-
-      </section>
 
 
       <section id="features" class="content-section">
@@ -851,9 +846,11 @@
 
 
             <div id="colorUploadSection" class="upload-section <?= $showColorResults ? 'hidden' : '' ?>">
-              <form id="colorForm" method="POST" action="index.php?page=process_color_analysis" enctype="multipart/form-data">
-                <label>Face Image (Selfie):</label>
-                <input type="file" name="face_image" accept="image/*" required>
+                <form id="colorForm" method="POST" action="index.php?page=process_color_analysis" enctype="multipart/form-data">
+                  <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+
+                  <label>Face Image (Selfie):</label>
+                  <input type="file" name="face_image" accept="image/*" required>
                
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                   <button type="submit" class="btn" style="flex: 1;">
@@ -913,6 +910,8 @@
 
             <div class="upload-section <?= $showResultsByDefault ? 'hidden' : '' ?>">
               <form id="bodyShapeForm" method="POST" action="index.php?page=process_body_shape" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrfToken) ?>">
+
                 <label>Front Image:</label>
                 <input type="file" name="front_image" accept="image/*" required>
                 <br>
@@ -921,7 +920,6 @@
                 <br>
                 <label>Height (cm):</label>
                 <input type="number" name="height_cm" placeholder="Enter your height in cm" required>
-
 
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                   <button type="submit" class="btn" style="flex: 1;">
@@ -1252,46 +1250,122 @@
 
         <!-- SUB TAB CONTENT: ORDERS -->
         <div class="sub-tab-content active" id="orders">
-          <div class="order-card">
-            <div class="order-header">
-              <span class="order-number">#001234</span>
-              <span class="order-status status-processing">Processing</span>
-            </div>
-            <div class="order-body">
-              <div class="order-item">
-                <span class="item-name">Elegant Silk Blouse</span>
-                <span class="item-price">₱2,500</span>
+          <?php if (!empty($ordersByTab['orders'])): ?>
+            <?php foreach ($ordersByTab['orders'] as $order): ?>
+              <?php
+                $orderId    = (int)$order['ORDER_ID'];
+                $statusText = mapStatusLabel($order['STATUS']);   // e.g. "Processing", "Confirmed"
+                $statusCls  = mapStatusClass($order['STATUS']);   // e.g. "status-processing"
+              ?>
+              <div class="order-card">
+                <div class="order-header">
+                  <span class="order-number">
+                    <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
+                  </span>
+                  <span class="order-status <?= htmlspecialchars($statusCls); ?>">
+                    <?= htmlspecialchars($statusText); ?>
+                  </span>
+                </div>
+
+                <div class="order-body">
+                  <?php if (!empty($orderItems[$orderId])): ?>
+                    <?php foreach ($orderItems[$orderId] as $item): ?>
+                      <div class="order-item">
+                        <span class="item-name">
+                          <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
+                          <?php if (!empty($item['COLOR_NAME'])): ?>
+                            (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
+                            <?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php else: ?>
+                            (<?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php endif; ?>
+                        </span>
+                        <span class="item-price">
+                          ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
+                          × <?= (int)$item['QUANTITY']; ?>
+                        </span>
+                      </div>
+                    <?php endforeach; ?>
+                  <?php else: ?>
+                    <p class="empty-state">No items found for this order.</p>
+                  <?php endif; ?>
+                </div>
+
+                <div class="order-footer">
+                  <span class="order-date">
+                    Ordered: <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
+                  </span>
+                  <span class="order-total">
+                    Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
+                  </span>
+                </div>
               </div>
-              <div class="order-item">
-                <span class="item-name">Classic Denim Jeans</span>
-                <span class="item-price">₱1,800</span>
-              </div>
-            </div>
-            <div class="order-footer">
-              <span class="order-date">Ordered: Oct 20, 2025</span>
-              <span class="order-total">Total: ₱4,300</span>
-            </div>
-          </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p class="empty-state">You don’t have active orders yet.</p>
+          <?php endif; ?>
         </div>
 
         <!-- SUB TAB CONTENT: HISTORY -->
         <div class="sub-tab-content" id="history">
-          <div class="order-card">
-            <div class="order-header">
-              <span class="order-number">#001220</span>
-              <span class="order-status status-completed">Completed</span>
-            </div>
-            <div class="order-body">
-              <div class="order-item">
-                <span class="item-name">Designer Sunglasses</span>
-                <span class="item-price">₱1,500</span>
+          <?php if (!empty($ordersByTab['history'])): ?>
+            <?php foreach ($ordersByTab['history'] as $order): ?>
+              <?php
+                $orderId    = (int)$order['ORDER_ID'];
+                $statusText = mapStatusLabel($order['STATUS']);
+                $statusCls  = mapStatusClass($order['STATUS']);
+              ?>
+              <div class="order-card">
+                <div class="order-header">
+                  <span class="order-number">
+                    <?= htmlspecialchars($order['ORDER_NUMBER']); ?>
+                  </span>
+                  <span class="order-status <?= htmlspecialchars($statusCls); ?>">
+                    <?= htmlspecialchars($statusText); ?>
+                  </span>
+                </div>
+
+                <div class="order-body">
+                  <?php if (!empty($orderItems[$orderId])): ?>
+                    <?php foreach ($orderItems[$orderId] as $item): ?>
+                      <div class="order-item">
+                        <span class="item-name">
+                          <?= htmlspecialchars($item['PRODUCT_NAME']); ?>
+                          <?php if (!empty($item['COLOR_NAME'])): ?>
+                            (<?= htmlspecialchars($item['COLOR_NAME']); ?>,
+                            <?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php else: ?>
+                            (<?= htmlspecialchars($item['SIZE']); ?>)
+                          <?php endif; ?>
+                        </span>
+                        <span class="item-price">
+                          ₱<?= number_format($item['UNIT_PRICE'], 2); ?>
+                          × <?= (int)$item['QUANTITY']; ?>
+                        </span>
+                      </div>
+                    <?php endforeach; ?>
+                  <?php else: ?>
+                    <p class="empty-state">No items found for this order.</p>
+                  <?php endif; ?>
+                </div>
+
+                <div class="order-footer">
+                  <?php
+                    // Optional: show "Delivered" instead of "Ordered" for completed orders
+                    $dateLabel = ($order['STATUS'] === 'delivered') ? 'Delivered:' : 'Ordered:';
+                  ?>
+                  <span class="order-date">
+                    <?= $dateLabel ?> <?= date('M d, Y H:i', strtotime($order['ORDER_DATE'])); ?>
+                  </span>
+                  <span class="order-total">
+                    Total: ₱<?= number_format($order['TOTAL_AMOUNT'], 2); ?>
+                  </span>
+                </div>
               </div>
-            </div>
-            <div class="order-footer">
-              <span class="order-date">Delivered: Oct 15, 2025</span>
-              <span class="order-total">Total: ₱1,500</span>
-            </div>
-          </div>
+            <?php endforeach; ?>
+          <?php else: ?>
+            <p class="empty-state">You don’t have any past orders yet.</p>
+          <?php endif; ?>
         </div>
       </div>
 
@@ -1529,17 +1603,6 @@
         >
           Close
         </button>
-        <button
-          class="btn"
-          onclick="document.getElementById('recommendations')?.scrollIntoView({behavior:'smooth'})"
-          style="
-            margin-top: 0;
-            padding: 0.5rem 1.2rem;
-            font-size: 0.9rem;
-          "
-        >
-          See Outfit Recommendations
-        </button>
       </div>
     </div>
   </div>
@@ -1658,17 +1721,6 @@
         >
           Close
         </button>
-        <button
-          class="btn"
-          onclick="document.getElementById('recommendations')?.scrollIntoView({behavior:'smooth'})"
-          style="
-            margin-top: 0;
-            padding: 0.5rem 1.2rem;
-            font-size: 0.9rem;
-          "
-        >
-          See Outfit Recommendations
-        </button>
       </div>
     </div>
   </div>
@@ -1727,9 +1779,52 @@
       </div>
     </div>
   </div>
+  <!-- IMAGE ANALYSIS LOADING OVERLAY -->
+<div id="analysisLoadingOverlay" class="loading-overlay hidden">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Analyzing your images…</div>
+    <div class="loading-text">
+      This may take a few seconds.<br>
+      Please don’t close or refresh the page.
+    </div>
+  </div>
+</div>
+
 
 
   <script>
+document.addEventListener("DOMContentLoaded", () => {
+  // ... your existing DOMContentLoaded code ...
+
+  const loadingOverlay = document.getElementById('analysisLoadingOverlay');
+  const colorForm      = document.getElementById('colorForm');
+  const bodyShapeForm  = document.getElementById('bodyShapeForm');
+
+  function showAnalysisLoading() {
+    if (!loadingOverlay) return;
+
+    // show overlay
+    loadingOverlay.classList.remove('hidden');
+    loadingOverlay.style.display = 'flex';
+
+    // optionally prevent scrolling in background
+    document.body.style.overflow = 'hidden';
+  }
+
+  if (colorForm) {
+    colorForm.addEventListener('submit', function () {
+      showAnalysisLoading();
+    });
+  }
+
+  if (bodyShapeForm) {
+    bodyShapeForm.addEventListener('submit', function () {
+      showAnalysisLoading();
+    });
+  }
+});
+
     function toggleColorAnalysis(showUpload) {
       const results = document.getElementById('colorSeasons');
       const uploadSection = document.getElementById('colorUploadSection');
@@ -1764,6 +1859,47 @@
     }
   </script>
 <?php include __DIR__ . '/cartModal.php'; ?>
+<?php
+// Map DB status to CSS class used in your design
+function mapStatusClass(string $status): string {
+    $status = strtolower($status);
+
+    switch ($status) {
+        case 'pending':
+        case 'processing':
+        case 'paid':
+            return 'status-processing';  // orange-ish in your current design
+        case 'shipped':
+        case 'out_for_delivery':
+            return 'status-shipping';    // blue-ish
+        case 'delivered':
+        case 'completed':
+            return 'status-completed';   // green
+        case 'cancelled':
+        case 'canceled':
+            return 'status-cancelled';   // if you add CSS for this
+        default:
+            return 'status-processing';
+    }
+}
+
+// Map DB status to human-readable text
+function mapStatusLabel(string $status): string {
+    $status = strtolower($status);
+
+    return match ($status) {
+        'pending'            => 'Pending',
+        'processing'         => 'Processing',
+        'paid'               => 'Paid',
+        'shipped'            => 'Shipped',
+        'out_for_delivery'   => 'To Receive',
+        'delivered'          => 'Completed',
+        'completed'          => 'Completed',
+        'cancelled', 'canceled' => 'Cancelled',
+        default              => ucfirst($status),
+    };
+}
+?>
 
 <script>
   document.addEventListener("DOMContentLoaded", () => {
@@ -1851,19 +1987,6 @@
     navigateToSection('#catalog-shop');
   }
 
-  // ============================================
-  // RECOMMENDATIONS VISIBILITY
-  // ============================================
-  const recommendationsSection = document.getElementById("recommendations");
-  const colorResults = document.getElementById("colorSeasons");
-  const bodyResults = document.getElementById("bodyShapes");
-
-  const hasColor = colorResults && colorResults.classList.contains('show-results');
-  const hasBody = bodyResults && bodyResults.classList.contains('show-results');
-
-  if (recommendationsSection) {
-    recommendationsSection.style.display = (hasColor || hasBody) ? "block" : "none";
-  }
 
   // ============================================
   // CART FUNCTIONALITY

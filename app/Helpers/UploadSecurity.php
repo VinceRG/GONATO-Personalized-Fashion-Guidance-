@@ -15,32 +15,48 @@ class UploadSecurity
     {
         // Friendly labels for human-readable error messages
         $labels = [
-            'face_image'  => 'Your selfie',
-            'front_image' => 'Your front body photo',
-            'side_image'  => 'Your side body photo',
+            'face_image'  => 'your selfie',
+            'front_image' => 'your front body photo',
+            'side_image'  => 'your side body photo',
         ];
         
         $niceName = $labels[$fieldName] ?? 'your image';
 
+        /*
+        |--------------------------------------------------------------------------
+        | 1. Basic upload errors
+        |--------------------------------------------------------------------------
+        */
         if (!isset($_FILES[$fieldName]) || $_FILES[$fieldName]['error'] !== UPLOAD_ERR_OK) {
             throw new RuntimeException(
-                "We couldn't read $niceName. Please try uploading it again."
+                ucfirst($niceName) . " couldn’t be uploaded.  
+                Please try choosing the photo again."
             );
         }
 
         $file = $_FILES[$fieldName];
 
-        // Size check
+        /*
+        |--------------------------------------------------------------------------
+        | 2. File size validation
+        |--------------------------------------------------------------------------
+        */
         if ($file['size'] > $maxSizeBytes) {
             throw new RuntimeException(
-                "$niceName is too large. Please upload a photo under 5 MB."
+                ucfirst($niceName) . " is too large.  
+                Please upload a photo smaller than **5 MB** to continue."
             );
         }
 
-        // MIME type check
+        /*
+        |--------------------------------------------------------------------------
+        | 3. MIME validation
+        |--------------------------------------------------------------------------
+        */
         if (!class_exists('finfo')) {
             throw new RuntimeException(
-                "Your device cannot verify the file type. Please upload a standard JPG, PNG, or WEBP photo."
+                "We couldn't verify your photo’s file type.  
+                Please upload a **JPG, PNG, or WEBP** image."
             );
         }
 
@@ -51,11 +67,16 @@ class UploadSecurity
 
         if (!in_array($mime, $allowed, true)) {
             throw new RuntimeException(
-                "$niceName must be a photo in JPG, PNG, or WEBP format."
+                ucfirst($niceName) . " must be in **JPG, PNG, or WEBP** format.  
+                Please upload a valid photo."
             );
         }
 
-        // Extension vs MIME mismatch
+        /*
+        |--------------------------------------------------------------------------
+        | 4. Extension vs MIME mismatch
+        |--------------------------------------------------------------------------
+        */
         $extFromName = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         $mimeToExt = [
             'image/jpeg' => 'jpg',
@@ -65,17 +86,22 @@ class UploadSecurity
 
         if (isset($mimeToExt[$mime]) && $extFromName && $extFromName !== $mimeToExt[$mime]) {
             throw new RuntimeException(
-                "The file format of $niceName doesn’t match its extension. "
-                . "Please re-save the image and upload it again (JPG, PNG, or WEBP)."
+                ucfirst($niceName) . " seems to have the wrong file extension.  
+                Please re-save the image as a **".$mimeToExt[$mime]."** file and upload it again."
             );
         }
 
-        // OPTIONAL: ClamAV scan (ignored if unavailable)
+        /*
+        |--------------------------------------------------------------------------
+        | 5. Virus scan (ClamAV)
+        |--------------------------------------------------------------------------
+        */
         $scanResult = @shell_exec('clamscan --infected --no-summary ' . escapeshellarg($file['tmp_name']));
         
         if ($scanResult !== null && stripos($scanResult, 'Infected files: 0') === false) {
             throw new RuntimeException(
-                "For your safety, this file appears to be suspicious and cannot be uploaded."
+                "For your safety, we cannot accept this file because it may contain harmful content.  
+                Please choose a different photo."
             );
         }
 

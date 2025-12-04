@@ -1,8 +1,12 @@
 <?php
 // app/Controllers/AdminController.php
+require_once __DIR__ . '/../Model/audit.php';
+// config.php or at top of AdminController.php
+define('CRITICAL_STOCK_THRESHOLD', 10);
+
 
 class AdminController {
-    private $db; // This is a mysqli object
+    private $db;
     
     public function __construct($database) {
         $this->db = $database;
@@ -105,14 +109,25 @@ class AdminController {
                 throw new Exception("DB Execute failed: " . $stmt->error);
             }
 
-            $productId = $this->db->insert_id;
+           $productId = $this->db->insert_id;
             $stmt->close();
+
+            // 🔹 AUDIT: Add product
+            if (!empty($_SESSION['admin_id'])) {
+                $audit = new Audit($this->db);
+                $audit->log(
+                    (int)$_SESSION['admin_id'],
+                    'ADD_PRODUCT',
+                    "Added product: {$productName} (ID {$productId})"
+                );
+            }
 
             http_response_code(201);
             echo json_encode([
                 'success'   => true,
                 'productId' => $productId
             ]);
+
         } catch (Exception $e) {
             // Delete the file if DB insertion or file move fails
             if (isset($uploadPath) && file_exists($uploadPath)) {
@@ -242,7 +257,18 @@ class AdminController {
 
             $this->db->commit();
 
+            // 🔹 AUDIT: Delete product
+            if (!empty($_SESSION['admin_id'])) {
+                $audit = new Audit($this->db);
+                $audit->log(
+                    (int)$_SESSION['admin_id'],
+                    'DELETE_PRODUCT',
+                    "Deleted product ID: {$productId}"
+                );
+            }
+
             echo json_encode(['success' => true]);
+
         } catch (Exception $e) {
             $this->db->rollback();
             http_response_code(500);
@@ -292,6 +318,45 @@ class AdminController {
         }
     }
 
+    public function getAllInventory()
+{
+    try {
+        $sql = "
+            SELECT 
+                i.INVENTORY_ID,
+                i.PRODUCT_ID,
+                i.SIZE,
+                i.QUANTITY,
+                i.CREATED_AT,
+                p.PRODUCT_NAME,
+                c.COLOR_VALUE
+            FROM INVENTORY i
+            JOIN PRODUCTS p ON i.PRODUCT_ID = p.PRODUCT_ID
+            JOIN COLORS c   ON i.COLOR_ID   = c.COLOR_ID
+            ORDER BY p.PRODUCT_NAME, i.SIZE, c.COLOR_VALUE
+        ";
+
+        $result = $this->db->query($sql);
+        if (!$result) {
+            throw new Exception('Query failed: ' . $this->db->error);
+        }
+
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode($rows);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Failed to fetch inventory: ' . $e->getMessage()
+        ]);
+    }
+}
+
+
     /**
      * Add inventory variant
      */
@@ -324,11 +389,22 @@ class AdminController {
             $inventoryId = $this->db->insert_id;
             $stmt->close();
 
+            // 🔹 AUDIT: Add inventory
+            if (!empty($_SESSION['admin_id'])) {
+                $audit = new Audit($this->db);
+                $audit->log(
+                    (int)$_SESSION['admin_id'],
+                    'ADD_INVENTORY',
+                    "Product {$productId}, Color {$colorId}, Size {$size}, Qty {$quantity} (Inventory ID {$inventoryId})"
+                );
+            }
+
             http_response_code(201);
             echo json_encode([
                 'success'      => true,
                 'inventory_id' => $inventoryId
             ]);
+
         } catch (Exception $e) {
             http_response_code(500);
             echo json_encode(['error' => 'Failed to add inventory: ' . $e->getMessage()]);
@@ -359,7 +435,15 @@ class AdminController {
 
             if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
             $stmt->close();
-
+            // 🔹 AUDIT: Update inventory
+            if (!empty($_SESSION['admin_id'])) {
+                $audit = new Audit($this->db);
+                $audit->log(
+                    (int)$_SESSION['admin_id'],
+                    'UPDATE_INVENTORY',
+                    "Inventory ID {$inventoryId} -> Color {$colorId}, Size {$size}, Qty {$quantity}"
+                );
+            }
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -377,7 +461,15 @@ class AdminController {
 
             if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
             $stmt->close();
-
+            // 🔹 AUDIT: Delete inventory
+            if (!empty($_SESSION['admin_id'])) {
+                $audit = new Audit($this->db);
+                $audit->log(
+                    (int)$_SESSION['admin_id'],
+                    'DELETE_INVENTORY',
+                    "Deleted inventory ID {$inventoryId}"
+                );
+            }
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -437,7 +529,15 @@ class AdminController {
 
             $colorId = $this->db->insert_id;
             $stmt->close();
-
+            // 🔹 AUDIT: Add color
+            if (!empty($_SESSION['admin_id'])) {
+                $audit = new Audit($this->db);
+                $audit->log(
+                    (int)$_SESSION['admin_id'],
+                    'ADD_COLOR',
+                    "Added color '{$colorValue}' (ID {$colorId}) for season ID {$seasonId}"
+                );
+            }
             http_response_code(201);
             echo json_encode([
                 'success'  => true,
@@ -555,7 +655,15 @@ public function toggleUserLock($userId, $data) {
 
         $message = $newStatus ? 'User account locked successfully.' 
                               : 'User account unlocked successfully.';
-
+        // 🔹 AUDIT: Lock / Unlock user
+        if (!empty($_SESSION['admin_id'])) {
+            $audit = new Audit($this->db);
+            $audit->log(
+                (int)$_SESSION['admin_id'],
+                $newStatus ? 'LOCK_USER' : 'UNLOCK_USER',
+                "User ID {$userId}"
+            );
+        }
         echo json_encode([
             'success' => true,
             'message' => $message
@@ -565,7 +673,64 @@ public function toggleUserLock($userId, $data) {
         echo json_encode(['success' => false, 'message' => 'Failed to update user status: ' . $e->getMessage()]);
     }
 }
+public function getCriticalInventory() {
+    // Uses the constant you already defined at the top: CRITICAL_STOCK_THRESHOLD
+    $threshold = CRITICAL_STOCK_THRESHOLD; // e.g. 10
 
+    try {
+        $sql = "
+            SELECT 
+                i.INVENTORY_ID,
+                i.PRODUCT_ID,
+                i.COLOR_ID,
+                i.SIZE,
+                i.QUANTITY,
+                p.PRODUCT_NAME,
+                c.COLOR_VALUE
+            FROM INVENTORY i
+            JOIN PRODUCTS p ON i.PRODUCT_ID = p.PRODUCT_ID
+            JOIN COLORS c   ON i.COLOR_ID   = c.COLOR_ID
+            WHERE i.QUANTITY <= ?
+            ORDER BY i.UPDATED_AT DESC
+        ";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            throw new Exception('Prepare failed: ' . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $threshold);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $items = [];
+        while ($row = $result->fetch_assoc()) {
+            $items[] = [
+                'inventory_id' => (int)$row['INVENTORY_ID'],
+                'product_id'   => (int)$row['PRODUCT_ID'],
+                'product_name' => $row['PRODUCT_NAME'],
+                'color'        => $row['COLOR_VALUE'],
+                'size'         => $row['SIZE'],
+                'quantity'     => (int)$row['QUANTITY'],
+            ];
+        }
+
+        $stmt->close();
+
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'count'     => count($items),
+            'threshold' => $threshold,
+            'items'     => $items,
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'error'   => 'Failed to fetch critical inventory',
+            'message' => $e->getMessage(),
+        ]);
+    }
+}
 
 
     // ==================== ORDERS ====================
@@ -702,7 +867,15 @@ public function toggleUserLock($userId, $data) {
             
             if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
             $stmt->close();
-            
+            // 🔹 AUDIT: Order status change
+            if (!empty($_SESSION['admin_id'])) {
+                $audit = new Audit($this->db);
+                $audit->log(
+                    (int)$_SESSION['admin_id'],
+                    'UPDATE_ORDER_STATUS',
+                    "Order ID {$orderId} -> Status '{$status}'"
+                );
+            }
             echo json_encode(['success' => true]);
         } catch (Exception $e) {
             http_response_code(500);
@@ -710,4 +883,6 @@ public function toggleUserLock($userId, $data) {
         }
     }
 }
+
+
 ?>

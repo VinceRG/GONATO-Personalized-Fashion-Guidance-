@@ -33,6 +33,27 @@ class Inventory {
         return $stmt->execute();
     }
 
+// In inventory.php
+
+public function getCriticalStock($threshold) {
+    $query = "SELECT i.*, p.PRODUCT_NAME, p.PRICE, c.COLOR_NAME
+              FROM {$this->table} i
+              JOIN products p ON i.PRODUCT_ID = p.PRODUCT_ID
+              JOIN colors c ON i.COLOR_ID = c.COLOR_ID
+              WHERE i.QUANTITY <= ?
+              ORDER BY i.UPDATED_AT DESC";
+
+    $stmt = $this->conn->prepare($query);
+    if (!$stmt) {
+        throw new Exception("Prepare failed: " . $this->conn->error);
+    }
+
+    $stmt->bind_param("i", $threshold);
+    $stmt->execute();
+    return $stmt->get_result();
+}
+
+
     public function readAll() {
         // Using mysqli->query() for JOIN query
         $query = "SELECT i.*, p.PRODUCT_NAME, p.PRICE, c.COLOR_NAME

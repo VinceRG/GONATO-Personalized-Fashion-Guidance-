@@ -1,6 +1,7 @@
 <?php
 
 require_once './app/Helpers/UploadSecurity.php';
+require_once './app/Helpers/Csrf.php'; 
 
 class BodyShapeController {
 
@@ -32,6 +33,15 @@ class BodyShapeController {
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            // 🔐 2.1 CSRF VALIDATION – put this BEFORE reading other POST fields
+            if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+                $_SESSION['errorMessage']    = "Security check failed. Please try again.";
+                $_SESSION['show_body_modal'] = false;
+                header("Location: index.php?page=features#features");
+                exit;
+            }
+
             $height = $_POST['height_cm'] ?? null;
 
             // Basic height presence check

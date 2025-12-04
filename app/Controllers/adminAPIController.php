@@ -7,10 +7,12 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once __DIR__ . '/../Core/Database.php';
 require_once __DIR__ . '/adminController.php';
+require_once __DIR__ . '/../Model/audit.php';
 
 class AdminApiController
 {
     private $adminController;
+    private $conn;
 
     public function __construct()
     {
@@ -22,7 +24,8 @@ class AdminApiController
                 // If connection fails, throw an exception
                 throw new Exception("MySQLi Connection failed: " . $mysqli->connect_error);
             }
-            
+            $this->conn = $mysqli; // ✅ keep for audit model
+
             // Pass the mysqli object to AdminController
             $this->adminController = new AdminController($mysqli);
 
@@ -51,6 +54,7 @@ private function checkAdminAuth()
         exit;
     }
 }
+
 
 
     public function handle()
@@ -115,6 +119,25 @@ private function checkAdminAuth()
             elseif ($action === 'inventory' && $method === 'DELETE' && $id) {
                 $this->adminController->deleteInventory((int)$id);
             }
+            // ============= INVENTORY ALERTS ROUTE =============
+            elseif ($action === 'criticalInventory' && $method === 'GET') {
+                $this->adminController->getCriticalInventory();
+            }
+            // ============= INVENTORY (ALL) =========
+            elseif ($action === 'inventoryAll' && $method === 'GET') {
+                $this->adminController->getAllInventory();
+            }
+
+            // ============= INVENTORY BY PRODUCT =========
+            elseif ($action === 'inventoryByProduct' && $method === 'GET') {
+                $productId = $_GET['product_id'] ?? null;
+                if (!$productId) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Missing product_id']);
+                    return;
+                }
+                $this->adminController->getInventoryByProduct((int)$productId);
+            }
 
             // ============= COLORS ROUTES ================
             elseif ($action === 'colors') {
@@ -125,16 +148,17 @@ private function checkAdminAuth()
                     $this->adminController->addColor($data);
                 }
             }
+            
 
-// ============= USERS ROUTES =================
-elseif ($action === 'users') {
-    if ($method === 'GET' && !$id) {
-        $this->adminController->getUsers();
-    } elseif (in_array($method, ['PATCH', 'POST']) && $id && isset($_GET['toggle-lock'])) {
-        $data = json_decode(file_get_contents('php://input'), true) ?? [];
-        $this->adminController->toggleUserLock((int)$id, $data);
-    }
-}
+            // ============= USERS ROUTES =================
+            elseif ($action === 'users') {
+                if ($method === 'GET' && !$id) {
+                    $this->adminController->getUsers();
+                } elseif (in_array($method, ['PATCH', 'POST']) && $id && isset($_GET['toggle-lock'])) {
+                    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+                    $this->adminController->toggleUserLock((int)$id, $data);
+                }
+            }
 
             // ============= ORDERS ROUTES ================
             elseif ($action === 'orders') {
@@ -149,6 +173,23 @@ elseif ($action === 'users') {
                     $data = json_decode(file_get_contents('php://input'), true);
                     $this->adminController->updateOrderStatus((int)$id, $data);
                 }
+            }
+            // ============= AUDIT ROUTES =================
+            elseif ($action === 'get_audit' && $method === 'GET') {
+                $audit = new Audit($this->conn);
+                $logs  = $audit->getAll();
+
+                $data = [];
+                if ($logs) {
+                    while ($row = $logs->fetch_assoc()) {
+                        $data[] = $row;
+                    }
+                }
+
+                echo json_encode([
+                    'status' => 'success',
+                    'data'   => $data
+                ]);
             }
 
             // ============= 404 – NOT FOUND =============
@@ -166,4 +207,5 @@ elseif ($action === 'users') {
         }
     }
 }
+
 

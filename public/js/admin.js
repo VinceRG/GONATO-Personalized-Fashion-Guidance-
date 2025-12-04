@@ -23,21 +23,31 @@ let allUsers = [];
 let inventoryPage = 1;
 let inventoryPageSize = 5; // variants per page
 let inventoryItems = [];   // holds current product's inventory
-
-
-
+let userPage = 1;
+let userPageSize = 5;
+let currentUsers = [];
+let orderPage = 1;
+let orderPageSize = 5;
+let currentOrders = [];
+let auditLogs = [];
+let displayAuditLogs = [];
+let auditPage = 1;
+let auditPageSize = 5;
 
 // Initialize dashboard
 document.addEventListener('DOMContentLoaded', () => {
   initNavigation();
   loadColors();
   loadBodyShapes();
-  loadSeasons(); 
+  loadSeasons();
   loadProducts();
   loadUsers();
   loadOrders();
   initFormHandlers();
+  loadAudit();
+  initLowStockNotification();   // 🔔 set up bell + fetch
 });
+
 
 // ==================== NAVIGATION ====================
 function initNavigation() {
@@ -46,6 +56,17 @@ function initNavigation() {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       const target = btn.getAttribute('href').substring(1);
+
+      if (target === 'inventory') {
+        // Coming from the nav: always show ALL inventory
+        selectedProductId   = null;
+        selectedProductName = null;
+
+        switchSection('inventory');
+        loadAllInventory();      // 🔹 always "All Products" from nav
+        return;
+      }
+
       switchSection(target);
     });
   });
@@ -63,7 +84,27 @@ function switchSection(sectionId) {
     section.classList.remove('active');
   });
   document.getElementById(sectionId).classList.add('active');
+
+  // no inventory logic here anymore
 }
+
+function buildStatusOptions(currentStatus) {
+  // 🔧 Edit this list to match your ORDERS.STATUS enum
+  const statuses = ['pending', 'delivered'];
+
+  const curr = (currentStatus || '').toLowerCase();
+
+  return statuses
+    .map(status => {
+      const value = status.toLowerCase();
+      const selected = curr === value ? 'selected' : '';
+      const label = status.charAt(0).toUpperCase() + status.slice(1);
+      return `<option value="${value}" ${selected}>${label}</option>`;
+    })
+    .join('');
+}
+
+
 
 // ==================== PRODUCTS TAB ====================
 async function loadProducts() {
@@ -122,7 +163,7 @@ function renderProductsTable() {
       <td>${p.PRODUCT_NAME}</td>
       <td>${p.DESCRIPTION || 'No description'}</td>
       <td>${p.BODY_SHAPE_NAME || 'N/A'}</td>
-      <td>$${parseFloat(p.PRICE).toFixed(2)}</td>
+      <td>₱${parseFloat(p.PRICE).toFixed(2)}</td>
       <td>
         <button class="btn-icon" onclick="openInventoryManager(${p.PRODUCT_ID}, '${safeName}')">
           <i class="bi bi-box-seam"></i>
@@ -140,117 +181,19 @@ function renderProductsTable() {
 }
 
 function renderProductPagination() {
-  const container = document.getElementById('productPagination');
-  if (!container) return;
-
-  const totalItems  = products.length;
-  const totalPages  = Math.ceil(totalItems / productPageSize) || 1;
-
-  container.innerHTML = '';
-
-  if (totalPages <= 1) {
-    // If you still want to show "Page 1 of 1", uncomment next lines:
-    // const span = document.createElement('span');
-    // span.textContent = `Page 1 of 1 (${totalItems} products)`;
-    // container.appendChild(span);
-    return;
-  }
-
-  const createBtn = (label, disabled, onClick, isActive = false) => {
-    const btn = document.createElement('button');
-    btn.textContent = label;
-    btn.disabled = disabled;
-    btn.className = 'btn btn-secondary btn-sm';
-    if (isActive) btn.classList.add('active-page');
-    if (!disabled && onClick) btn.onclick = onClick;
-    return btn;
-  };
-
-  const total = totalPages;
-  const current = productPage;
-  const maxButtons = 5;
-
-  // Prev
-  container.appendChild(
-    createBtn('Prev', current <= 1, () => {
-      productPage--;
-      renderProductsTable();
-      renderProductPagination();
-    })
-  );
-
-  let start = Math.max(1, current - Math.floor(maxButtons / 2));
-  let end   = start + maxButtons - 1;
-
-  if (end > total) {
-    end = total;
-    start = Math.max(1, end - maxButtons + 1);
-  }
-
-  // First + ...
-  if (start > 1) {
-    container.appendChild(
-      createBtn('1', false, () => {
-        productPage = 1;
-        renderProductsTable();
-        renderProductPagination();
-      }, current === 1)
+    renderPagination(
+        "productPagination",
+        productPage,
+        products.length,
+        productPageSize,
+        (p) => {
+            productPage = p;
+            renderProductsTable();
+            renderProductPagination();
+        }
     );
-    if (start > 2) {
-      const dots = document.createElement('span');
-      dots.textContent = '...';
-      dots.style.margin = '0 4px';
-      container.appendChild(dots);
-    }
-  }
-
-  // Main window
-  for (let p = start; p <= end; p++) {
-    container.appendChild(
-      createBtn(
-        String(p),
-        false,
-        () => {
-          productPage = p;
-          renderProductsTable();
-          renderProductPagination();
-        },
-        p === current
-      )
-    );
-  }
-
-  // ... + Last
-  if (end < total) {
-    if (end < total - 1) {
-      const dots = document.createElement('span');
-      dots.textContent = '...';
-      dots.style.margin = '0 4px';
-      container.appendChild(dots);
-    }
-    container.appendChild(
-      createBtn(
-        String(total),
-        false,
-        () => {
-          productPage = total;
-          renderProductsTable();
-          renderProductPagination();
-        },
-        current === total
-      )
-    );
-  }
-
-  // Next
-  container.appendChild(
-    createBtn('Next', current >= total, () => {
-      productPage++;
-      renderProductsTable();
-      renderProductPagination();
-    })
-  );
 }
+
 
 
 function openProductModal(productId = null) {
@@ -425,14 +368,78 @@ async function toggleUserStatus(userId, isLocked) {
 
 
 // ==================== INVENTORY TAB ====================
-async function openInventoryManager(productId, productName) {
-  selectedProductId = productId;
-  selectedProductName = productName;
-  document.getElementById('inventoryProductTitle').textContent = `Inventory - ${decodeURIComponent(productName)}`;
-  document.getElementById('inventorySubtitle').textContent = `Managing stock variants for ${productName}`;
+function openInventoryManager(productId, productName) {
+  selectedProductId   = productId;
+  selectedProductName = encodeURIComponent(productName);
+
+  const title    = document.getElementById('inventoryProductTitle');
+  const subtitle = document.getElementById('inventorySubtitle');
+  if (title)    title.textContent    = `Inventory - ${productName}`;
+  if (subtitle) subtitle.textContent = 'Manage size & color stock for this product';
+
+  // Go to inventory section
   switchSection('inventory');
-  await loadInventory(productId, inventoryPage);
+
+  // And explicitly load only this product’s inventory
+  loadInventory(productId);
 }
+
+
+async function loadAllInventory() {
+  const title    = document.getElementById('inventoryProductTitle');
+  const subtitle = document.getElementById('inventorySubtitle');
+  const tbody    = document.getElementById('inventoryTableBody');
+
+  // Clear selected product so we know we’re in “all inventory” mode
+  selectedProductId   = null;
+  selectedProductName = null;
+
+  if (title)    title.textContent    = 'Inventory - All Products';
+  if (subtitle) subtitle.textContent = 'Showing stock variants for all products';
+
+  if (tbody) {
+    tbody.innerHTML = '<tr><td colspan="6">Loading...</td></tr>';
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}&action=inventoryAll`, {
+      credentials: 'include'
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to load inventory (HTTP ${res.status})`);
+    }
+
+    const result = await res.json();
+
+    // Expecting a plain array; if you ever wrap it with {data: [...]}, this still works:
+    if (Array.isArray(result)) {
+      inventoryItems = result;
+    } else if (result && Array.isArray(result.data)) {
+      inventoryItems = result.data;
+    } else {
+      inventoryItems = [];
+    }
+
+    inventoryPage = 1;
+    renderInventoryTable();
+    renderInventoryPagination();
+  } catch (err) {
+    console.error('loadAllInventory error:', err);
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6" style="color:red;text-align:center;">
+            Failed to load inventory: ${err.message}
+          </td>
+        </tr>
+      `;
+    }
+    const pag = document.getElementById('inventoryPagination');
+    if (pag) pag.innerHTML = '';
+  }
+}
+
 
 async function loadInventory(productId) {
   const tbody = document.getElementById('inventoryTableBody');
@@ -476,7 +483,7 @@ function renderInventoryTable() {
   tbody.innerHTML = '';
 
   if (!Array.isArray(inventoryItems) || inventoryItems.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No variants found. Click "Add Variant" to create one.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No variants found.</td></tr>';
     return;
   }
 
@@ -486,8 +493,16 @@ function renderInventoryTable() {
 
   pageItems.forEach(v => {
     const row = document.createElement('tr');
-    const stockClass = v.QUANTITY === 0 ? 'out-of-stock' : v.QUANTITY < 10 ? 'low-stock' : 'in-stock';
+    const stockClass =
+      v.QUANTITY === 0 ? 'out-of-stock'
+      : v.QUANTITY < 10 ? 'low-stock'
+      : 'in-stock';
+
+    const productLabel =
+      v.PRODUCT_NAME || (selectedProductName ? decodeURIComponent(selectedProductName) : '');
+
     row.innerHTML = `
+      <td>${productLabel}</td>
       <td>${v.SIZE}</td>
       <td>${v.COLOR_VALUE}</td>
       <td><span class="badge ${stockClass}">${v.QUANTITY}</span></td>
@@ -505,114 +520,113 @@ function renderInventoryTable() {
   });
 }
 
+
 function renderInventoryPagination() {
-  const container = document.getElementById('inventoryPagination');
-  if (!container) return;
+  renderPagination(
+    "inventoryPagination",
+    inventoryPage,
+    inventoryItems.length,
+    inventoryPageSize,
+    (p) => {
+      inventoryPage = p;
+      renderInventoryTable();
+      renderInventoryPagination();
+    }
+  );
+}
 
-  const totalItems = inventoryItems.length;
-  const totalPages = Math.ceil(totalItems / inventoryPageSize) || 1;
+async function fetchLowStock() {
+  try {
+const res = await fetch(`${API_BASE}&action=criticalInventory`, {
+  credentials: 'include'
+});
+    const text = await res.text(); // read raw body first
+    console.log('low stock raw response:', text);
 
-  container.innerHTML = '';
+    if (!res.ok) {
+      console.error('Low stock HTTP error', res.status);
+      return;
+    }
 
-  if (totalPages <= 1) {
+    if (!text) {
+      console.error('Low stock: empty response body');
+      return;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error('Low stock: failed to parse JSON', e);
+      return;
+    }
+
+    const count = data.count || 0;
+    const badge = document.getElementById('lowStockCount');
+    const list  = document.getElementById('lowStockList');
+
+    if (!badge || !list) return;
+
+    list.innerHTML = '';
+
+    if (count === 0) {
+      badge.hidden = true;
+      const li = document.createElement('li');
+      li.classList.add('empty');
+      li.textContent = 'All good, no critical items.';
+      list.appendChild(li);
+      return;
+    }
+
+    badge.hidden = false;
+    badge.textContent = count > 9 ? '9+' : count;
+
+    data.items.forEach(item => {
+  const li = document.createElement('li');
+  li.textContent =
+    `${item.product_name} (${item.color}, ${item.size}) – only ${item.quantity} left`;
+
+  li.addEventListener('click', () => {
+    // Go straight to the inventory tab for this product,
+    // same behaviour as the box icon in the Products table
+    const safeName = encodeURIComponent(item.product_name);
+    openInventoryManager(item.product_id, safeName);
+  });
+
+  list.appendChild(li);
+
+    });
+  } catch (err) {
+    console.error('Failed to fetch low stock', err);
+  }
+}
+function initLowStockNotification() {
+  const bell = document.getElementById('lowStockBtn');
+  const dropdown = document.getElementById('lowStockDropdown');
+
+  if (!bell || !dropdown) {
+    console.warn('Low stock notification elements not found in DOM');
     return;
   }
 
-  const createBtn = (label, disabled, onClick, isActive = false) => {
-    const btn = document.createElement('button');
-    btn.textContent = label;
-    btn.disabled = disabled;
-    btn.className = 'btn btn-secondary btn-sm';
-    if (isActive) btn.classList.add('active-page');
-    if (!disabled && onClick) btn.onclick = onClick;
-    return btn;
-  };
+  // Load data once at startup
+  fetchLowStock();
 
-  const current = inventoryPage;
-  const total   = totalPages;
-  const maxButtons = 5;
+  // Refresh + toggle when clicking the bell
+  bell.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    await fetchLowStock();                 // make sure we have latest counts
+    dropdown.classList.toggle('hidden');
+  });
 
-  // Prev
-  container.appendChild(
-    createBtn('Prev', current <= 1, () => {
-      inventoryPage--;
-      renderInventoryTable();
-      renderInventoryPagination();
-    })
-  );
-
-  let start = Math.max(1, current - Math.floor(maxButtons / 2));
-  let end   = start + maxButtons - 1;
-
-  if (end > total) {
-    end = total;
-    start = Math.max(1, end - maxButtons + 1);
-  }
-
-  // First + ...
-  if (start > 1) {
-    container.appendChild(
-      createBtn('1', false, () => {
-        inventoryPage = 1;
-        renderInventoryTable();
-        renderInventoryPagination();
-      }, current === 1)
-    );
-    if (start > 2) {
-      const dots = document.createElement('span');
-      dots.textContent = '...';
-      dots.style.margin = '0 4px';
-      container.appendChild(dots);
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!dropdown.contains(e.target) && !bell.contains(e.target)) {
+      dropdown.classList.add('hidden');
     }
-  }
-
-  // Main range
-  for (let p = start; p <= end; p++) {
-    container.appendChild(
-      createBtn(
-        String(p),
-        false,
-        () => {
-          inventoryPage = p;
-          renderInventoryTable();
-          renderInventoryPagination();
-        },
-        p === current
-      )
-    );
-  }
-
-  // ... + Last
-  if (end < total) {
-    if (end < total - 1) {
-      const dots = document.createElement('span');
-      dots.textContent = '...';
-      dots.style.margin = '0 4px';
-      container.appendChild(dots);
-    }
-    container.appendChild(
-      createBtn(
-        String(total),
-        false,
-        () => {
-          inventoryPage = total;
-          renderInventoryTable();
-          renderInventoryPagination();
-        },
-        current === total
-      )
-    );
-  }
-
-  // Next
-  container.appendChild(
-    createBtn('Next', current >= total, () => {
-      inventoryPage++;
-      renderInventoryTable();
-      renderInventoryPagination();
-    })
-  );
+  });
 }
+
 
 async function openInventoryModal(editItem = null) {
   const modal = document.getElementById('inventoryModal');
@@ -843,11 +857,67 @@ async function saveColor() {
   }
 }
 
+function renderPagination(containerId, currentPage, totalItems, pageSize, onChangePage) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = '';
+
+    const totalPages = Math.ceil(totalItems / pageSize);
+    if (totalPages <= 1) return;
+
+    const createBtn = (label, page, disabled = false, active = false) => {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.disabled = disabled;
+        btn.className = 'btn btn-secondary btn-sm';
+        if (active) btn.classList.add('active-page');
+        if (!disabled) btn.onclick = () => onChangePage(page);
+        return btn;
+    };
+
+    // Prev
+    container.appendChild(createBtn('Prev', currentPage - 1, currentPage === 1));
+
+    let pagesToShow = [];
+
+    if (totalPages <= 3) {
+        // Show all pages (max 3)
+        for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
+    } else {
+        // More than 3 pages
+        if (currentPage <= 2) {
+            pagesToShow = [1, 2, 3];
+            pagesToShow.push('...');
+        } else if (currentPage >= totalPages - 1) {
+            pagesToShow = ['...', totalPages - 2, totalPages - 1, totalPages];
+        } else {
+            pagesToShow = ['...', currentPage - 1, currentPage, currentPage + 1, '...'];
+        }
+    }
+
+    pagesToShow.forEach(p => {
+        if (p === '...') {
+            const dots = document.createElement('span');
+            dots.textContent = '...';
+            container.appendChild(dots);
+        } else {
+            container.appendChild(
+                createBtn(p, p, false, currentPage === p)
+            );
+        }
+    });
+
+    // Next
+    container.appendChild(createBtn('Next', currentPage + 1, currentPage === totalPages));
+}
+
+
 // ==================== USERS TAB ====================
 async function loadUsers() {
   try {
     const res = await fetch(`${API_BASE}&action=users`, {
-      credentials: 'include', // send session cookies for admin auth
+      credentials: 'include',
     });
 
     if (!res.ok) {
@@ -855,18 +925,24 @@ async function loadUsers() {
     }
 
     allUsers = await res.json();
-    renderUsers(allUsers);
+    currentUsers = allUsers.slice();  // copy
+    userPage = 1;
+
+    renderUsers();
+    renderUserPagination();
   } catch (err) {
     console.error('loadUsers error:', err);
     alert('Error loading users. Make sure you are logged in as admin.');
   }
 }
 
-function renderUsers(users) {
+function renderUsers() {
   const tbody = document.getElementById('userTableBody');
   tbody.innerHTML = '';
 
-  if (!Array.isArray(users) || users.length === 0) {
+  const list = currentUsers || [];
+
+  if (!Array.isArray(list) || list.length === 0) {
     tbody.innerHTML = `
       <tr>
         <td colspan="5" style="text-align:center;">No users found</td>
@@ -875,7 +951,11 @@ function renderUsers(users) {
     return;
   }
 
-  users.forEach(user => {
+  const start = (userPage - 1) * userPageSize;
+  const end   = start + userPageSize;
+  const pageItems = list.slice(start, end);
+
+  pageItems.forEach(user => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${user.USERNAME}</td>
@@ -892,6 +972,21 @@ function renderUsers(users) {
   });
 }
 
+function renderUserPagination() {
+    renderPagination(
+        "userPagination",
+        userPage,
+        currentUsers.length,
+        userPageSize,
+        (p) => {
+            userPage = p;
+            renderUsers();
+            renderUserPagination();
+        }
+    );
+}
+
+
 function filterUsers() {
   const searchTerm   = document.getElementById('userSearch').value.toLowerCase();
   const statusFilter = document.getElementById('statusFilter').value; // "active" | "locked" | ""
@@ -902,6 +997,7 @@ function filterUsers() {
       user.EMAIL.toLowerCase().includes(searchTerm);
 
     let matchesStatus = true;
+
     if (statusFilter === 'active') {
       matchesStatus = !user.IS_LOCKED;
     } else if (statusFilter === 'locked') {
@@ -911,8 +1007,13 @@ function filterUsers() {
     return matchesSearch && matchesStatus;
   });
 
-  renderUsers(filtered);
+  currentUsers = filtered;
+  userPage = 1;
+
+  renderUsers();
+  renderUserPagination();
 }
+
 
 async function toggleUserStatus(userId, isLocked) {
   try {
@@ -1075,7 +1176,11 @@ async function loadOrders() {
     const response = await fetch(`${API_BASE}&action=orders`);
     if (!response.ok) throw new Error('Failed to load orders');
     orders = await response.json();
+    currentOrders = orders.slice();
+    orderPage = 1;
+
     renderOrders();
+    renderOrderPagination();
   } catch (error) {
     console.error('Error loading orders:', error);
   }
@@ -1085,22 +1190,34 @@ function renderOrders() {
   const tbody = document.getElementById('orderTableBody');
   tbody.innerHTML = '';
 
-  if (orders.length === 0) {
+  const list = currentOrders || [];
+
+  if (!Array.isArray(list) || list.length === 0) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No orders found</td></tr>';
     return;
   }
 
-  orders.forEach(order => {
+  const start = (orderPage - 1) * orderPageSize;
+  const end   = start + orderPageSize;
+  const pageItems = list.slice(start, end);
+
+  pageItems.forEach(order => {
     const row = document.createElement('tr');
-    const statusClass = order.STATUS.toLowerCase();
 
     row.innerHTML = `
       <td>#${order.ORDER_ID}</td>
       <td>${order.USERNAME || 'N/A'}</td>
       <td>${order.ITEM_COUNT || 0} item(s)</td>
       <td>$${parseFloat(order.TOTAL_AMOUNT).toFixed(2)}</td>
-      <td><span class="badge ${statusClass}">${order.STATUS}</span></td>
-      <td>${order.SHIPPING_REQUIRED ? 'Yes' : 'No'}</td>
+      <td>
+      <select
+        class="order-status-select ${order.STATUS.toLowerCase()}"
+        onchange="updateOrderStatusTable(${order.ORDER_ID}, this.value, this)"
+      >
+        ${buildStatusOptions(order.STATUS)}
+      </select>
+
+      </td>
       <td>
         <button class="btn-icon" onclick="viewOrder(${order.ORDER_ID})">
           <i class="bi bi-eye"></i>
@@ -1110,41 +1227,180 @@ function renderOrders() {
     tbody.appendChild(row);
   });
 }
+async function updateOrderStatusTable(orderId, newStatus, selectEl) {
+  if (!newStatus) return;
+
+  // Remember previous status to revert on error
+  const oldOrder = (orders || []).find(o => Number(o.ORDER_ID) === Number(orderId));
+  const oldStatus = oldOrder ? oldOrder.STATUS : null;
+
+  try {
+    const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to update order status');
+    }
+
+    // ✅ Update local arrays so UI stays in sync
+    const updateInArray = (arr) => {
+      if (!Array.isArray(arr)) return;
+      const idx = arr.findIndex(o => Number(o.ORDER_ID) === Number(orderId));
+      if (idx !== -1) {
+        arr[idx].STATUS = newStatus;
+      }
+    };
+
+    updateInArray(orders);
+    updateInArray(currentOrders);
+
+    // update dropdown color class
+    if (selectEl) {
+      selectEl.className = "order-status-select " + newStatus.toLowerCase();
+    }
+
+    renderOrders(); // re-render table with updated statuses
+
+    if (typeof showNotification === 'function') {
+      showNotification('Order status updated', 'success');
+    }
+  } catch (err) {
+    console.error('updateOrderStatusTable error:', err);
+
+    // ⏪ Revert dropdown visually if something failed
+    if (selectEl && oldStatus) {
+      selectEl.value = oldStatus.toLowerCase();
+      selectEl.className = "order-status-select " + oldStatus.toLowerCase();
+    }
+
+    if (typeof showNotification === 'function') {
+      showNotification('Failed to update order status: ' + err.message, 'error');
+    }
+  }
+}
+
+
+function renderOrderPagination() {
+    renderPagination(
+        "orderPagination",
+        orderPage,
+        currentOrders.length,
+        orderPageSize,
+        (p) => {
+            orderPage = p;
+            renderOrders();
+            renderOrderPagination();
+        }
+    );
+}
+
+
+/* Filter hooked from HTML: orderSearch + orderStatusFilter */
+function filterOrders() {
+  const term = document.getElementById('orderSearch').value.toLowerCase();
+  const status = document.getElementById('orderStatusFilter').value; // "", "confirmed", "cancelled", ...
+
+  const filtered = orders.filter(order => {
+    const matchesSearch =
+      String(order.ORDER_ID).includes(term) ||
+      (order.USERNAME && order.USERNAME.toLowerCase().includes(term));
+
+    const matchesStatus =
+      !status || (order.STATUS && order.STATUS.toLowerCase() === status.toLowerCase());
+
+    return matchesSearch && matchesStatus;
+  });
+
+  currentOrders = filtered;
+  orderPage = 1;
+
+  renderOrders();
+  renderOrderPagination();
+}
 
 async function viewOrder(orderId) {
   try {
-    const response = await fetch(`${API_BASE}&action=orderDetails&id=${orderId}`);
-    if (!response.ok) throw new Error('Failed to load order details');
-    const orderDetails = await response.json();
+    // ✅ Call the correct route: action=orders with an id
+    const response = await fetch(`${API_BASE}&action=orders&id=${orderId}`, {
+      credentials: 'include',
+    });
+
+    const raw = await response.text();
+    console.log('Order details raw response:', raw);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const orderDetails = JSON.parse(raw);
+
+    if (orderDetails.error) {
+      // In case PHP returns { error: '...' }
+      throw new Error(orderDetails.error);
+    }
 
     const modal = document.getElementById('orderModal');
     const detailsDiv = document.getElementById('orderDetails');
+    const statusOptions = buildStatusOptions(orderDetails.STATUS);
 
     detailsDiv.innerHTML = `
       <div class="order-details">
         <div class="detail-row"><strong>Order ID:</strong> #${orderDetails.ORDER_ID}</div>
         <div class="detail-row"><strong>Customer:</strong> ${orderDetails.USERNAME || 'N/A'}</div>
         <div class="detail-row"><strong>Email:</strong> ${orderDetails.EMAIL || 'N/A'}</div>
-        <div class="detail-row"><strong>Status:</strong> <span class="badge ${orderDetails.STATUS.toLowerCase()}">${orderDetails.STATUS}</span></div>
+
+        <div class="detail-row">
+          <strong>Status:</strong>
+          <select id="orderStatusSelect" class="order-status-select">
+            ${statusOptions}
+          </select>
+          <button class="btn btn-sm" onclick="updateOrderStatus(${orderDetails.ORDER_ID})">
+            Update
+          </button>
+        </div>
+
+        <div class="detail-row">
+          <strong>Total:</strong> $${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}
+        </div>
+        <div class="detail-row">
+          <strong>Order Date:</strong> ${new Date(orderDetails.CREATED_AT).toLocaleString()}
+        </div>
         <div class="detail-row"><strong>Total:</strong> $${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}</div>
         <div class="detail-row"><strong>Order Date:</strong> ${new Date(orderDetails.CREATED_AT).toLocaleString()}</div>
         <hr>
-        <h3>Order Items</h3>
+        <h3 style="margin-top: 20px;">Order Items</h3>
         <table class="items-table">
           <thead>
-            <tr><th>Product</th><th>Size</th><th>Color</th><th>Qty</th><th>Price</th><th>Subtotal</th></tr>
+            <tr>
+              <th>Product</th>
+              <th>Size</th>
+              <th>Color</th>
+              <th>Qty</th>
+              <th>Price</th>
+              <th>Subtotal</th>
+            </tr>
           </thead>
           <tbody>
-            ${orderDetails.items.map(item => `
-              <tr>
-                <td>${item.PRODUCT_NAME}</td>
-                <td>${item.SIZE}</td>
-                <td>${item.COLOR_VALUE}</td>
-                <td>${item.QUANTITY}</td>
-                <td>$${parseFloat(item.PRICE).toFixed(2)}</td>
-                <td>$${(parseFloat(item.PRICE) * item.QUANTITY).toFixed(2)}</td>
-              </tr>
-            `).join('')}
+            ${
+              (orderDetails.items || [])
+                .map(item => `
+                  <tr>
+                    <td>${item.PRODUCT_NAME}</td>
+                    <td>${item.SIZE}</td>
+                    <td>${item.COLOR_VALUE}</td>
+                    <td>${item.QUANTITY}</td>
+                    <td>₱${parseFloat(item.PRICE || item.UNIT_PRICE).toFixed(2)}</td>
+                    <td>₱${(parseFloat(item.PRICE || item.UNIT_PRICE) * item.QUANTITY).toFixed(2)}</td>
+                  </tr>
+                `)
+                .join('')
+            }
           </tbody>
         </table>
       </div>
@@ -1153,9 +1409,41 @@ async function viewOrder(orderId) {
     modal.style.display = 'block';
   } catch (error) {
     console.error('Error viewing order:', error);
-    showNotification('Failed to load order details', 'error');
+    showNotification('Failed to load order details: ' + error.message, 'error');
   }
 }
+async function updateOrderStatus(orderId) {
+  const select = document.getElementById('orderStatusSelect');
+  if (!select) return;
+
+  const newStatus = select.value;
+
+  try {
+    const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ status: newStatus })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || data.error) {
+      throw new Error(data.error || 'Failed to update order status');
+    }
+
+    showNotification('Order status updated', 'success');
+
+    // Refresh the orders list so the badge in the table updates
+    await loadOrders();
+
+    // Optionally: re-open the modal or update only the badge text if you want
+  } catch (err) {
+    console.error('updateOrderStatus error:', err);
+    showNotification('Failed to update order status: ' + err.message, 'error');
+  }
+}
+
 
 function closeOrderModal() {
   document.getElementById('orderModal').style.display = 'none';
@@ -1183,3 +1471,106 @@ function logout() {
     window.location.href = '?page=logout';
   }
 }
+
+// === AUDIT TRAIL ===
+
+
+async function loadAudit() {
+  try {
+    const res = await fetch('index.php?api=admin&action=get_audit');
+    const json = await res.json();
+
+    console.log('Audit API response:', json); // for debugging
+
+    if (json.status !== 'success') {
+      console.error('Failed to load audit logs:', json);
+      return;
+    }
+
+    auditLogs = json.data || [];
+    displayAuditLogs = auditLogs.slice();
+    auditPage = 1;
+
+    renderAudit();
+    renderAuditPagination();
+  } catch (err) {
+    console.error('loadAudit error:', err);
+  }
+}
+
+function renderAudit() {
+  const tbody = document.getElementById('auditTableBody');
+  if (!tbody) {
+    console.error('auditTableBody not found in DOM');
+    return;
+  }
+
+  const list = displayAuditLogs || [];
+
+  if (!list.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center; padding: 12px;">
+          No audit logs found.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  const start = (auditPage - 1) * auditPageSize;
+  const end   = start + auditPageSize;
+  const pageItems = list.slice(start, end);
+
+  tbody.innerHTML = pageItems.map(log => `
+    <tr>
+      <td>${log.USERNAME || 'N/A'}</td>
+      <td>${log.ACTION}</td>
+      <td>${log.DESCRIPTION || ''}</td>
+      <td>${log.IP_ADDRESS || ''}</td>
+      <td>${log.CREATED_AT}</td>
+    </tr>
+  `).join('');
+}
+
+function renderAuditPagination() {
+    renderPagination(
+        "auditPagination",
+        auditPage,
+        displayAuditLogs.length,
+        auditPageSize,
+        (p) => {
+            auditPage = p;
+            renderAudit();
+            renderAuditPagination();
+        }
+    );
+}
+
+
+function filterAudit() {
+  const input = document.getElementById('auditSearch');
+  if (!input) return;
+
+  const term = input.value.toLowerCase();
+
+  const filtered = auditLogs.filter(log => {
+    return (
+      (log.USERNAME && log.USERNAME.toLowerCase().includes(term)) ||
+      (log.ACTION && log.ACTION.toLowerCase().includes(term)) ||
+      (log.DESCRIPTION && log.DESCRIPTION.toLowerCase().includes(term)) ||
+      (log.IP_ADDRESS && log.IP_ADDRESS.toLowerCase().includes(term)) ||
+      (log.CREATED_AT && log.CREATED_AT.toLowerCase().includes(term))
+    );
+  });
+
+  displayAuditLogs = filtered;
+  auditPage = 1;
+
+  renderAudit();
+  renderAuditPagination();
+}
+
+// expose to inline HTML
+window.loadAudit = loadAudit;
+window.filterAudit = filterAudit;
