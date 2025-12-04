@@ -1,6 +1,7 @@
 <?php
 
 require_once './app/Helpers/UploadSecurity.php';
+require_once './app/Helpers/Csrf.php';
 
 class ColorAnalysisController {
 
@@ -32,6 +33,14 @@ class ColorAnalysisController {
         ];
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+            // 🔐 CSRF validation FIRST
+            if (!Csrf::validate($_POST['csrf_token'] ?? null)) {
+                $_SESSION['errorMessage']     = "Security check failed. Please try again.";
+                $_SESSION['show_color_modal'] = false;
+                header("Location: index.php?page=features#features");
+                exit;
+            }
 
             if (empty($_FILES['face_image']['tmp_name'])) {
                 $_SESSION['errorMessage']     = "Please upload a face image.";
@@ -92,7 +101,8 @@ class ColorAnalysisController {
                     $db   = new Database();
                     $conn = $db->connect();
 
-                    $query = "UPDATE users SET season_id = ? WHERE USER_ID = ?";
+                    // ⚠️ Make sure column name matches your table: SEASON_ID
+                    $query = "UPDATE users SET SEASON_ID = ? WHERE USER_ID = ?";
 
                     $stmt = $conn->prepare($query);
 

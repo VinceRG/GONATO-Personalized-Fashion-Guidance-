@@ -122,36 +122,71 @@ def determine_season(rgb_color):
 @app.route('/analyze_color', methods=['POST'])
 def analyze_color():
     if 'face_image' not in request.files:
-        return jsonify({"status": "error", "message": "No image uploaded."}), 400
+        return jsonify({
+            "status": "error",
+            "message": "No image was uploaded. Please choose a selfie and try again."
+        }), 400
 
     try:
         file = request.files['face_image']
         img = np.array(Image.open(file.stream).convert("RGB"))
-        
-        mp_face_detection = mp.solutions.face_detection
-        with mp_face_detection.FaceDetection(model_selection=1, min_detection_confidence=0.5) as face_detection:
-            results = face_detection.process(img)
-            
-            if not results.detections:
-                # Fallback: Use center of image if no face detected
-                h, w, _ = img.shape
-                face_crop = img[h//4:h*3//4, w//4:w*3//4]
-            else:
-                detection = results.detections[0]
-                bbox = detection.location_data.relative_bounding_box
-                h, w, _ = img.shape
-                x, y, w_box, h_box = int(bbox.xmin * w), int(bbox.ymin * h), int(bbox.width * w), int(bbox.height * h)
-                
-                center_x, center_y = x + w_box//2, y + h_box//2
-                crop_size = int(w_box * 0.2)
-                face_crop = img[center_y-crop_size:center_y+crop_size, center_x-crop_size:center_x+crop_size]
-                
-                if face_crop.size == 0:
-                     face_crop = img[y:y+h_box, x:x+w_box]
 
+        mp_face_detection = mp.solutions.face_detection
+        with mp_face_detection.FaceDetection(
+            model_selection=1,
+            min_detection_confidence=0.5
+        ) as face_detection:
+
+            results = face_detection.process(img)
+
+            # ✅ STRICT: Require at least one face
+            if not results.detections:
+                return jsonify({
+                    "status": "error",
+                    "message": (
+                        "We couldn’t detect a face in your photo. "
+                        "Please upload a clear selfie where your face is fully visible, "
+                        "looking at the camera, with good lighting."
+                    )
+                }), 400
+
+            # Use the first detected face
+            detection = results.detections[0]
+            bbox = detection.location_data.relative_bounding_box
+            h, w, _ = img.shape
+
+            x = int(bbox.xmin * w)
+            y = int(bbox.ymin * h)
+            w_box = int(bbox.width * w)
+            h_box = int(bbox.height * h)
+
+            # Small safety padding crop around the face center
+            center_x = x + w_box // 2
+            center_y = y + h_box // 2
+            crop_size = int(w_box * 0.4)  # a bit bigger than before for robustness
+
+            y1 = max(center_y - crop_size, 0)
+            y2 = min(center_y + crop_size, h)
+            x1 = max(center_x - crop_size, 0)
+            x2 = min(center_x + crop_size, w)
+
+            face_crop = img[y1:y2, x1:x2]
+
+            # ✅ Extra safety: if the crop fails for some reason, treat it as no valid face
+            if face_crop.size == 0:
+                return jsonify({
+                    "status": "error",
+                    "message": (
+                        "We had trouble reading your face from the photo. "
+                        "Please make sure your full face is visible and not cropped out, "
+                        "then try again with a new selfie."
+                    )
+                }), 400
+
+            # === Color Analysis on face_crop ===
             skin_tone_rgb = get_dominant_color(face_crop)
             season = determine_season(skin_tone_rgb)
-            
+
             palettes = {
                 "Spring": ["Coral", "Peach", "Golden Yellow"],
                 "Summer": ["Lavender", "Powder Blue", "Soft Rose"],
@@ -167,7 +202,12 @@ def analyze_color():
             })
 
     except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
+        # You might later replace str(e) with a more generic message in production
+        return jsonify({
+            "status": "error",
+            "message": "Something went wrong while analyzing your photo. Please try again with a clear selfie."
+        }), 500
+
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
