@@ -89,6 +89,16 @@ function initNavigation() {
   });
 }
 
+function safeDecode(text) {
+  if (!text) return '';
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+}
+
+
 function switchSection(sectionId) {
   document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.classList.remove('active');
@@ -359,39 +369,19 @@ document.getElementById('confirmDeleteBtn').addEventListener('click', async () =
     showNotification('Failed to delete product', 'error');
   }
 });
-async function toggleUserStatus(userId, isLocked) {
-    try {
-        const res = await fetch(
-            `index.php?api=admin&action=users&id=${userId}&toggle-lock=1`,
-            {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ isLocked })
-            }
-        );
-
-        const result = await res.json();
-
-        if (result.success) {
-            await loadUsers();
-        } else {
-            alert(result.message || "Failed to update user status");
-        }
-    } catch (err) {
-        console.error(err);
-        alert("Error toggling lock status");
-    }
-}
 
 
 // ==================== INVENTORY TAB ====================
-function openInventoryManager(productId, productName) {
-  selectedProductId   = productId;
-  selectedProductName = encodeURIComponent(productName);
+function openInventoryManager(productId, encodedName) {
+  selectedProductId = productId;
+
+  // 🔹 Decode once and store the *human* name
+  const decodedName = safeDecode(encodedName);
+  selectedProductName = decodedName;
 
   const title    = document.getElementById('inventoryProductTitle');
   const subtitle = document.getElementById('inventorySubtitle');
-  if (title)    title.textContent    = `Inventory - ${productName}`;
+  if (title)    title.textContent    = `Inventory - ${decodedName}`;
   if (subtitle) subtitle.textContent = 'Manage size & color stock for this product';
 
   // Go to inventory section
@@ -515,8 +505,9 @@ function renderInventoryTable() {
       : v.QUANTITY < 10 ? 'low-stock'
       : 'in-stock';
 
-    const productLabel =
-      v.PRODUCT_NAME || (selectedProductName ? decodeURIComponent(selectedProductName) : '');
+const productLabel = v.PRODUCT_NAME
+  ? v.PRODUCT_NAME
+  : (selectedProductName || '');
 
     row.innerHTML = `
       <td>${productLabel}</td>
@@ -881,7 +872,7 @@ function renderPagination(containerId, currentPage, totalItems, pageSize, onChan
     container.innerHTML = '';
 
     const totalPages = Math.ceil(totalItems / pageSize);
-    if (totalPages <= 1) return;
+    //if (totalPages <= 1) return;
 
     const createBtn = (label, page, disabled = false, active = false) => {
         const btn = document.createElement('button');
@@ -1036,30 +1027,41 @@ function filterUsers() {
 }
 
 
-async function toggleUserStatus(userId, isLocked) {
-  try {
-    const res = await fetch(
-      `${API_BASE}&action=users&id=${userId}&toggle-lock=1`,
-      {
-        method: 'PATCH', // matches AdminApiController
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ isLocked }) // send current state; backend flips it
+function toggleUserStatus(userId, isLocked) {
+  const message = isLocked
+    ? 'Are you sure you want to unlock this user?'
+    : 'Are you sure you want to lock this user?';
+
+  showConfirm(message, async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE}&action=users&id=${userId}&toggle-lock=1`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ isLocked }) // backend flips it
+        }
+      );
+
+      const result = await res.json();
+
+      if (result.success) {
+        showNotification(
+          isLocked ? 'User unlocked successfully' : 'User locked successfully',
+          'success'
+        );
+        await loadUsers();
+      } else {
+        showNotification(result.message || 'Failed to update user status', 'error');
       }
-    );
-
-    const result = await res.json();
-
-    if (result.success) {
-      await loadUsers(); // refresh table
-    } else {
-      alert(result.message || 'Failed to update user status');
+    } catch (err) {
+      console.error('toggleUserStatus error:', err);
+      showNotification('Error toggling lock status: ' + err.message, 'error');
     }
-  } catch (err) {
-    console.error('toggleUserStatus error:', err);
-    alert('Error toggling lock status');
-  }
+  });
 }
+
 
 // ==================== STAFF TAB ====================
 
@@ -1126,10 +1128,6 @@ function renderStaff() {
           onclick="toggleStaffActive(${s.ADMIN_ID}, ${isActive ? 1 : 0})">
           ${isActive ? 'Deactivate' : 'Activate'}
         </button>
-        <button class="btn btn-sm" type="button"
-          onclick="deleteStaff(${s.ADMIN_ID})">
-          Delete
-        </button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1171,29 +1169,37 @@ function filterStaff() {
   renderStaffPagination();
 }
 
-async function toggleStaffActive(adminId, isActive) {
-  if (!confirm('Change this staff account status?')) return;
+function toggleStaffActive(adminId, isActive) {
+  const message = isActive
+    ? 'Are you sure you want to deactivate this staff account?'
+    : 'Are you sure you want to activate this staff account?';
 
-  try {
-    const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ is_active: isActive ? 0 : 1 }),
-    });
+  showConfirm(message, async () => {
+    try {
+      const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ is_active: isActive ? 0 : 1 }),
+      });
 
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      throw new Error(data.error || 'Failed to update staff status');
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to update staff status');
+      }
+
+      showNotification(
+        isActive ? 'Staff deactivated successfully' : 'Staff activated successfully',
+        'success'
+      );
+      await loadStaff();
+    } catch (err) {
+      console.error('toggleStaffActive error:', err);
+      showNotification('Error updating staff status: ' + err.message, 'error');
     }
-
-    showNotification('Staff status updated', 'success');
-    await loadStaff();
-  } catch (err) {
-    console.error('toggleStaffActive error:', err);
-    showNotification('Error updating staff status: ' + err.message, 'error');
-  }
+  });
 }
+
 
 async function deleteStaff(adminId) {
   if (!confirm('Are you sure you want to delete this staff account?')) return;
@@ -1705,6 +1711,55 @@ function showNotification(message, type = 'info') {
     setTimeout(() => notification.remove(), 300);
   }, 3000);
 }
+
+function showConfirm(message, onConfirm) {
+  // Create container
+  const notification = document.createElement('div');
+  notification.className = 'notification notification-info confirm-notification';
+  notification.innerHTML = `
+    <i class="bi bi-question-circle"></i>
+    <div style="flex:1; display:flex; flex-direction:column; gap:0.35rem;">
+      <span>${message}</span>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary btn-sm confirm-cancel">Cancel</button>
+        <button type="button" class="btn btn-sm confirm-ok">Confirm</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(notification);
+
+  // Animate in (same pattern as showNotification)
+  setTimeout(() => notification.classList.add('show'), 50);
+
+  const cleanup = () => {
+    notification.classList.remove('show');
+    setTimeout(() => notification.remove(), 300);
+  };
+
+  // Wire buttons
+  const btnCancel = notification.querySelector('.confirm-cancel');
+  const btnOk     = notification.querySelector('.confirm-ok');
+
+  if (btnCancel) {
+    btnCancel.addEventListener('click', () => {
+      cleanup();
+    });
+  }
+
+  if (btnOk) {
+    btnOk.addEventListener('click', async () => {
+      try {
+        if (typeof onConfirm === 'function') {
+          await onConfirm();
+        }
+      } finally {
+        cleanup();
+      }
+    });
+  }
+}
+
 
 function logout() {
   if (confirm('Are you sure you want to logout?')) {

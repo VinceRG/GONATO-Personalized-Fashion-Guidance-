@@ -11,28 +11,46 @@ class ForgotModel {
     }
 
     // ✅ STEP 1: Check Email + Send OTP
-    public function sendResetOTP($email) {
-        $stmt = $this->conn->prepare("SELECT * FROM users WHERE EMAIL = ?");
+     public function sendResetOTP($email) {
+        // 1) Try users
+        $stmt = $this->conn->prepare("SELECT USER_ID FROM users WHERE EMAIL = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
 
-        // Email does not exist
-        if ($result->num_rows == 0) {
-            return [
-                'success' => false,
-                'message' => 'Email not found.'
-            ];
+        $scope = null; // 'user' or 'admin'
+
+        if ($result->num_rows > 0) {
+            // Found in users
+            $scope = 'user';
+        } else {
+            // 2) Try admin/staff
+            $stmt->close();
+            $stmt = $this->conn->prepare("SELECT ADMIN_ID FROM admin WHERE EMAIL = ?");
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $adminResult = $stmt->get_result();
+
+            if ($adminResult->num_rows > 0) {
+                $scope = 'admin';
+            } else {
+                // Not found anywhere
+                return [
+                    'success' => false,
+                    'message' => 'Email not found.'
+                ];
+            }
         }
 
         // ✅ Create OTP
         $otp = rand(100000, 999999);
 
-        // ✅ Save OTP to session (or DB)
+        // ✅ Save OTP to session
         $_SESSION['reset_email'] = $email;
         $_SESSION['reset_otp']   = $otp;
         $_SESSION['otp_sent']    = true;
-        $_SESSION['otp_time']    = time(); // Track when OTP was sent
+        $_SESSION['otp_time']    = time();
+        $_SESSION['reset_scope'] = $scope;
 
         // ✅ Send OTP Email
         $this->sendOTPEmail($email, $otp);
@@ -40,18 +58,27 @@ class ForgotModel {
         return [
             'success' => true,
             'message' => 'OTP sent',
-            'otp' => $otp
+            'otp'     => $otp,
+            'scope'   => $scope
         ];
     }
 
     // ✅ STEP 2: Update password after OTP verification
-    public function updatePassword($email, $newPassword) {
-        $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+    public function updatePassword($email, $newPassword, $scope) {
+        if ($scope === 'admin') {
+            // Admin/staff login is PLAIN TEXT in adminfunc.php
+            $plain = $newPassword;
+            $stmt = $this->conn->prepare("UPDATE admin SET PASSWORD = ? WHERE EMAIL = ?");
+            $stmt->bind_param("ss", $plain, $email);
+        } else {
+            // Normal user – hashed
+            $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+            $stmt = $this->conn->prepare("UPDATE users SET PASSWORD = ? WHERE EMAIL = ?");
+            $stmt->bind_param("ss", $hashed, $email);
+        }
 
-        $stmt = $this->conn->prepare("UPDATE users SET PASSWORD = ? WHERE EMAIL = ?");
-        $stmt->bind_param("ss", $hashed, $email);
-
-        return $stmt->execute();
+        $stmt->execute();
+        return $stmt->affected_rows > 0;
     }
 
     // ✅ EMAIL SENDER with Beautiful Template

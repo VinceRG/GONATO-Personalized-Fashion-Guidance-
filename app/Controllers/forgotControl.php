@@ -63,6 +63,7 @@ class ForgotController {
                 $_SESSION['reset_otp_time'] = time();
                 $_SESSION['otp_attempts'] = 0;
                 $_SESSION['otp_blocked_until'] = null;
+                $_SESSION['reset_scope'] = $result['scope']; // 'user' or 'admin'
 
                 $message = "OTP successfully sent to your email.";
                 $messageType = "success";
@@ -123,6 +124,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp']) && !isset(
         elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['new_password'])) {
             $email = $_SESSION['reset_email'] ?? null;
             $otpVerified = $_SESSION['otp_verified'] ?? false;
+            
             $newPassword = trim($_POST['new_password']);
             $confirmPassword = trim($_POST['confirm_password']);
 
@@ -155,8 +157,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp']) && !isset(
                 return;
             }
 
-            $updated = $this->forgotModel->updatePassword($email, $newPassword);
+            $scope = $_SESSION['reset_scope'] ?? 'user'; // fallback just in case
 
+            $updated = $this->forgotModel->updatePassword($email, $newPassword, $scope);
             if ($updated) {
                 $message = "Password updated successfully! Redirecting to login...";
                 $messageType = "success";
@@ -182,6 +185,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['otp']) && !isset(
     private function clearOTPSession() {
         unset($_SESSION['reset_email'], $_SESSION['reset_otp'], $_SESSION['reset_otp_time']);
         unset($_SESSION['otp_attempts'], $_SESSION['otp_blocked_until'], $_SESSION['otp_verified']);
+        unset($_SESSION['reset_scope']); // NEW
     }
 }
 ?>

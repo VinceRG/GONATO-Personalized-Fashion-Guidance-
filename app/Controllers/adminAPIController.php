@@ -129,17 +129,30 @@ private function handleStaff(string $method, ?string $idParam): void
 
     $stmt->bind_param('ssss', $username, $email, $hash, $role);
 
-    if (!$stmt->execute()) {
+        if (!$stmt->execute()) {
         http_response_code(500);
         echo json_encode(['error' => $stmt->error]);
         return;
     }
 
+    $newAdminId = $stmt->insert_id;
+
+    // 🔹 AUDIT: Add staff
+    if (!empty($_SESSION['admin_id'])) {
+        $audit = new Audit($this->conn);
+        $audit->log(
+            (int)$_SESSION['admin_id'],        // who did it
+            'ADD_STAFF',                       // action code
+            "Created staff account: {$username} (ADMIN_ID {$newAdminId}, ROLE {$role})"
+        );
+    }
+
     echo json_encode([
         'success'  => true,
-        'admin_id' => $stmt->insert_id
+        'admin_id' => $newAdminId
     ]);
     return;
+
 }
 
     // ---------- UPDATE ACTIVE STATUS ----------
@@ -171,14 +184,29 @@ private function handleStaff(string $method, ?string $idParam): void
 
         $stmt->bind_param('ii', $isActive, $id);
 
-        if (!$stmt->execute()) {
+                if (!$stmt->execute()) {
             http_response_code(500);
             echo json_encode(['error' => $stmt->error]);
             return;
         }
 
+        // 🔹 AUDIT: Activate / Deactivate staff
+        if (!empty($_SESSION['admin_id'])) {
+            $audit = new Audit($this->conn);
+
+            $action    = $isActive ? 'ACTIVATE_STAFF' : 'DEACTIVATE_STAFF';
+            $statusTxt = $isActive ? 'Active' : 'Inactive';
+
+            $audit->log(
+                (int)$_SESSION['admin_id'],          // who did it
+                $action,                             // ACTIVATE_STAFF or DEACTIVATE_STAFF
+                "Set staff ADMIN_ID {$id} to {$statusTxt}"
+            );
+        }
+
         echo json_encode(['success' => true]);
         return;
+
     }
 
     // ---------- DELETE STAFF ----------

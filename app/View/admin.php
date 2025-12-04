@@ -162,9 +162,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
         <div class="notif-dropdown hidden" id="lowStockDropdown">
           <div class="notif-header">Low stock alerts</div>
           <ul id="lowStockList"></ul>
-          <button class="notif-footer-btn" type="button" onclick="switchSection('inventory')">
-            View inventory
-          </button>
+
         </div>
       </div>
 
@@ -355,7 +353,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
         <div class="section-header">
           <div>
             <div class="section-title"><i>Audit Trail</i></div>
-            <div class="section-subtitle">Track admin actions</div>
+            <div class="section-subtitle">Track admin and staff actions</div>
           </div>
         </div>
 
@@ -367,7 +365,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
           <table>
             <thead>
               <tr>
-                <th>Admin</th>
+                <th>Admin/Staff</th>
                 <th>Action</th>
                 <th>Description</th>
                 <th>IP Address</th>
@@ -568,8 +566,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
         <div class="form-group">
           <label>Role</label>
           <select id="staffRole" name="staffRole">
-            <option value="staff">Staff</option>
-            <option value="super_admin">Super Admin</option>
+              <option value="staff">Staff</option>
           </select>
         </div>
 
@@ -645,6 +642,10 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- Your main admin JS -->
+   <script>
+  window.ADMIN_ROLE = "<?php echo $_SESSION['admin_role']; ?>";
+</script>
+
   <script src="public/js/admin.js"></script>
 
   <script>

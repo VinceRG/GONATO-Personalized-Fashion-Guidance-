@@ -41,7 +41,7 @@ class User {
             if ((int)$admin['IS_ACTIVE'] !== 1) {
                 return [
                     'success' => false,
-                    'message' => 'Admin account is disabled. Please contact the system owner.',
+                    'message' => 'Staff account is disabled. Please contact the system owner.',
                     'isLocked' => false
                 ];
             }
