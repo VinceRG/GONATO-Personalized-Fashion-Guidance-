@@ -15,9 +15,18 @@ app = Flask(__name__)
 CORS(app)
 
 # ---------------- CONFIG ----------------
-MODEL_DIR = r"D:\xammp\htdocs\projectCollab\new\GONATO-Personalized-Fashion-Guidance-\python"
+CURRENT_FILE_DIR = os.path.dirname(os.path.abspath(_file_))
+
+# Go up ONE level: from /python/api → /python
+PYTHON_DIR = os.path.dirname(CURRENT_FILE_DIR)
+
+# MODEL_DIR now points to the "python" folder in your project
+MODEL_DIR = PYTHON_DIR
+
+# Files inside the python folder
 TRAINING_CSV = os.path.join(MODEL_DIR, "body_shapes.csv")
 LOG_FILE = os.path.join(MODEL_DIR, "analysis_log.csv")
+
 
 # ---------------- MODEL LOADING ----------------
 mp_pose = mp.solutions.pose
