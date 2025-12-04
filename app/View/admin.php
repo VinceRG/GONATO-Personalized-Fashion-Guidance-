@@ -1,4 +1,19 @@
 
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+// basic guard
+if (empty($_SESSION['is_admin']) || empty($_SESSION['admin_id'])) {
+    header('Location: index.php?page=login');
+    exit;
+}
+
+$adminRole     = $_SESSION['admin_role']     ?? 'staff';      // 'super_admin' | 'staff'
+$adminUsername = $_SESSION['admin_username'] ?? '@admin';
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,25 +34,43 @@
         <div class="profile">
           <div class="profile-pic"><i class="bi bi-shield-check"></i></div>
           <div class="profile-info">
-            <h4>Admin Panel</h4>
-            <p><i>@administrator</i></p>
+            <h4>
+              <?php echo $adminRole === 'super_admin' ? 'Super Admin Panel' : 'Staff Panel'; ?>
+            </h4>
+            <p><i><?php echo htmlspecialchars($adminUsername); ?></i></p>
+            <small style="font-size: 0.8rem; color:#ccc;">
+              <?php echo $adminRole === 'super_admin' ? 'Super Admin' : 'Staff'; ?>
+            </small>
           </div>
         </div>
 
         <nav class="nav-links">
-  <a href="#products" class="nav-btn active"><i class="bi bi-tags"></i> Products</a>
-  <a href="#inventory" class="nav-btn"><i class="bi bi-box-seam"></i> Inventory</a>
-  <a href="#users" class="nav-btn"><i class="bi bi-people"></i> Users</a>
-  <a href="#orders" class="nav-btn"><i class="bi bi-cart-check"></i> Orders</a>
-<a 
-  href="#audit" 
-  class="nav-btn" 
-  onclick="switchSection('audit'); loadAudit(); return false;"
->
-  <i class="bi bi-clipboard-data"></i> Audit Trail
-</a>
+          <a href="#products" class="nav-btn active" onclick="switchSection('products'); return false;">
+            <i class="bi bi-tags"></i> Products
+          </a>
+          <a href="#inventory" class="nav-btn" onclick="switchSection('inventory'); return false;">
+            <i class="bi bi-box-seam"></i> Inventory
+          </a>
 
-</nav>
+          <?php if ($adminRole === 'super_admin'): ?>
+          <a href="#users" class="nav-btn" onclick="switchSection('users'); return false;">
+            <i class="bi bi-people"></i> Users
+          </a>
+          <?php endif; ?>
+
+          <a href="#orders" class="nav-btn" onclick="switchSection('orders'); return false;">
+            <i class="bi bi-cart-check"></i> Orders
+          </a>
+
+          <?php if ($adminRole === 'super_admin'): ?>
+            <a href="#staff" class="nav-btn" onclick="switchSection('staff'); loadStaff(); return false;">
+              <i class="bi bi-person-gear"></i> Staff
+            </a>
+            <a href="#audit" class="nav-btn" onclick="switchSection('audit'); loadAudit(); return false;">
+              <i class="bi bi-clipboard-data"></i> Audit Trail
+            </a>
+          <?php endif; ?>
+        </nav>    
 
       </div>
 
@@ -57,211 +90,125 @@
       </div>
     </div>
 
-    
-
     <div class="main-content">
 
-<div class="top-utils">
-  <button class="icon-btn" id="lowStockBtn" type="button" title="Low stock alerts">
-    <i class="bi bi-bell"></i>
-    <span class="badge" id="lowStockCount" hidden></span>
-  </button>
+      <div class="top-utils">
+        <button class="icon-btn" id="lowStockBtn" type="button" title="Low stock alerts">
+          <i class="bi bi-bell"></i>
+          <span class="badge" id="lowStockCount" hidden></span>
+        </button>
 
-  <div class="notif-dropdown hidden" id="lowStockDropdown">
-    <div class="notif-header">Low stock alerts</div>
-    <ul id="lowStockList"></ul>
-    <button class="notif-footer-btn" type="button" onclick="switchSection('inventory')">
-      View inventory
-    </button>
-  </div>
-</div>
+        <div class="notif-dropdown hidden" id="lowStockDropdown">
+          <div class="notif-header">Low stock alerts</div>
+          <ul id="lowStockList"></ul>
+          <button class="notif-footer-btn" type="button" onclick="switchSection('inventory')">
+            View inventory
+          </button>
+        </div>
+      </div>
 
       <!-- PRODUCTS SECTION -->
-<section id="products" class="content-section active">
-  <div class="section-header">
-    <div>
-      <div class="section-title"><i>Product Management</i></div>
-      <div class="section-subtitle">Manage base product details</div>
-    </div>
-    <button class="btn" onclick="openProductModal()">
-      <i class="bi bi-plus-circle"></i> Add Product
-    </button>
-  </div>
+      <section id="products" class="content-section active">
+        <div class="section-header">
+          <div>
+            <div class="section-title"><i>Product Management</i></div>
+            <div class="section-subtitle">Manage base product details</div>
+          </div>
+          <button class="btn" onclick="openProductModal()">
+            <i class="bi bi-plus-circle"></i> Add Product
+          </button>
+        </div>
 
-  <div class="data-table">
-    <table>
-      <thead>
-        <tr>
-          <th>Image</th>
-          <th>Product Name</th>
-          <th>Description</th>
-          <th>Body Shape</th>
-          <th>Price</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="productListBody">
-        <!-- Populated by JS -->
-      </tbody>
-    </table>
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Description</th>
+                <th>Body Shape</th>
+                <th>Price</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="productListBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="productPagination" class="pagination-controls"></div>
+      </section>
 
-  </div>
-      <div id="productPagination" class="pagination-controls"></div>
+      <!-- INVENTORY SECTION -->
+      <section id="inventory" class="content-section">
+        <div class="section-header">
+          <div>
+            <div class="section-title" id="inventoryProductTitle">Inventory Management</div>
+            <div class="section-subtitle" id="inventorySubtitle">Select a product to view its stock variants</div>
+          </div>
+          <button class="btn" onclick="openInventoryModal()">
+            <i class="bi bi-plus-circle"></i> Add Variant
+          </button>
+        </div>
 
-</section>
-<!-- INVENTORY SECTION -->
-<section id="inventory" class="content-section">
-  <div class="section-header">
-    <div>
-      <div class="section-title" id="inventoryProductTitle">Inventory Management</div>
-      <div class="section-subtitle" id="inventorySubtitle">Select a product to view its stock variants</div>
-    </div>
-    <button class="btn" onclick="openInventoryModal()">
-      <i class="bi bi-plus-circle"></i> Add Variant
-    </button>
-  </div>
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Size</th>
+                <th>Color</th>
+                <th>Quantity</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="inventoryPagination" class="pagination-controls"></div>
+      </section>
 
-  <div class="data-table">
-    <table>
-      <thead>
-      <tr>
-        <th>Product</th>
-        <th>Size</th>
-        <th>Color</th>
-        <th>Quantity</th>
-        <th>Created At</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
+      <!-- USERS SECTION – only for super_admin -->
+      <?php if ($adminRole === 'super_admin'): ?>
+      <section id="users" class="content-section">
+        <div class="section-header">
+          <div>
+            <div class="section-title"><i>User Management</i></div>
+            <div class="section-subtitle">View and manage user accounts</div>
+          </div>
+        </div>
 
-      <tbody id="inventoryTableBody">
-        <!-- Populated by JS -->
-      </tbody>
-    </table>
+        <div class="filter-bar">
+          <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
+          <select id="statusFilter" onchange="filterUsers()">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="locked">Locked</option>
+          </select>
+        </div>
 
-  </div>
-      <div id="inventoryPagination" class="pagination-controls"></div>
-
-</section>
-
-      <!-- USERS SECTION -->
-<section id="users" class="content-section">
-  <div class="section-header">
-    <div>
-      <div class="section-title"><i>User Management</i></div>
-      <div class="section-subtitle">View and manage user accounts</div>
-    </div>
-  </div>
-
-  <div class="filter-bar">
-    <input type="text" id="userSearch" placeholder="Search users..." onkeyup="filterUsers()">
-    <select id="statusFilter" onchange="filterUsers()">
-      <option value="">All Status</option>
-      <option value="active">Active</option>
-      <option value="locked">Locked</option>
-    </select>
-  </div>
-
-  <div class="data-table">
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th>
-          <th>Email</th>
-          <th>Joined Date</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="userTableBody">
-        <!-- Populated by JS -->
-      </tbody>
-    </table>
-  </div>
-    <div id="userPagination" class="pagination-controls"></div>
-
-</section>
-
-<!-- <script>
-let allUsers = [];
-
-// Fetch users from the admin API
-async function loadUsers() {
-  try {
-    const res = await fetch('index.php?api=admin&action=users'); // ensure your API route
-    if (!res.ok) throw new Error('Failed to fetch users');
-    allUsers = await res.json();
-    renderUsers(allUsers);
-  } catch (err) {
-    console.error(err);
-    alert('Error loading users. Make sure you are logged in as admin.');
-  }
-}
-
-// Render users into table
-function renderUsers(users) {
-  const tbody = document.getElementById('userTableBody');
-  tbody.innerHTML = '';
-
-  users.forEach(user => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${user.USERNAME}</td>
-      <td>${user.EMAIL}</td>
-      <td>${new Date(user.CREATED_AT).toLocaleDateString()}</td>
-      <td>${user.IS_LOCKED ? 'Locked' : 'Active'}</td>
-      <td>
-        <button class="btn btn-sm" onclick="toggleUserStatus(${user.USER_ID}, ${user.IS_LOCKED})">
-          ${user.IS_LOCKED ? 'Unlock' : 'Lock'}
-        </button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-// Filter users by search & status
-function filterUsers() {
-  const searchTerm = document.getElementById('userSearch').value.toLowerCase();
-  const statusFilter = document.getElementById('statusFilter').value;
-
-  const filtered = allUsers.filter(user => {
-    const matchesSearch = user.USERNAME.toLowerCase().includes(searchTerm) ||
-                          user.EMAIL.toLowerCase().includes(searchTerm);
-    const matchesStatus = !statusFilter || 
-                          (statusFilter === 'active' && !user.IS_LOCKED) ||
-                          (statusFilter === 'locked' && user.IS_LOCKED);
-    return matchesSearch && matchesStatus;
-  });
-
-  renderUsers(filtered);
-}
-
-// Toggle user lock status
-async function toggleUserStatus(userId, isLocked) {
-  try {
-    const res = await fetch(`index.php?api=admin&action=toggleUserLock&userId=${userId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isLocked: !isLocked })
-    });
-
-    const result = await res.json();
-    if (result.success) {
-      await loadUsers();
-    } else {
-      alert('Failed to update user status');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('Error updating user status');
-  }
-}
-
-// Load users on page load
-window.addEventListener('DOMContentLoaded', loadUsers);
-</script> -->
-
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Joined Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="userPagination" class="pagination-controls"></div>
+      </section>
+      <?php endif; ?>
 
       <!-- ORDERS SECTION -->
       <section id="orders" class="content-section">
@@ -297,10 +244,51 @@ window.addEventListener('DOMContentLoaded', loadUsers);
             </tbody>
           </table>
         </div>
-          <div id="orderPagination" class="pagination-controls"></div>
-
+        <div id="orderPagination" class="pagination-controls"></div>
       </section>
-            <!-- AUDIT SECTION -->
+
+      <!-- STAFF SECTION – only for super_admin -->
+      <?php if ($adminRole === 'super_admin'): ?>
+      <section id="staff" class="content-section">
+        <div class="section-header">
+          <div>
+            <div class="section-title"><i>Staff Management</i></div>
+            <div class="section-subtitle">Create and manage admin staff accounts</div>
+          </div>
+          <button class="btn" type="button" onclick="openStaffModal()">
+            <i class="bi bi-person-plus"></i> Add Staff
+          </button>
+        </div>
+
+        <div class="filter-bar">
+          <input 
+            type="text" 
+            id="staffSearch" 
+            placeholder="Search staff by username or role..." 
+            onkeyup="filterStaff()"
+          >
+        </div>
+
+        <div class="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="staffTableBody">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+        <div id="staffPagination" class="pagination-controls"></div>
+      </section>
+
+      <!-- AUDIT SECTION – only for super_admin -->
       <section id="audit" class="content-section">
         <div class="section-header">
           <div>
@@ -334,11 +322,13 @@ window.addEventListener('DOMContentLoaded', loadUsers);
             </tbody>
           </table>
         </div>
-          <div id="auditPagination" class="pagination-controls"></div>
+        <div id="auditPagination" class="pagination-controls"></div>
       </section>
+      <?php endif; ?>
 
     </div>
   </div>
+
 <div id="productModal" class="modal">
   <div class="modal-content">
     <div class="modal-header">
@@ -447,6 +437,46 @@ window.addEventListener('DOMContentLoaded', loadUsers);
       <div class="modal-actions">
         <button type="button" class="btn btn-secondary" onclick="closeInventoryModal()">Cancel</button>
         <button type="submit" class="btn">Save Variant</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- STAFF MODAL -->
+<div id="staffModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title" id="staffModalTitle">Add Staff</h2>
+      <button class="close-modal" type="button" onclick="closeStaffModal()">&times;</button>
+    </div>
+
+    <form id="staffForm">
+      <div class="form-group">
+        <label>Username *</label>
+        <input type="text" id="staffUsername" name="staffUsername" required>
+      </div>
+
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" id="staffEmail" name="staffEmail" required>
+        </div>
+
+      <div class="form-group">
+        <label>Password *</label>
+        <input type="password" id="staffPassword" name="staffPassword" required>
+      </div>
+
+      <div class="form-group">
+        <label>Role</label>
+        <select id="staffRole" name="staffRole">
+          <option value="staff">Staff</option>
+          <option value="super_admin">Super Admin</option>
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeStaffModal()">Cancel</button>
+        <button type="submit" class="btn">Save</button>
       </div>
     </form>
   </div>

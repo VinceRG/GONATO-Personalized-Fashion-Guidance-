@@ -111,6 +111,7 @@ class LoginController {
 
                         $_SESSION['admin_id']       = $admin['ADMIN_ID'];
                         $_SESSION['admin_username'] = $admin['USERNAME'];
+                        $_SESSION['admin_role']     = $admin['ROLE'] ?? 'staff'; // <= 'super_admin' or 'staff'
                         $_SESSION['is_admin']       = true;
 
                         // ✅ Redirect to your existing admin route

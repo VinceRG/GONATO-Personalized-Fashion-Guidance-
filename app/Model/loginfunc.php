@@ -20,39 +20,52 @@ class User {
      *  - ['success' => false, 'message' => '...', 'remainingAttempts' => ?, 'isLocked' => ?]
      */
     public function login($usernameOrEmail, $password) {
-        // ==============================
-        // 1. TRY ADMIN TABLE FIRST
-        // ==============================
-        $adminStmt = $this->conn->prepare("
-            SELECT * FROM admin WHERE USERNAME = ? LIMIT 1
-        ");
-        if ($adminStmt) {
-            $adminStmt->bind_param("s", $usernameOrEmail);
-            $adminStmt->execute();
-            $adminResult = $adminStmt->get_result();
+    // ==============================
+    // 1. TRY ADMIN / STAFF FIRST
+    // ==============================
+    $adminStmt = $this->conn->prepare("
+        SELECT ADMIN_ID, USERNAME, PASSWORD, ROLE, IS_ACTIVE
+        FROM admin
+        WHERE USERNAME = ?
+        LIMIT 1
+    ");
+    if ($adminStmt) {
+        $adminStmt->bind_param("s", $usernameOrEmail);
+        $adminStmt->execute();
+        $adminResult = $adminStmt->get_result();
 
-            if ($adminResult && $adminResult->num_rows === 1) {
-                $admin = $adminResult->fetch_assoc();
+        if ($adminResult && $adminResult->num_rows === 1) {
+            $admin = $adminResult->fetch_assoc();
 
-                // IMPORTANT: admin.PASSWORD should be hashed with password_hash()
-                if (
-    password_verify($password, $admin['PASSWORD'])  // if DB has a hash
-    || $admin['PASSWORD'] === $password             // if DB has plain text
-) {
-    return [
-        'success' => true,
-        'role'    => 'admin',
-        'admin'   => $admin
-    ];
-} else {
-    return [
-        'success' => false,
-        'message' => 'Incorrect username or password.',
-        'isLocked' => false
-    ];
-}
+            // Check if admin/staff is active
+            if ((int)$admin['IS_ACTIVE'] !== 1) {
+                return [
+                    'success' => false,
+                    'message' => 'Admin account is disabled. Please contact the system owner.',
+                    'isLocked' => false
+                ];
+            }
+
+            // IMPORTANT: ideally PASSWORD is a hash from password_hash()
+            $passwordMatches =
+                password_verify($password, $admin['PASSWORD']) ||
+                $admin['PASSWORD'] === $password; // temporary fallback if DB still has plain text
+
+            if ($passwordMatches) {
+                return [
+                    'success' => true,
+                    'role'    => 'admin',  // high-level role for LoginController
+                    'admin'   => $admin    // contains ROLE = 'super_admin' or 'staff'
+                ];
+            } else {
+                return [
+                    'success' => false,
+                    'message' => 'Incorrect username or password.',
+                    'isLocked' => false
+                ];
             }
         }
+    }
 
         // ==================================
         // 2. FALLBACK: NORMAL USER LOGIN

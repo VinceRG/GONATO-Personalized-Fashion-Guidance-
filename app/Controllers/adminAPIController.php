@@ -55,6 +55,173 @@ private function checkAdminAuth()
     }
 }
 
+private function checkAdminRole(array $allowedRoles)
+{
+    $this->checkAdminAuth();
+
+    $role = $_SESSION['admin_role'] ?? null;
+    if (!in_array($role, $allowedRoles, true)) {
+        http_response_code(403);
+        echo json_encode([
+            'error'   => 'Forbidden',
+            'details' => 'You do not have permission to access this resource.'
+        ]);
+        exit;
+    }
+}
+
+private function handleStaff(string $method, ?string $idParam): void
+{
+    header('Content-Type: application/json');
+    $conn = $this->conn;
+
+    // ---------- LIST STAFF ----------
+    if ($method === 'GET') {
+        $sql = "SELECT ADMIN_ID, USERNAME, EMAIL, ROLE, IS_ACTIVE
+                FROM admin
+                ORDER BY ADMIN_ID ASC";
+
+        $result = $conn->query($sql);
+
+        $rows = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $rows[] = $row;
+            }
+        }
+
+        echo json_encode($rows);
+        return;
+    }
+
+    // ---------- CREATE STAFF ----------
+    if ($method === 'POST') {
+    $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+    $username = trim($data['username'] ?? '');
+    $email    = trim($data['email'] ?? '');
+    $password = $data['password'] ?? '';
+    $role     = $data['role'] ?? 'staff';
+
+    if ($username === '' || $password === '' || $email === '') {
+        http_response_code(400);
+        echo json_encode(['error' => 'Username, email, and password are required']);
+        return;
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Invalid email address']);
+        return;
+    }
+
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+
+    $stmt = $conn->prepare("
+        INSERT INTO admin (USERNAME, EMAIL, PASSWORD, ROLE, IS_ACTIVE)
+        VALUES (?, ?, ?, ?, 1)
+    ");
+    if (!$stmt) {
+        http_response_code(500);
+        echo json_encode(['error' => 'Database error: ' . $conn->error]);
+        return;
+    }
+
+    $stmt->bind_param('ssss', $username, $email, $hash, $role);
+
+    if (!$stmt->execute()) {
+        http_response_code(500);
+        echo json_encode(['error' => $stmt->error]);
+        return;
+    }
+
+    echo json_encode([
+        'success'  => true,
+        'admin_id' => $stmt->insert_id
+    ]);
+    return;
+}
+
+    // ---------- UPDATE ACTIVE STATUS ----------
+    if ($method === 'PATCH') {
+        parse_str($_SERVER['QUERY_STRING'] ?? '', $qs);
+        $id = isset($qs['id']) ? (int)$qs['id'] : 0;
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            return;
+        }
+
+        if ($id === (int)($_SESSION['admin_id'] ?? 0)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'You cannot deactivate yourself']);
+            return;
+        }
+
+        $data = json_decode(file_get_contents('php://input'), true) ?? [];
+        $isActive = isset($data['is_active']) ? (int)$data['is_active'] : 1;
+
+        $stmt = $conn->prepare("UPDATE admin SET IS_ACTIVE = ? WHERE ADMIN_ID = ?");
+        if (!$stmt) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Database error: ' . $conn->error]);
+            return;
+        }
+
+        $stmt->bind_param('ii', $isActive, $id);
+
+        if (!$stmt->execute()) {
+            http_response_code(500);
+            echo json_encode(['error' => $stmt->error]);
+            return;
+        }
+
+        echo json_encode(['success' => true]);
+        return;
+    }
+
+    // ---------- DELETE STAFF ----------
+    if ($method === 'DELETE') {
+        parse_str($_SERVER['QUERY_STRING'] ?? '', $qs);
+        $id = isset($qs['id']) ? (int)$qs['id'] : 0;
+
+        if ($id <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing id']);
+            return;
+        }
+
+        if ($id === (int)($_SESSION['admin_id'] ?? 0)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'You cannot delete your own account']);
+            return;
+        }
+
+        $stmt = $conn->prepare("DELETE FROM admin WHERE ADMIN_ID = ?");
+        if (!$stmt) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Database error: ' . $conn->error]);
+            return;
+        }
+
+        $stmt->bind_param('i', $id);
+
+        if (!$stmt->execute()) {
+            http_response_code(500);
+            echo json_encode(['error' => $stmt->error]);
+            return;
+        }
+
+        echo json_encode(['success' => true]);
+        return;
+    }
+
+    // Method not supported
+    http_response_code(405);
+    echo json_encode(['error' => 'Method not allowed']);
+}
+
 
 
     public function handle()
@@ -148,6 +315,8 @@ private function checkAdminAuth()
                     $this->adminController->addColor($data);
                 }
             }
+
+            
             
 
             // ============= USERS ROUTES =================
@@ -173,6 +342,13 @@ private function checkAdminAuth()
                     $data = json_decode(file_get_contents('php://input'), true);
                     $this->adminController->updateOrderStatus((int)$id, $data);
                 }
+            }
+
+            // ============= STAFF ROUTES =================
+            elseif ($action === 'staff') {
+                // Only super admin can manage staff/admin accounts
+                $this->checkAdminRole(['super_admin']);
+                $this->handleStaff($method, $id);
             }
             // ============= AUDIT ROUTES =================
             elseif ($action === 'get_audit' && $method === 'GET') {
