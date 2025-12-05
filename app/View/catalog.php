@@ -5,13 +5,6 @@ $imageBasePath = 'public/image/';
 ?>
 
 <div class="subsection">
-  <div class="filter-bar">
-    <input type="text" id="productSearch" placeholder="Search products..." onkeyup="filterProducts()">
-
-    <select id="categoryFilter" onchange="filterProducts()">
-      <option value="">All Categories</option>
-    </select>
-  </div>
 
   <div class="clothes-grid">
 

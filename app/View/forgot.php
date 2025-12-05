@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Forgot Password</title>
-<link rel="stylesheet" href="public/css/forgot.css">]
+    <link rel="icon" type="image/png" href="public/image/amarelle.png">
+<link rel="stylesheet" href="public/css/forgot.css">
 <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body>

@@ -6,7 +6,7 @@
 <!-- CART DRAWER -->
 <div id="cartModal" class="cart-modal">
   <div class="cart-modal-header">
-    <h2 class="cart-modal-title">Your Cart</h2>
+    <h2 class="cart-modal-title">Cart</h2>
     <button type="button" class="cart-close-btn" onclick="closeModals()">&times;</button>
   </div>
 
@@ -18,16 +18,18 @@
 
     <!-- Summary -->
     <div class="summary-section">
-      <div class="summary-row">
+      <!-- Hidden summary row for JS logic, visually removed per design -->
+      <div class="summary-row" style="display:none;">
         <span>Selected Items</span>
         <span id="selectedCount">0</span>
       </div>
+      
       <div class="summary-total">
         <span class="total-label">Total</span>
         <span class="total-value" id="selectedTotal">₱0.00</span>
       </div>
       <button type="button" class="action-btn" onclick="proceedToCheckout()">
-        Proceed to Checkout
+        Checkout
       </button>
     </div>
   </div>
@@ -37,7 +39,7 @@
 <!-- CHECKOUT DRAWER -->
 <div id="checkoutModal" class="cart-modal">
   <div class="cart-modal-header">
-    <h2 class="cart-modal-title">Checkout</h2>
+    <h2 class="cart-modal-title" style="font-family: var(--font-family); font-size:1.4rem;">Checkout</h2>
     <button type="button" class="cart-close-btn" onclick="closeModals()">&times;</button>
   </div>
 
@@ -52,7 +54,6 @@ if (isset($user) && is_array($user)) {
     $lastName  = $user['LAST_NAME'] ?? '';
     $shipName  = trim("$firstName $lastName");
 
-    // Prefer SHIPPING_ADDRESS if set, otherwise build from components
     if (!empty($user['SHIPPING_ADDRESS'])) {
         $shipAddress = $user['SHIPPING_ADDRESS'];
     } else {
@@ -73,10 +74,7 @@ if (isset($user) && is_array($user)) {
 
 <section class="section-divider">
   <div class="section-header">
-    <div class="section-header-left">
-      <div class="section-icon"><i class="bi bi-geo-alt"></i></div>
-      <h3 class="section-title">Contact & Shipping Details</h3>
-    </div>
+    <h3 class="section-title">Shipping Details</h3>
     <button type="button" class="address-edit-btn" id="addressEditBtn">Edit</button>
   </div>
 
@@ -129,68 +127,53 @@ if (isset($user) && is_array($user)) {
     <!-- Order items summary -->
 <section class="section-divider">
   <div class="section-header">
-    <div class="section-header-left">
-      <div class="section-icon"><i class="bi bi-bag"></i></div>
-      <h3 class="section-title">Order Summary</h3>
-    </div>
+    <h3 class="section-title">Order Summary</h3>
   </div>
 
-  <!-- Line items go here -->
-  <div id="checkoutItemsList" class="checkout-items-list">
+  <div id="checkoutItemsList" class="checkout-items-list" style="background:#f9f9f9; padding:1rem; border-radius:12px;">
     <!-- JS will render selected items here -->
   </div>
 
-  <div class="order-summary">
-    <div class="summary-row">
-      <span>Items</span>
-      <span id="checkoutItemCount">0</span>
-    </div>
+  <div class="order-summary" style="margin-top:1rem;">
     <div class="summary-total">
-      <span class="total-label">Total</span>
+      <span class="total-label">Total Payment</span>
       <span class="total-value" id="cartTotal">₱0.00</span>
     </div>
   </div>
 </section>
 
-
-    <!-- Payment methods + card form -->
-    <!-- Payment methods + card form -->
+<!-- Payment methods + card form -->
 <section>
   <div class="section-header">
-    <div class="section-header-left">
-      <div class="section-icon"><i class="bi bi-credit-card"></i></div>
-      <h3 class="section-title">Payment Method</h3>
-    </div>
+    <h3 class="section-title">Payment</h3>
   </div>
 
   <div class="payment-methods">
-    <label class="payment-option">
-      <input type="radio" name="payment" value="card" checked />
-      <div class="payment-option-content">
-        <i class="bi bi-credit-card-2-front"></i>
+    <label class="payment-option" style="padding:1rem; border:1px solid #eee; border-radius:12px; display:flex; align-items:center;">
+      <input type="radio" name="payment" value="card" checked style="accent-color:var(--color-btn-checkout); margin-right:1rem;">
+      <div class="payment-option-content" style="font-weight:600; font-size:0.95rem;">
         Credit / Debit Card
       </div>
     </label>
   </div>
 
-  <!-- Simple card form -->
-  <div class="card-form" style="margin-top:1.25rem;">
-    <div class="form-group">
-      <label>Card Number</label>
-      <input type="text" id="card-number" placeholder="4242 4242 4242 4242" />
+  <div class="card-form" style="background:#f9f9f9; padding:1.25rem; border-radius:12px; margin-top:1rem;">
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label style="display:block; font-size:0.8rem; margin-bottom:0.4rem; color:#666; font-weight:600;">Card Number</label>
+      <input type="text" id="card-number" placeholder="0000 0000 0000 0000" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px; outline:none;" />
     </div>
-    <div style="display:flex; gap:0.75rem; margin-top:0.75rem;">
+    <div style="display:flex; gap:0.75rem;">
       <div class="form-group" style="flex:1;">
-        <label>Exp. Month</label>
-        <input type="text" id="card-exp-month" placeholder="12" />
+        <label style="display:block; font-size:0.8rem; margin-bottom:0.4rem; color:#666; font-weight:600;">Exp. Month</label>
+        <input type="text" id="card-exp-month" placeholder="MM" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px; outline:none;" />
       </div>
       <div class="form-group" style="flex:1;">
-        <label>Exp. Year</label>
-        <input type="text" id="card-exp-year" placeholder="2030" />
+        <label style="display:block; font-size:0.8rem; margin-bottom:0.4rem; color:#666; font-weight:600;">Exp. Year</label>
+        <input type="text" id="card-exp-year" placeholder="YYYY" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px; outline:none;" />
       </div>
       <div class="form-group" style="flex:1;">
-        <label>CVC</label>
-        <input type="text" id="card-cvc" placeholder="123" />
+        <label style="display:block; font-size:0.8rem; margin-bottom:0.4rem; color:#666; font-weight:600;">CVC</label>
+        <input type="text" id="card-cvc" placeholder="123" style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px; outline:none;" />
       </div>
     </div>
   </div>
@@ -216,15 +199,7 @@ if (isset($user) && is_array($user)) {
   </div>
 
   <div class="cart-modal-content">
-    <!-- Product info -->
     <section class="section-divider">
-      <div class="section-header">
-        <div class="section-header-left">
-          <div class="section-icon"><i class="bi bi-bag"></i></div>
-          <h3 class="section-title">Product Details</h3>
-        </div>
-      </div>
-
       <div class="variant-product-info">
         <img
           id="variantProductImage"
@@ -233,39 +208,30 @@ if (isset($user) && is_array($user)) {
           style="width:80px; height:80px; object-fit:cover; border-radius:8px;"
         >
         <div>
-          <p class="variant-name" id="variantProductNameText"></p>
-          <p class="variant-price" id="variantProductPrice" style="font-weight:600;"></p>
+          <p class="variant-name" id="variantProductNameText" style="font-weight:700; color:#333; margin:0;"></p>
+          <p class="variant-price" id="variantProductPrice" style="font-weight:600; color:#c68a4c; margin-top:0.25rem;"></p>
         </div>
       </div>
     </section>
 
-    <!-- Options -->
     <section class="section-divider">
-      <div class="section-header">
-        <div class="section-header-left">
-          <div class="section-icon"><i class="bi bi-sliders"></i></div>
-          <h3 class="section-title">Choose Color & Size</h3>
-        </div>
-      </div>
-
       <div class="variant-options">
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:1rem;">
           <label for="variantColorSelect">Color</label>
           <select id="variantColorSelect"></select>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" style="margin-bottom:1rem;">
           <label for="variantSizeSelect">Size</label>
           <select id="variantSizeSelect"></select>
         </div>
 
-        <div class="stock-info">
-          Available stock: <strong id="variantStock">0</strong>
+        <div class="stock-info" style="text-align:center; padding:0.8rem; background:#f9f9f7; border-radius:8px; font-size:0.9rem; color:#666;">
+          Available stock: <strong id="variantStock" style="color:#333;">0</strong>
         </div>
       </div>
     </section>
 
-    <!-- Actions -->
     <section>
       <button
         type="button"
@@ -279,8 +245,7 @@ if (isset($user) && is_array($user)) {
   </div>
 </div>
 
-<!-- TOAST NOTIFICATION (overlay-level, not inside any modal) -->
+<!-- TOAST (Outside) -->
 <div id="toast" class="toast hidden">
-  <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
   <span id="toastMessage"></span>
 </div>

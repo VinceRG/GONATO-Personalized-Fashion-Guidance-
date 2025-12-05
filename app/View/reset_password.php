@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Forgot Password - Reset Password</title>
+    <title>Forgot Password</title>
+    <link rel="icon" type="image/png" href="public/image/amarelle.png">
 
     <link rel="stylesheet" href="public/css/forgot.css">
     <link rel="stylesheet" href="public/css/register.css">

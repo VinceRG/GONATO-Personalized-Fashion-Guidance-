@@ -128,7 +128,8 @@ HTML;
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Terms & Privacy - Amarelle</title>
+    <title>Privacy Policy and Cookies Consent</title>
+    <link rel="icon" type="image/png" href="public/image/amarelle.png">
     <link rel="stylesheet" href="public/css/policy.css">
 </head>
 <body>
