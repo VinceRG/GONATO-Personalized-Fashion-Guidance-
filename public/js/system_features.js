@@ -1,20 +1,115 @@
+// ============================================
+// GLOBAL FUNCTIONS (Defined immediately)
+// ============================================
+
+window.toggleSearchBar = function() {
+    const searchContainer = document.getElementById('searchContainer');
+    if (searchContainer) {
+        searchContainer.classList.toggle('hidden');
+        if (!searchContainer.classList.contains('hidden')) {
+            const input = document.getElementById('productSearch');
+            if (input) input.focus();
+        }
+    }
+};
+
+window.filterProducts = function() {
+    const input = document.getElementById('productSearch');
+    if (!input) return;
+    
+    const filter = input.value.toLowerCase().trim();
+    // Select both catalog items and generic clothes items to ensure we catch everything
+    const items = document.querySelectorAll('.catalog-item, .clothes-item'); 
+    
+    let matchCount = 0;
+    // Try to find the specific grid first, then fallbacks
+    let resultsContainer = document.querySelector('.clothes-grid') || document.querySelector('#catalog-shop') || document.querySelector('.main-content');
+
+    items.forEach(item => {
+        // 1. Try data-name attribute
+        let name = item.dataset.name ? item.dataset.name.toLowerCase() : '';
+        
+        // 2. Try finding a title element inside
+        if (!name) {
+            const titleEl = item.querySelector('.title, .product-name, h3, h4');
+            if (titleEl) {
+                name = titleEl.textContent.trim().toLowerCase();
+            }
+        }
+
+        // 3. Fallback: Search all text in the card
+        if (!name) {
+            name = item.textContent.trim().toLowerCase();
+        }
+
+        // Show/Hide logic
+        if (name.includes(filter)) {
+            item.style.display = ''; // Revert to CSS default (block/flex)
+            matchCount++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+    
+    // Manage "No Results" message
+    let noResultsMsg = document.getElementById('search-no-results');
+    
+    if (matchCount === 0 && filter !== '') {
+        // Create message if it doesn't exist
+        if (!noResultsMsg && resultsContainer) {
+            noResultsMsg = document.createElement('div');
+            noResultsMsg.id = 'search-no-results';
+            noResultsMsg.className = 'no-results-message';
+            noResultsMsg.style.textAlign = 'center';
+            noResultsMsg.style.width = '100%';
+            noResultsMsg.style.padding = '3rem';
+            noResultsMsg.style.color = '#78716C';
+            noResultsMsg.style.fontSize = '1.1rem';
+            noResultsMsg.innerHTML = `<i class="bi bi-search" style="font-size: 2rem; display: block; margin-bottom: 1rem;"></i><p>No products found matching "<strong>${filter}</strong>"</p>`;
+            
+            // Insert safely
+            if (resultsContainer.classList.contains('clothes-grid')) {
+                // Insert after the grid so it doesn't mess up grid layout
+                resultsContainer.parentNode.insertBefore(noResultsMsg, resultsContainer.nextSibling);
+            } else {
+                resultsContainer.appendChild(noResultsMsg);
+            }
+        } else if (noResultsMsg) {
+            // Update existing message
+            const p = noResultsMsg.querySelector('p');
+            if (p) p.innerHTML = `No products found matching "<strong>${filter}</strong>"`;
+            noResultsMsg.style.display = 'block';
+        }
+    } else {
+        // Hide message if results found or search cleared
+        if (noResultsMsg) noResultsMsg.style.display = 'none';
+    }
+    
+    // Auto-scroll to shop if user is searching
+    if (filter.length > 0) {
+       const shopSection = document.getElementById('catalog-shop');
+       if (shopSection) {
+            const rect = shopSection.getBoundingClientRect();
+            // Scroll if the shop section is not currently well-visible (e.g. user is at the very top)
+            // Using a threshold of 150px to prevent jumping if already viewing the section
+            if (rect.top > 150 || rect.bottom < 0) {
+                shopSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+       }
+    }
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   // ============================================
   // USER PROFILE OVERLAY INITIAL STATE
   // ============================================
+  // Logic disabled to prevent auto-opening on login/load
   const userProfileOverlay = document.getElementById('userProfileOverlay');
   if (userProfileOverlay) {
-    const shouldKeepOpen = userProfileOverlay.dataset.keepOpen === '1';
-
-    if (shouldKeepOpen) {
-      userProfileOverlay.style.display = 'flex';
-      userProfileOverlay.classList.add('show');
-      document.body.style.overflow = 'hidden';
-    } else {
+      // Ensure it starts hidden regardless of session flags
       userProfileOverlay.style.display = 'none';
       userProfileOverlay.classList.remove('show');
       document.body.style.overflow = '';
-    }
   }
 
   // ============================================
@@ -48,69 +143,82 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================
   // NAVIGATION FUNCTIONALITY
   // ============================================
-  const navLinks = Array.from(document.querySelectorAll('.nav-btn'));
-  const sections = Array.from(document.querySelectorAll('.content-section'));
-  const mainContent = document.querySelector('.main-content');
+  initNavigation();
 
-  function navigateToSection(sectionId) {
-    const target = document.querySelector(sectionId);
-    if (!target) return;
-
-    navLinks.forEach(l => l.classList.remove('active'));
-    const correspondingLink = document.querySelector(`a[href="${sectionId}"]`);
-    if (correspondingLink) correspondingLink.classList.add('active');
-
-    sections.forEach(s => s.classList.remove('active'));
-    target.classList.add('active');
-
-    if (mainContent) {
-      mainContent.scrollTo({ top: target.offsetTop, behavior: 'smooth' });
+  function initNavigation() {
+    const navLinks = document.querySelectorAll('.nav-btn');
+    const sections = document.querySelectorAll('.content-section');
+    
+    function navigateTo(targetId) {
+      if (!targetId) return;
+      const targetSection = document.querySelector(targetId);
+      if (!targetSection) return;
+  
+      // Update Links
+      navLinks.forEach(l => {
+          l.classList.toggle('active', l.getAttribute('href') === targetId);
+      });
+  
+      // Update Sections
+      sections.forEach(s => s.classList.remove('active'));
+      targetSection.classList.add('active');
+  
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // update URL without page reload
+      if(history.pushState) {
+          history.pushState(null, null, targetId);
+      } else {
+          location.hash = targetId;
+      }
     }
-    history.replaceState(null, '', sectionId);
-  }
-
-  navLinks.forEach(link => {
-    link.addEventListener('click', e => {
-      e.preventDefault();
-      navigateToSection(link.getAttribute('href'));
+  
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateTo(link.getAttribute('href'));
+      });
     });
-  });
-
-  const hash = window.location.hash;
-  if (hash && (hash === '#catalog-shop' || hash === '#features')) {
-    navigateToSection(hash);
-  } else {
-    navigateToSection('#catalog-shop');
+  
+    // Handle Hash on Load
+    const hash = window.location.hash;
+    try {
+        if (hash && document.querySelector(hash)) {
+          navigateTo(hash);
+        } else {
+          navigateTo('#catalog-shop');
+        }
+    } catch(e) {
+        console.warn("Invalid hash, defaulting to shop");
+        navigateTo('#catalog-shop');
+    }
   }
 
   // ============================================
-  // RECOMMENDATIONS VISIBILITY
-  // ============================================
-  const recommendationsSection = document.getElementById("recommendations");
-  const colorResults = document.getElementById("colorSeasons");
-  const bodyResults = document.getElementById("bodyShapes");
-
-  const hasColor = colorResults && colorResults.classList.contains('show-results');
-  const hasBody = bodyResults && bodyResults.classList.contains('show-results');
-
-  if (recommendationsSection) {
-    recommendationsSection.style.display = (hasColor || hasBody) ? "block" : "none";
-  }
-
-  // ============================================
-  // CART FUNCTIONALITY
+  // CART FUNCTIONALITY (UPDATED FOR NEW CARD)
   // ============================================
   let cartCount = 0;
   const cartCountElement = document.querySelector('.cart-count');
-  const addToCartButtons = document.querySelectorAll('.add-to-cart');
-
-  addToCartButtons.forEach(button => {
-    button.addEventListener('click', () => {
+  // Listen for clicks on document to handle dynamically added buttons
+  document.addEventListener('click', (e) => {
+    // Check if clicked element or parent is add-to-cart
+    const button = e.target.closest('.add-to-cart') || e.target.closest('.card-add-btn');
+    
+    if (button) {
+      e.stopPropagation(); // Prevent bubbling
       cartCount++;
       if (cartCountElement) cartCountElement.textContent = cartCount;
+      
+      // Animation
       button.classList.add('added');
-      setTimeout(() => button.classList.remove('added'), 1000);
-    });
+      const icon = button.querySelector('i');
+      const originalClass = icon ? icon.className : '';
+      if(icon) icon.className = 'bi bi-check-lg';
+
+      setTimeout(() => {
+        button.classList.remove('added');
+        if(icon) icon.className = originalClass;
+      }, 1500);
+    }
   });
 
   // ============================================
@@ -142,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================
   // TABS (Orders/History)
   // ============================================
-  const subTabBtns = document.querySelectorAll('.sub-tab-btn');
+ const subTabBtns = document.querySelectorAll('.sub-tab-btn');
   const subTabContents = document.querySelectorAll('.sub-tab-content');
 
   subTabBtns.forEach(btn => {
@@ -153,11 +261,14 @@ document.addEventListener("DOMContentLoaded", () => {
       subTabBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      // Update content
+      // Update content (with Display Toggle for robustness)
       subTabContents.forEach(content => {
-        content.classList.remove('active'); // Hide all
+        content.classList.remove('active'); 
+        content.style.display = 'none'; // Force hide
+
         if (content.id === targetSubTab) {
-            content.classList.add('active'); // Show matching
+            content.classList.add('active');
+            content.style.display = 'block'; // Force show
         }
       });
     });
@@ -166,301 +277,404 @@ document.addEventListener("DOMContentLoaded", () => {
   // ============================================
   // PROFILE IMAGE PREVIEW & CLICK
   // ============================================
-  const fileInput = document.getElementById('profile_image');
+  const fileInput    = document.getElementById('profile_image');
   const headerAvatar = document.querySelector('.header-avatar');
-  const sidebarPic = document.getElementById('sidebar-profile-pic');
+  const sidebarPic   = document.getElementById('sidebar-profile-pic');
 
-  // Handle clicking the avatar ONLY when editing
-  if(headerAvatar && fileInput) {
-      headerAvatar.addEventListener('click', () => {
-          if(headerAvatar.classList.contains('editing')) {
-              fileInput.click();
-          }
-      });
+  if (headerAvatar && fileInput) {
+    headerAvatar.addEventListener('click', () => {
+      if (headerAvatar.classList.contains('editing')) {
+        fileInput.click();
+      }
+    });
   }
 
   if (fileInput) {
     fileInput.addEventListener('change', (event) => {
       const file = event.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          // Update Modal Image
-          const imgInsideAvatar = headerAvatar.querySelector('img');
-          if (imgInsideAvatar) {
-             imgInsideAvatar.src = e.target.result;
-          } else {
-             // If it was initials, replace with img
-             headerAvatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
-          }
-          
-          // Update Sidebar Image
-          if (sidebarPic) {
-            sidebarPic.innerHTML = `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
-          }
-        };
-        reader.readAsDataURL(file);
-      }
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const imgInsideAvatar = headerAvatar.querySelector('img');
+        if (imgInsideAvatar) {
+          imgInsideAvatar.src = e.target.result;
+        } else {
+          headerAvatar.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+        }
+        if (sidebarPic) {
+          sidebarPic.innerHTML = `<img src="${e.target.result}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">`;
+        }
+      };
+      reader.readAsDataURL(file);
     });
   }
 
   // ============================================
-  // CONTACT & POSTAL FORMATTING
+  // ADDRESS DATA & CASCADING DROPDOWNS (PSGC LOGIC)
   // ============================================
-  const contactInput = document.getElementById("contacts");
-  if (contactInput) {
-    contactInput.addEventListener("input", function () {
-      let value = this.value.replace(/[^0-9]/g, "");
-      if (value === "") value = "0";
-      if (value[0] !== "0") value = "0" + value;
-      this.value = value;
-    });
-  }
+  const PSGC_API = "https://psgc.gitlab.io/api";
+  const regionSelect = document.getElementById("regionSelect");
+  const provinceSelect = document.getElementById("province");
+  const citySelect = document.getElementById("city");
+  const barangaySelect = document.getElementById("barangay");
 
-  const postalInput = document.getElementById("postal_code");
-  if (postalInput) {
-    postalInput.addEventListener("input", function () {
-      this.value = this.value.replace(/[^0-9]/g, "");
-    });
-  }
-
-  // ============================================
-  // ADDRESS DATA & CASCADING DROPDOWNS
-  // ============================================
-  const addressData = {
-    "Metro Manila": {
-      "Quezon City": ["Commonwealth", "Fairview", "Batasan Hills"],
-      "Manila": ["Barangay 1", "Barangay 2", "Barangay 3"],
-      "Pasig": ["Rosario", "Ugong", "Manggahan", "Pinagbuhatan", "Malinao"]
-    },
-    "Cavite": {
-      "Bacoor": ["Talaba", "Zapote", "Molino 1", "Molino 2"]
-    },
-    "Laguna": {
-      "Calamba": ["Canlubang", "Real", "Lingga"]
-    },
-    "Bulacan": {
-      "Malolos": ["Tikay", "Mojon", "San Agustin"]
-    },
-    "Rizal": {
-      "Antipolo": ["San Roque", "Dalig", "Cupang"]
-    }
+  const APP_REGION_MAP = {
+      "Metro Manila": ["130000000"],
+      "North Luzon": ["010000000","020000000","030000000","140000000"],
+      "South Luzon": ["040000000","170000000","050000000"],
+      "Visayas": ["060000000","070000000","080000000"],
+      "Mindanao": ["090000000","100000000","110000000","120000000","160000000","150000000"]
   };
 
-  const province = document.getElementById("province");
-  const city = document.getElementById("city");
-  const barangay = document.getElementById("barangay");
+  function resetSelect(sel, placeholder) {
+      if (!sel) return;
+      sel.innerHTML = "";
+      const opt = document.createElement("option");
+      opt.value = "";
+      opt.textContent = placeholder;
+      sel.appendChild(opt);
+  }
 
-  // Pre-populate logic
-  if (province && city && barangay) {
-    const currentProvince = province.dataset.currentProvince || "";
-    const currentCity = city.dataset.currentCity || "";
-    const currentBarangay = barangay.dataset.currentBarangay || "";
+  async function handleAppRegionChange(appRegion, currentProvince = '', currentCity = '', currentBarangay = '') {
+    resetSelect(provinceSelect, "Select Province");
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
 
-    if (currentProvince && addressData[currentProvince]) {
-      province.value = currentProvince;
+    if (!appRegion) {
+        provinceSelect.disabled = false;
+        citySelect.disabled = true;
+        barangaySelect.disabled = true;
+        return;
+    }
 
-      // Populate Cities
-      city.innerHTML = `<option value="" disabled>Select City</option>`;
-      Object.keys(addressData[currentProvince]).forEach(c => {
+    const regionCodes = APP_REGION_MAP[appRegion] || [];
+
+    // NCR special-case
+    if (appRegion === "Metro Manila") {
+        resetSelect(provinceSelect, "Province");
         const opt = document.createElement("option");
-        opt.value = c;
-        opt.textContent = c;
-        city.appendChild(opt);
-      });
-      if (currentCity) city.value = currentCity;
+        opt.value = "Metro Manila";
+        opt.textContent = "Metro Manila";
+        opt.selected = true;
+        provinceSelect.appendChild(opt);
 
-      // Populate Barangays
-      if (currentCity && addressData[currentProvince][currentCity]) {
-        barangay.innerHTML = `<option value="" disabled>Select Barangay</option>`;
-        addressData[currentProvince][currentCity].forEach(brgy => {
-          const opt = document.createElement("option");
-          opt.value = brgy;
-          opt.textContent = brgy;
-          barangay.appendChild(opt);
-        });
-        if (currentBarangay) barangay.value = currentBarangay;
-      }
+        provinceSelect.disabled = false;
+        citySelect.disabled = false;
+        barangaySelect.disabled = true;
+
+        await loadCitiesForNCR(currentCity, currentBarangay);
+        return;
     }
-  }
 
-  function validateSelect(selectEl) {
-    if (!selectEl) return true;
-    const wrapper = selectEl.closest(".address-group");
-    if (!wrapper) return true;
+    // Other regions
+    provinceSelect.disabled = true;
+    citySelect.disabled = true;
+    barangaySelect.disabled = true;
 
-    if (!selectEl.value) {
-      wrapper.classList.add("has-error");
-      return false;
-    } else {
-      wrapper.classList.remove("has-error");
-      return true;
+    const allProvinces = [];
+    for (const rCode of regionCodes) {
+        try {
+            const res = await fetch(`${PSGC_API}/regions/${rCode}/provinces/`);
+            if (!res.ok) continue;
+            const provinces = await res.json();
+            provinces.forEach(p => allProvinces.push(p));
+        } catch (e) {
+            console.error("Error loading provinces", e);
+        }
     }
-  }
 
-  if (province) {
-    province.addEventListener("change", () => {
-      if (!city || !barangay) return;
-      city.innerHTML = `<option value="" disabled selected>Select City</option>`;
-      barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
-      
-      const selectedProv = province.value;
-      if (addressData[selectedProv]) {
-        Object.keys(addressData[selectedProv]).forEach(c => {
-          const opt = document.createElement("option");
-          opt.value = c;
-          opt.textContent = c;
-          city.appendChild(opt);
+    allProvinces.sort((a, b) => a.name.localeCompare(b.name));
+    allProvinces.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.name;
+        opt.textContent = p.name;
+        opt.dataset.code = p.code;
+        provinceSelect.appendChild(opt);
+    });
+
+    provinceSelect.disabled = allProvinces.length === 0;
+
+    // 🔹 Pre-select province if we have one from DB
+    if (currentProvince) {
+        const normProv = currentProvince.trim().toLowerCase();
+        let matched = false;
+
+        Array.from(provinceSelect.options).forEach(o => {
+            if (!o.value) return;
+            const val = o.value.trim().toLowerCase();
+            const text = o.textContent.trim().toLowerCase();
+            if (!matched && (val === normProv || text === normProv)) {
+                o.selected = true;
+                matched = true;
+            }
         });
-      }
-      validateSelect(province);
-    });
-  }
 
-  if (city) {
-    city.addEventListener("change", () => {
-      if (!province || !barangay) return;
-      barangay.innerHTML = `<option value="" disabled selected>Select Barangay</option>`;
-      
-      const selectedProv = province.value;
-      const selectedCity = city.value;
-      if (addressData[selectedProv] && addressData[selectedProv][selectedCity]) {
-        addressData[selectedProv][selectedCity].forEach(brgy => {
-          const opt = document.createElement("option");
-          opt.value = brgy;
-          opt.textContent = brgy;
-          barangay.appendChild(opt);
+        // If we found a province, load cities with current city/barangay
+        if (matched) {
+            await loadCitiesFromProvince(currentCity, currentBarangay);
+        }
+    }
+}
+
+async function loadCitiesFromProvince(currentCity = '', currentBarangay = '') {
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+
+    const selected = provinceSelect.selectedOptions[0];
+    if (!selected || !selected.dataset.code) {
+        citySelect.disabled = true;
+        return;
+    }
+
+    try {
+        const res = await fetch(`${PSGC_API}/provinces/${selected.dataset.code}/cities-municipalities/`);
+        const cities = await res.json();
+        cities.sort((a, b) => a.name.localeCompare(b.name));
+        cities.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;
+            opt.textContent = c.name;
+            opt.dataset.code = c.code;
+            citySelect.appendChild(opt);
         });
+        citySelect.disabled = cities.length === 0;
+
+        // 🔹 Pre-select city if we have one from DB
+        if (currentCity) {
+            const normCity = currentCity.trim().toLowerCase();
+            let matched = false;
+
+            Array.from(citySelect.options).forEach(o => {
+                if (!o.value) return;
+                const val = o.value.trim().toLowerCase();
+                const text = o.textContent.trim().toLowerCase();
+                if (!matched && (val === normCity || text === normCity)) {
+                    o.selected = true;
+                    matched = true;
+                }
+            });
+
+            if (matched && currentBarangay) {
+                await loadBarangaysFromCity(currentBarangay);
+            }
+        }
+    } catch (e) {
+        console.error("Error loading cities:", e);
+    }
+}
+
+async function loadCitiesForNCR(currentCity = '', currentBarangay = '') {
+    resetSelect(citySelect, "Select City / Municipality");
+    resetSelect(barangaySelect, "Select Barangay");
+    try {
+        const res = await fetch(`${PSGC_API}/regions/130000000/cities-municipalities/`);
+        const cities = await res.json();
+        cities.sort((a, b) => a.name.localeCompare(b.name));
+        cities.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.name;
+            opt.textContent = c.name;
+            opt.dataset.code = c.code;
+            citySelect.appendChild(opt);
+        });
+        citySelect.disabled = cities.length === 0;
+
+        // 🔹 Pre-select city if we have one from DB
+        if (currentCity) {
+            const normCity = currentCity.trim().toLowerCase();
+            let matched = false;
+
+            Array.from(citySelect.options).forEach(o => {
+                if (!o.value) return;
+                const val = o.value.trim().toLowerCase();
+                const text = o.textContent.trim().toLowerCase();
+                if (!matched && (val === normCity || text === normCity)) {
+                    o.selected = true;
+                    matched = true;
+                }
+            });
+
+            if (matched && currentBarangay) {
+                await loadBarangaysFromCity(currentBarangay);
+            }
+        }
+    } catch (e) {
+        console.error("Error loading NCR cities:", e);
+    }
+}
+
+async function loadBarangaysFromCity(currentBarangay = '') {
+    resetSelect(barangaySelect, "Select Barangay");
+
+    const selected = citySelect.selectedOptions[0];
+    if (!selected || !selected.dataset.code) {
+        barangaySelect.disabled = true;
+        return;
+    }
+
+    try {
+        const res = await fetch(`${PSGC_API}/cities-municipalities/${selected.dataset.code}/barangays/`);
+        const barangays = await res.json();
+        barangays.sort((a, b) => a.name.localeCompare(b.name));
+        barangays.forEach(b => {
+            const opt = document.createElement("option");
+            opt.value = b.name;
+            opt.textContent = b.name;
+            barangaySelect.appendChild(opt);
+        });
+        barangaySelect.disabled = barangays.length === 0;
+
+        // 🔹 Pre-select barangay if we have one from DB
+        if (currentBarangay) {
+            const normBrgy = currentBarangay.trim().toLowerCase();
+            Array.from(barangaySelect.options).forEach(o => {
+                const val = o.value.trim().toLowerCase();
+                const text = o.textContent.trim().toLowerCase();
+                if (val === normBrgy || text === normBrgy) {
+                    o.selected = true;
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error loading barangays:", e);
+    }
+}
+
+  if (regionSelect) {
+      regionSelect.disabled = true; provinceSelect.disabled = true; citySelect.disabled = true; barangaySelect.disabled = true;
+      regionSelect.addEventListener("change", function () { handleAppRegionChange(this.value); });
+      provinceSelect.addEventListener("change", function () { loadCitiesFromProvince(); });
+      citySelect.addEventListener("change", function () { loadBarangaysFromCity(); });
+  }
+  // 🔹 Initialize address selects with values from DB (if any)
+  if (regionSelect && provinceSelect && citySelect && barangaySelect) {
+      const currentRegion    = regionSelect.value; // already set by PHP using 'selected'
+      const currentProvince  = provinceSelect.dataset.currentProvince || '';
+      const currentCity      = citySelect.dataset.currentCity || '';
+      const currentBarangay  = barangaySelect.dataset.currentBarangay || '';
+
+      if (currentRegion) {
+          (async () => {
+              try {
+                  await handleAppRegionChange(currentRegion, currentProvince, currentCity, currentBarangay);
+              } catch (e) {
+                  console.error('Error initializing address from profile:', e);
+              } finally {
+                  // Keep them disabled until user clicks "Edit"
+                  provinceSelect.disabled = true;
+                  citySelect.disabled = true;
+                  barangaySelect.disabled = true;
+              }
+          })();
       }
-      validateSelect(city);
-    });
   }
 
-  if (barangay) {
-    barangay.addEventListener("change", () => validateSelect(barangay));
+  // Loading Overlay Logic
+  const loadingOverlay = document.getElementById('analysisLoadingOverlay');
+  const colorForm = document.getElementById('colorForm');
+  const bodyShapeForm = document.getElementById('bodyShapeForm');
+  function showAnalysisLoading() {
+      if (loadingOverlay) { loadingOverlay.classList.remove('hidden'); loadingOverlay.style.display = 'flex'; }
   }
+  if (colorForm) colorForm.addEventListener('submit', showAnalysisLoading);
+  if (bodyShapeForm) bodyShapeForm.addEventListener('submit', showAnalysisLoading);
 
-  // Validate on submit
-  const profileFormEl = document.getElementById("profileForm");
-  if (profileFormEl) {
-    profileFormEl.addEventListener("submit", function (e) {
-      const ok1 = validateSelect(province);
-      const ok2 = validateSelect(city);
-      const ok3 = validateSelect(barangay);
-      if (!ok1 || !ok2 || !ok3) e.preventDefault();
-    });
-  }
+  // Initialize Drag & Drop
+  initDragAndDrop();
 });
 
 // ============================================
-// GLOBAL FUNCTIONS (Necessary for inline onClick)
+// GLOBAL FUNCTIONS (For onclick attributes)
 // ============================================
 
-// 1. EDIT PROFILE LOGIC
 let originalProfileValues = {};
-
 window.enableEditing = function(btn) {
     const form = document.getElementById('profileForm');
     if (!form) return;
-
-    // Select inputs to enable
     const fields = form.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select');
     const saveBtn = document.getElementById('saveProfileBtn');
     const footer = document.getElementById('profileFooter');
     const editRow = document.querySelector('.edit-row');
     const headerAvatar = document.querySelector('.header-avatar');
-
-    // Store original values and enable fields
     originalProfileValues = {};
     fields.forEach(el => {
         if (el.id) originalProfileValues[el.id] = el.value;
         el.disabled = false;
         el.style.borderColor = '#A68763';
     });
-
-    // Toggle UI visibility
-    if (editRow) editRow.style.display = 'none'; // Hide "Edit Profile" button
-    if (footer) footer.style.display = 'flex'; // Show Save/Cancel buttons
+    if (editRow) editRow.style.display = 'none';
+    if (footer) footer.style.display = 'flex';
     if (saveBtn) saveBtn.disabled = false;
-    
-    // Allow Avatar editing
     if (headerAvatar) headerAvatar.classList.add('editing');
+    
+    // Enable address selects for editing
+    const regionSelect = document.getElementById('regionSelect');
+    const provinceSelect = document.getElementById('province');
+    const citySelect = document.getElementById('city');
+    const barangaySelect = document.getElementById('barangay');
+    if (regionSelect) regionSelect.disabled = false;
+    if (provinceSelect) provinceSelect.disabled = false;
+    if (citySelect) citySelect.disabled = false;
+    if (barangaySelect) barangaySelect.disabled = false;
 };
+
 
 window.cancelEditing = function() {
     const form = document.getElementById('profileForm');
     if (!form) return;
-
     const fields = form.querySelectorAll('input:not([type="hidden"]):not(#profile_image), select');
     const saveBtn = document.getElementById('saveProfileBtn');
     const footer = document.getElementById('profileFooter');
     const editRow = document.querySelector('.edit-row');
     const headerAvatar = document.querySelector('.header-avatar');
-
-    // Restore values and disable fields
     fields.forEach(el => {
-        if (el.id && originalProfileValues.hasOwnProperty(el.id)) {
-            el.value = originalProfileValues[el.id];
-        }
-        el.disabled = true;
-        el.style.borderColor = '';
+        if (el.id && originalProfileValues.hasOwnProperty(el.id)) el.value = originalProfileValues[el.id];
+        el.disabled = true; el.style.borderColor = '';
     });
-
-    // Reset file input
     const fileInput = document.getElementById('profile_image');
     if (fileInput) fileInput.value = '';
-
-    // Toggle UI visibility
     if (editRow) editRow.style.display = 'flex';
     if (footer) footer.style.display = 'none';
     if (saveBtn) saveBtn.disabled = true;
-
-    // Disable Avatar editing
     if (headerAvatar) headerAvatar.classList.remove('editing');
+    
+    const regionSelect = document.getElementById('regionSelect');
+    if(regionSelect) regionSelect.disabled = true;
 };
 
-
-// 2. TOGGLE VIEWS (Purchases vs Account)
 window.toggleViews = function(viewName) {
     const accountView = document.getElementById('account-view');
     const purchasesView = document.getElementById('purchases-view');
-    
     if(!accountView || !purchasesView) return;
-
     if (viewName === 'purchases') {
-        accountView.style.display = 'none';
-        purchasesView.style.display = 'block';
+        accountView.style.display = 'none'; purchasesView.style.display = 'block';
     } else {
-        accountView.style.display = 'block';
-        purchasesView.style.display = 'none';
+        accountView.style.display = 'block'; purchasesView.style.display = 'none';
     }
 };
 
-// 3. OTHER MODAL FUNCTIONS
 window.openUserProfile = function () {
   const userProfileOverlay = document.getElementById('userProfileOverlay');
   if (userProfileOverlay) {
-    userProfileOverlay.style.display = 'flex';
-    userProfileOverlay.classList.add('show');
-    document.body.style.overflow = 'hidden';
+    userProfileOverlay.style.display = 'flex'; userProfileOverlay.classList.add('show'); document.body.style.overflow = 'hidden';
   }
 };
 
 window.closeUserProfile = function () {
   const userProfileOverlay = document.getElementById('userProfileOverlay');
   if (userProfileOverlay) {
-    userProfileOverlay.style.display = 'none';
-    userProfileOverlay.classList.remove('show');
-    document.body.style.overflow = '';
-    // Optional: Reset view to account when closing
-    toggleViews('account');
-    cancelEditing();
+    userProfileOverlay.style.display = 'none'; userProfileOverlay.classList.remove('show'); document.body.style.overflow = '';
+    toggleViews('account'); cancelEditing();
   }
+};
+
+window.openCart = function() {
+    // Placeholder for cart logic, OR handled by cartModal.js
+    console.log("Open Cart Clicked");
 };
 
 window.goToFeatures = function () {
   closeUserProfile();
-  // We use the navigateToSection logic via hash or manually
   const featuresLink = document.querySelector('a[href="#features"]');
   if(featuresLink) featuresLink.click();
 };
@@ -469,49 +683,43 @@ window.toggleAnalysis = function (targetId, show) {
   const targetElement = document.getElementById(targetId);
   if (!targetElement) return;
   const card = targetElement.closest('.option-card');
-  const uploadSection = card.querySelector('.upload-section');
-  const featureList = card.querySelector('.feature-list');
-  if (show) {
-    targetElement.classList.add('show-results');
-    if (uploadSection) uploadSection.classList.add('hidden');
-    if (featureList) featureList.classList.add('hidden');
-    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  } else {
+  const uploadSection = card.querySelector('.upload-wrapper') || card.querySelector('.upload-section'); // Support both class names
+  if (show) { // Show Upload
     targetElement.classList.remove('show-results');
     if (uploadSection) uploadSection.classList.remove('hidden');
-    if (featureList) featureList.classList.remove('hidden');
+  } else { // Show Results
+    targetElement.classList.add('show-results');
+    if (uploadSection) uploadSection.classList.add('hidden');
   }
 };
 
-window.simulateAnalysis = function (targetId) {
-  const button = event.target;
-  button.disabled = true;
-  const originalText = button.textContent;
-  button.textContent = "Analyzing...";
-  setTimeout(() => {
-    button.disabled = false;
-    button.textContent = originalText;
-    window.toggleAnalysis(targetId, true);
-  }, 1500);
+window.toggleColorAnalysis = function(show) {
+    const results = document.getElementById('colorSeasons');
+    const uploadSection = document.getElementById('colorUploadSection');
+    if (!results || !uploadSection) return;
+    
+    if (show) { // "Try Again" -> Show Upload
+      results.classList.remove('show-results');
+      uploadSection.classList.remove('hidden');
+      const form = document.getElementById('colorForm');
+      if (form) form.reset();
+    } else { // "Cancel" or Show Results
+      results.classList.add('show-results');
+      uploadSection.classList.add('hidden');
+    }
 };
 
-window.filterProducts = function () {
-  const searchInput = document.getElementById('productSearch');
-  const categorySelect = document.getElementById('categoryFilter');
-
-  const query = searchInput ? searchInput.value.toLowerCase() : '';
-  const category = categorySelect ? categorySelect.value : '';
-
-  document.querySelectorAll('.catalog-item').forEach(item => {
-    const titleEl = item.querySelector('.title');
-    const title = titleEl ? titleEl.textContent.toLowerCase() : '';
-    const itemCategory = item.dataset.category || '';
-
-    const matchesName = !query || title.includes(query);
-    const matchesCategory = !category || itemCategory === category;
-
-    item.style.display = (matchesName && matchesCategory) ? 'block' : 'none';
-  });
+window.closeAnalysisErrorModal = function() {
+    const overlay = document.getElementById('analysisErrorOverlay');
+    if (overlay) overlay.classList.add('hidden');
+};
+window.closeBodyShapeResultModal = function() {
+    const overlay = document.getElementById('bodyShapeResultOverlay');
+    if (overlay) overlay.classList.add('hidden');
+};
+window.closeColorResultModal = function() {
+    const overlay = document.getElementById('colorResultOverlay');
+    if (overlay) overlay.classList.add('hidden');
 };
 
 window.logout = function () {
@@ -524,18 +732,70 @@ window.logout = function () {
 
 window.closeLogoutOverlay = function () {
   const logoutOverlay = document.getElementById('logoutOverlay');
-  if (logoutOverlay) {
-    logoutOverlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }
+  if (logoutOverlay) { logoutOverlay.style.display = 'none'; document.body.style.overflow = ''; }
 };
 
 window.confirmLogout = function () {
   const logoutOverlay = document.getElementById('logoutOverlay');
   if (logoutOverlay) {
     logoutOverlay.innerHTML = `<div class="modal" style="max-width: 400px; background:white; padding:2rem; border-radius:15px; text-align:center;">Logging out...</div>`;
-    setTimeout(() => {
-      window.location.href = "index.php?page=login&action=logout";
-    }, 800);
+    setTimeout(() => { window.location.href = "index.php?page=login&action=logout"; }, 800);
   }
 };
+
+// ============================================
+// DRAG & DROP UPLOAD LOGIC
+// ============================================
+function initDragAndDrop() {
+    setupDragDrop('colorDropArea', 'face_image_input', 'colorFilePreview');
+    setupDragDrop('frontDropArea', 'front_image_input', 'frontFilePreview');
+    setupDragDrop('sideDropArea', 'side_image_input', 'sideFilePreview');
+}
+
+function setupDragDrop(areaId, inputId, previewId) {
+    const area = document.getElementById(areaId);
+    const input = document.getElementById(inputId);
+    const preview = document.getElementById(previewId);
+
+    if (!area || !input) return;
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        area.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop area
+    ['dragenter', 'dragover'].forEach(eventName => {
+        area.addEventListener(eventName, () => area.classList.add('drag-over'), false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        area.addEventListener(eventName, () => area.classList.remove('drag-over'), false);
+    });
+
+    // Handle dropped files
+    area.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        input.files = files;
+        updatePreview(files[0]);
+    });
+
+    // Handle file input change (browse)
+    input.addEventListener('change', () => {
+        if(input.files.length > 0) {
+            updatePreview(input.files[0]);
+        }
+    });
+
+    function updatePreview(file) {
+        if(preview && file) {
+            preview.innerHTML = `<i class="bi bi-check-circle-fill" style="color:green;"></i> ${file.name} selected`;
+        }
+    }
+}

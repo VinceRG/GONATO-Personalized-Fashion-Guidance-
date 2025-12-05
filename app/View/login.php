@@ -5,16 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
-    <title>Login - Amarelle</title>
+    <title>Amarelle</title>
+    <link rel="icon" type="image/png" href="public/image/amarelle.png">
+    
     <link rel="stylesheet" href="public/css/login.css">
 
-    <!-- FONT AWESOME -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-    <style>
-
-
-    </style>
 </head>
 
 <body>
@@ -25,7 +21,6 @@ $rememberedUsername = $_COOKIE['remember_username'] ?? '';
 $inputUsername = $username ?? $rememberedUsername ?? '';
 ?>
 
-<!-- OTP MODAL -->
 <div id="otpModal" class="otp-modal">
     <div class="otp-modal-content">
         <h2>Email Verification</h2>
@@ -41,14 +36,27 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
     </div>
 </div>
 
+<div id="lockModal" class="otp-modal">
+    <div class="otp-modal-content">
+        <h2>Account Locked</h2>
+        <p>Your account has been temporarily locked for security reasons due to multiple unsuccessful login attempts.</p>
+        <p>Please contact the administrator at
+            <a href="mailto:amarelle2025@gmail.com">amarelle2025@gmail.com</a>
+            to regain access to your account.
+        </p>
+        <button id="lockOkBtn" class="otp-btn">OK</button>
+    </div>
+</div>
+
 <div class="header">
-    <a href="index.php?page=landing" class="logo-link"><img src="public/image/amarelle.png" alt="Amarelle Logo" class="brand-logo" style="height: 50px; width: auto; margin-left: 20px; vertical-align: middle;">
-</a>
+    <a href="index.php?page=landing" class="logo-link">
+        <img src="public/image/amarelle.png" alt="Amarelle Logo" class="brand-logo">
+    </a>
 </div>
 
 <div class="content">
 
-    <h1>Welcome</h1>
+    <h1>Welcome to Amarelle!</h1>
     <p>Please enter your details.</p>
 
     <form id="loginForm" action="index.php?page=login" method="POST">
@@ -56,12 +64,6 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
         <?php if (!empty($message)): ?>
             <div class="message <?php echo $messageType; ?>">
                 <?php echo htmlspecialchars($message); ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if (isset($remainingAttempts) && $remainingAttempts > 0 && $remainingAttempts < 3): ?>
-            <div class="message warning">
-                Warning: You have <?php echo $remainingAttempts; ?> attempt(s) remaining before your account is locked.
             </div>
         <?php endif; ?>
 
@@ -75,32 +77,39 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
             <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>
         >
 
-        <div class="form-group password-wrapper">
+       <div class="form-group">
             <label for="password">Password</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Enter your password"
-                <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>
-            >
+            
+            <div class="password-wrapper">
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>
+                >
+                <button type="button" class="password-toggle" data-target="password">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <p class="forgotpass">
-            <a class="forgotpass" href="index.php?page=forgot">Forgot your password?</a>
-        </p>
+        <div class="form-actions">
+            <label class="remember-me">
+                <input
+                    type="checkbox"
+                    name="remember_me"
+                    value="1"
+                    <?php echo !empty($rememberedUsername) ? 'checked' : ''; ?>
+                >
+                Remember me
+            </label>
 
-        <label class="remember-me">
-            <input
-                type="checkbox"
-                name="remember_me"
-                value="1"
-                <?php echo !empty($rememberedUsername) ? 'checked' : ''; ?>
-            >
-            Remember me on this device
-        </label>
-
-        <!-- reCAPTCHA removed -->
+            <a class="forgotpass-link" href="index.php?page=forgot">Forgot password?</a>
+        </div>
 
         <button type="submit"
             <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>>
@@ -131,9 +140,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const verifyBtn  = document.getElementById("verifyOtpBtn");
     const cancelBtn  = document.getElementById("cancelOtpBtn");
 
-    // Open modal after successful username/password (PHP sets this flag)
+    const lockModal  = document.getElementById("lockModal");
+    const lockOkBtn  = document.getElementById("lockOkBtn");
+
+    // Open OTP modal after successful username/password (PHP sets this flag)
     <?php if (!empty($openOtpModal)): ?>
         otpModal.style.display = "flex";
+    <?php endif; ?>
+
+    // Open Account Locked modal when account is locked
+    <?php if (isset($isLocked) && $isLocked): ?>
+        lockModal.style.display = "flex";
     <?php endif; ?>
 
     verifyBtn.addEventListener("click", () => {
@@ -164,7 +181,42 @@ document.addEventListener("DOMContentLoaded", () => {
         otpInput.value = "";
         otpError.style.display = "none";
     });
+
+    // Close lock modal (inputs remain disabled; user must contact admin)
+    lockOkBtn.addEventListener("click", () => {
+        lockModal.style.display = "none";
+    });
 });
+
+// --- Password Toggle Logic ---
+    const toggles = document.querySelectorAll(".password-toggle");
+
+    const eyeIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>`;
+    
+    const eyeSlashIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+        </svg>`;
+
+    toggles.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            const targetId = btn.getAttribute("data-target");
+            const input = document.getElementById(targetId);
+            if (!input) return;
+
+            if (input.type === "password") {
+                input.type = "text";
+                btn.innerHTML = eyeSlashIcon;
+            } else {
+                input.type = "password";
+                btn.innerHTML = eyeIcon;
+            }
+        });
+    });
 </script>
 
 </body>

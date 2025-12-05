@@ -73,7 +73,6 @@ async function createPaymongoPaymentMethod(card, billing) {
           exp_year: parseInt(card.exp_year, 10),
           cvc: card.cvc,
         },
-        // PayMongo requires billing.email (and usually name/phone are nice)
         billing: {
           name: billing?.name || undefined,
           email: billing?.email || undefined,
@@ -105,7 +104,6 @@ async function createPaymongoPaymentMethod(card, billing) {
 }
 
 async function attachPaymongoPaymentIntent(clientKey, paymentMethodId) {
-  // client_key is like: pi_xxx_client_yyy
   const paymentIntentId = clientKey.split("_client")[0];
 
   const payload = {
@@ -113,7 +111,7 @@ async function attachPaymongoPaymentIntent(clientKey, paymentMethodId) {
       attributes: {
         payment_method: paymentMethodId,
         client_key: clientKey,
-        return_url: window.location.origin + "/paymongo-return", // adjust if needed
+        return_url: window.location.origin + "/paymongo-return",
       },
     },
   };
@@ -139,13 +137,11 @@ async function attachPaymongoPaymentIntent(clientKey, paymentMethodId) {
     throw new Error(detail);
   }
 
-  return data; // full payment_intent data
+  return data;
 }
 
 // ---------- Local order creation (DB) ----------
-// NOTE: now accepts name + phone + address
 async function createLocalOrder(totalAmount, shippingName, shippingPhone, shippingAddress) {
-  // Collect selected cart item IDs
   const selectedCheckboxes = document.querySelectorAll(
     ".cart-item .item-select:checked"
   );
@@ -175,8 +171,6 @@ async function createLocalOrder(totalAmount, shippingName, shippingPhone, shippi
     });
 
     const text = await response.text();
-    console.log("create_order raw response:", text);
-
     let data;
     try {
       data = JSON.parse(text);
@@ -219,7 +213,6 @@ async function updateCartItemQuantity(cartItemId, newQuantity) {
       return;
     }
 
-    // if backend returns cart_count, use it; otherwise refresh
     const badge = document.getElementById("cartCount");
     if (badge && typeof data.cart_count !== "undefined") {
       badge.textContent = data.cart_count;
@@ -275,7 +268,6 @@ function sendAddToCart(productId, inventoryId, price) {
   })
     .then(async (r) => {
       const text = await r.text();
-      console.log("Raw response from add_to_cart:", text);
       return JSON.parse(text);
     })
     .then(async (data) => {
@@ -301,7 +293,6 @@ async function loadCartFromServer() {
     });
 
     const data = await response.json();
-    console.log("Cart data from server:", data);
 
     if (!data.success) {
       console.warn(data.message || "Failed to load cart");
@@ -313,7 +304,6 @@ async function loadCartFromServer() {
 
     renderCartItems(data.items || []);
 
-    // Some backends send cart_count, others totalQty – try both
     const badge = document.getElementById("cartCount");
     if (badge) {
       const cnt = data.cart_count ?? data.totalQty ?? 0;
@@ -335,7 +325,7 @@ function renderCartItems(items) {
     container.innerHTML = `
       <div class="empty-state">
         <i class="bi bi-bag"></i>
-        <p>Your cart is empty.</p>
+        <p>Your bag is empty.</p>
       </div>
     `;
     const selectedCountEl = document.getElementById("selectedCount");
@@ -362,48 +352,53 @@ function renderCartItems(items) {
       stockLeft !== "" &&
       Number(stockLeft) <= Number(item.quantity);
 
+    // Structure matching reference image:
+    // [Hidden Checkbox]
+    // [Image]
+    // [Details Column: (Name+Desc+Meta), (Qty Control)]
+    // [Price Absolute Top Right]
+
     row.innerHTML = `
-      <input type="checkbox" class="item-select" checked>
+      <input type="checkbox" class="item-select" checked style="display:none;">
+      
       <div class="item-image">
         <img src="${item.image}" alt="${item.name}">
       </div>
-      <div class="item-details">
-        <div class="item-name">${item.name}</div>
-        <div class="item-meta">
-          ${
-            item.color || item.size
-              ? `Color: ${item.color || "-"} • Size: ${item.size || "-"}<br>`
-              : ""
-          }
-          Qty: <span class="quantity-value">${item.quantity}</span>
-          ${
-            stockLeft
-              ? `<span style="font-size:0.8rem; color:#777;">(Max: ${stockLeft})</span>`
-              : ""
-          }
+      
+      <div class="item-content">
+        <div class="item-header-row">
+            <div class="item-info">
+                <div class="item-name">${item.name}</div>
+                ${item.description ? `<div class="item-description">${item.description}</div>` : ""}
+                <div class="item-meta">
+                  ${
+                    item.color || item.size
+                      ? `${item.color || ""} ${item.size ? ", " + item.size : ""}`
+                      : ""
+                  }
+                  ${stockLeft ? `<span class="stock-alert">(Max: ${stockLeft})</span>` : ""}
+                </div>
+            </div>
+            <div class="item-price">₱${Number(item.price).toFixed(2)}</div>
         </div>
-        <div class="item-actions">
-          <div class="quantity-control">
-            <button class="quantity-btn qty-minus" data-id="${item.cart_item_id}">-</button>
-            <span class="quantity-value">${item.quantity}</span>
-            <button 
-              class="quantity-btn qty-plus ${maxReached ? "qty-plus-disabled" : ""}"
-              data-id="${item.cart_item_id}"
-              data-stock="${stockLeft ?? ""}"
-              ${maxReached ? "disabled aria-disabled='true'" : ""}
-            >+</button>
-          </div>
-          <div class="item-price">₱${Number(item.price).toFixed(2)}</div>
+
+        <div class="quantity-control">
+          <button class="quantity-btn qty-minus" data-id="${item.cart_item_id}">-</button>
+          <span class="quantity-value">${item.quantity}</span>
+          <button 
+            class="quantity-btn qty-plus ${maxReached ? "qty-plus-disabled" : ""}"
+            data-id="${item.cart_item_id}"
+            data-stock="${stockLeft ?? ""}"
+            ${maxReached ? "disabled aria-disabled='true'" : ""}
+          >+</button>
         </div>
       </div>
-      <button class="remove-btn" data-id="${item.cart_item_id}">
-        <i class="bi bi-trash"></i>
-      </button>
     `;
 
     container.appendChild(row);
   });
 
+  // Calculate totals
   const totalAmount = items.reduce((sum, i) => sum + Number(i.line_total), 0);
   const totalQty = items.reduce((sum, i) => sum + Number(i.quantity), 0);
 
@@ -412,9 +407,9 @@ function renderCartItems(items) {
   const cartTotalEl = document.getElementById("cartTotal");
   const checkoutItemCountEl = document.getElementById("checkoutItemCount");
 
+  // NOTE: In this design, we assume all items are implicitly selected
   if (selectedCountEl) selectedCountEl.textContent = totalQty;
-  if (selectedTotalEl)
-    selectedTotalEl.textContent = `₱${totalAmount.toFixed(2)}`;
+  if (selectedTotalEl) selectedTotalEl.textContent = `₱${totalAmount.toFixed(2)}`;
   if (cartTotalEl) cartTotalEl.textContent = `₱${totalAmount.toFixed(2)}`;
   if (checkoutItemCountEl) checkoutItemCountEl.textContent = totalQty;
 
@@ -429,7 +424,7 @@ async function placeOrder() {
     .trim();
   const totalAmount = parseFloat(totalText) || 0;
 
-  // Only card now
+  // Card details
   const card = {
     number: document.getElementById("card-number").value,
     exp_month: document.getElementById("card-exp-month").value,
@@ -442,7 +437,7 @@ async function placeOrder() {
     return;
   }
 
-  // Shipping / billing details from editable fields
+  // Shipping details
   const shippingNameInput    = document.getElementById("shippingNameInput");
   const shippingPhoneInput   = document.getElementById("shippingPhoneInput");
   const shippingAddressInput = document.getElementById("shippingAddressInput");
@@ -450,12 +445,8 @@ async function placeOrder() {
 
   const shippingName = shippingNameInput ? shippingNameInput.value.trim() : "";
   const shippingPhone = shippingPhoneInput ? shippingPhoneInput.value.trim() : "";
-  const shippingAddress = shippingAddressInput
-    ? shippingAddressInput.value.trim()
-    : "";
-  const shippingEmail = shippingEmailInput
-    ? shippingEmailInput.value.trim()
-    : "";
+  const shippingAddress = shippingAddressInput ? shippingAddressInput.value.trim() : "";
+  const shippingEmail = shippingEmailInput ? shippingEmailInput.value.trim() : "";
 
   if (!shippingEmail) {
     alert("Please provide an email address for the payment receipt.");
@@ -466,7 +457,7 @@ async function placeOrder() {
   showPaymentLoading("Initializing payment...");
 
   try {
-    // 1) Create Payment Intent via your MVC controller (already working)
+    // 1) Create Payment Intent
     const response = await fetch("index.php?api=paymongo", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -478,8 +469,6 @@ async function placeOrder() {
     }
 
     const data = await response.json();
-    console.log("PI created:", data);
-
     if (!data.client_key) {
       hidePaymentLoading();
       alert("Failed to create payment. Please try again.");
@@ -488,7 +477,7 @@ async function placeOrder() {
 
     const clientKey = data.client_key;
 
-    // 2) Create payment method with card details + billing
+    // 2) Create payment method
     const billing = {
       name: shippingName || undefined,
       email: shippingEmail || undefined,
@@ -498,7 +487,6 @@ async function placeOrder() {
     showPaymentLoading("Contacting your bank...");
 
     const paymentMethodId = await createPaymongoPaymentMethod(card, billing);
-    console.log("PaymentMethod created:", paymentMethodId);
 
     // 3) Attach payment intent
     showPaymentLoading("Finalizing payment...");
@@ -563,7 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const checkoutModal = document.getElementById("checkoutModal");
   const variantModal = document.getElementById("variantModal");
 
-  // ---------- Checkout summary builder (no Max: X here) ----------
+  // ---------- Checkout summary builder ----------
   function buildCheckoutSummaryFromSelection() {
     const list = document.getElementById("checkoutItemsList");
     if (!list) return;
@@ -585,13 +573,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const name = nameEl ? nameEl.textContent.trim() : "";
       const metaHtml = metaEl ? metaEl.innerHTML : "";
+      const priceText = priceEl ? priceEl.textContent.replace("₱", "").trim() : "0";
 
-      const priceText = priceEl
-        ? priceEl.textContent.replace("₱", "").trim()
-        : "0";
-
-      // there are 2 .quantity-value spans, take the last one (inside controls)
-      const qtyEl = qtyEls[qtyEls.length - 1];
+      const qtyEl = qtyEls[qtyEls.length - 1]; // Use the last one found in DOM
       const quantity = qtyEl ? parseInt(qtyEl.textContent, 10) || 0 : 0;
 
       const price = parseFloat(priceText) || 0;
@@ -601,7 +585,8 @@ document.addEventListener("DOMContentLoaded", () => {
       totalAmount += lineTotal;
 
       const row = document.createElement("div");
-      const cleanMetaHtml = metaHtml.replace(/\(Max:\s*\d+\)/g, "").trim();
+      // Strip out stock warning for checkout receipt
+      const cleanMetaHtml = metaHtml.replace(/<span class="stock-alert">.*?<\/span>/g, "").trim();
 
       row.className = "checkout-item-row";
       row.innerHTML = `
@@ -698,16 +683,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function proceedToCheckout() {
-    // Build list of selected items + totals
     buildCheckoutSummaryFromSelection();
-
-    // Switch modals
     if (cartModal) cartModal.classList.remove("show");
     if (checkoutModal) checkoutModal.classList.add("show");
     openOverlay();
   }
 
-  // ESC & overlay click close
   if (overlay) overlay.addEventListener("click", closeModals);
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeModals();
@@ -789,12 +770,35 @@ document.addEventListener("DOMContentLoaded", () => {
         variantNameTextEl.textContent = data.product.name;
       if (variantPriceEl)
         variantPriceEl.textContent = `₱${currentBasePrice.toFixed(2)}`;
+
+      // --- INJECT DESCRIPTION ---
+      // We check if the element exists; if not, we create it and append to the text container
+      let variantDescEl = document.getElementById("variantProductDescription");
+      if (!variantDescEl && variantPriceEl && variantPriceEl.parentNode) {
+          variantDescEl = document.createElement("p");
+          variantDescEl.id = "variantProductDescription";
+          variantDescEl.style.fontSize = "0.9rem";
+          variantDescEl.style.color = "#666";
+          variantDescEl.style.marginTop = "0.5rem";
+          variantDescEl.style.lineHeight = "1.4";
+          // Append to the parent container of Name/Price (the text column)
+          variantPriceEl.parentNode.appendChild(variantDescEl);
+      }
+      
+      if (variantDescEl) {
+          // Use the description from backend if available
+          const desc = data.product.description || "";
+          variantDescEl.textContent = desc;
+          // Hide element if description is empty to avoid empty space
+          variantDescEl.style.display = desc ? "block" : "none";
+      }
+      // --------------------------
+
       if (variantImgEl) {
         variantImgEl.src = data.product.image;
         variantImgEl.alt = data.product.name;
       }
 
-      // Build color options
       if (colorSelect) {
         const colorMap = {};
         const colors = [];
@@ -852,33 +856,36 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ----- Contact & Shipping Edit Toggle -----
-const editBtn    = document.getElementById("addressEditBtn");
-const nameInput  = document.getElementById("shippingNameInput");
-const emailInput = document.getElementById("shippingEmailInput");
-const phoneInput = document.getElementById("shippingPhoneInput");
-const addrInput  = document.getElementById("shippingAddressInput");
+  const editBtn    = document.getElementById("addressEditBtn");
+  const nameInput  = document.getElementById("shippingNameInput");
+  const emailInput = document.getElementById("shippingEmailInput");
+  const phoneInput = document.getElementById("shippingPhoneInput");
+  const addrInput  = document.getElementById("shippingAddressInput");
 
-const editableFields = [nameInput, emailInput, phoneInput, addrInput].filter(Boolean);
+  const editableFields = [nameInput, emailInput, phoneInput, addrInput].filter(Boolean);
 
-if (editBtn && editableFields.length) {
-  editableFields.forEach((el) => (el.readOnly = true));
+  if (editBtn && editableFields.length) {
+    editableFields.forEach((el) => (el.readOnly = true));
 
-  editBtn.addEventListener("click", () => {
-    const willBecomeEditable = editableFields[0].readOnly;
+    editBtn.addEventListener("click", () => {
+      const isReadOnly = editableFields[0].readOnly;
+      
+      editableFields.forEach((el) => {
+        el.readOnly = !isReadOnly;
+      });
 
-    editableFields.forEach((el) => {
-      el.readOnly = !willBecomeEditable;
+      if (isReadOnly) {
+        editBtn.classList.add("active");
+        editBtn.textContent = "Save for this order";
+        nameInput.focus();
+      } else {
+        editBtn.classList.remove("active");
+        editBtn.textContent = "Edit";
+      }
     });
+  }
 
-    editBtn.classList.toggle("active", willBecomeEditable);
-    editBtn.textContent = willBecomeEditable
-      ? "Save for this order"
-      : "Edit";
-  });
-}
-
-
-  // --- Quantity + / - and remove buttons (event delegation) ---
+  // --- Quantity + / - and remove buttons ---
   document.addEventListener("click", (e) => {
     // + button
     if (e.target.classList.contains("qty-plus")) {
@@ -918,7 +925,7 @@ if (editBtn && editableFields.length) {
       }
     }
 
-    // delete button (trash icon)
+    // delete button (if ever added back)
     const removeBtn = e.target.closest(".remove-btn");
     if (removeBtn) {
       const cartItemId = removeBtn.dataset.id;
@@ -934,8 +941,8 @@ if (editBtn && editableFields.length) {
   window._updateCartSummary = updateCartSummary;
   window.openVariantModal = openVariantModalInternal;
   window.confirmVariantSelection = confirmVariantSelectionInternal;
-  window.placeOrder = placeOrder; // used in onclick="placeOrder()"
+  window.placeOrder = placeOrder;
 
   console.log("cartModal.js initialized");
-  refreshCartCount(); // load badge from DB on page load
+  refreshCartCount(); 
 });

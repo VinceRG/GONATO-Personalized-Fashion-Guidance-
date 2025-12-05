@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - Amarelle</title>
+    <title>Amarelle</title>
+    <link rel="icon" type="image/png" href="public/image/amarelle.png">
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
@@ -149,6 +150,7 @@
 
     <div class="content">
         <h1>Join Amarelle</h1>
+        <p class="page-description">Unlock the Amarelle Experience</p>
 
         <?php if (!empty($success)) : ?>
             <div class="message success">

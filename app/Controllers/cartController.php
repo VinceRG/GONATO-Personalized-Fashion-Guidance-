@@ -67,54 +67,56 @@ class CartController
             $insert->execute();
         }
 
-$cartCount = $this->getCartItemCount($userId);
+        $cartCount = $this->getCartItemCount($userId);
 
-echo json_encode([
-    "success"    => true,
-    "cart_count" => $cartCount
-]);    }
-
- public function getProductVariants() {
-    // Get product id from query string
-    $productId = isset($_GET['PRODUCT_ID']) ? (int)$_GET['PRODUCT_ID'] : 0;
-
-    if ($productId <= 0) {
         echo json_encode([
-            "success" => false,
-            "message" => "Invalid product ID"
+            "success"    => true,
+            "cart_count" => $cartCount
         ]);
-        return;
     }
 
-    // 1) Get base product info
-    $sql = "SELECT PRODUCT_ID, PRODUCT_NAME, PRICE, IMAGE_FILE 
+    public function getProductVariants() {
+        // Get product id from query string
+        $productId = isset($_GET['PRODUCT_ID']) ? (int)$_GET['PRODUCT_ID'] : 0;
+
+        if ($productId <= 0) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Invalid product ID"
+            ]);
+            return;
+        }
+
+        // 1) Get base product info (Added DESCRIPTION)
+        $sql = "SELECT PRODUCT_ID, PRODUCT_NAME, DESCRIPTION, PRICE, IMAGE_FILE 
             FROM products 
             WHERE PRODUCT_ID = ?";
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $productId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $productRow = $result->fetch_assoc();
-    $stmt->close();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $productRow = $result->fetch_assoc();
+        $stmt->close();
 
-    if (!$productRow) {
-        echo json_encode([
-            "success" => false,
-            "message" => "Product not found"
-        ]);
-        return;
-    }
+        if (!$productRow) {
+            echo json_encode([
+                "success" => false,
+                "message" => "Product not found"
+            ]);
+            return;
+        }
 
-    $imageBasePath = 'public/image/';
-    $product = [
-        'id'    => (int)$productRow['PRODUCT_ID'],
-        'name'  => $productRow['PRODUCT_NAME'],
-        'price' => (float)$productRow['PRICE'],
-        'image' => $imageBasePath . $productRow['IMAGE_FILE'],
-    ];
+        $imageBasePath = 'public/image/';
+        $product = [
+            'id'          => (int)$productRow['PRODUCT_ID'],
+            'name'        => $productRow['PRODUCT_NAME'],
+            'description' => $productRow['DESCRIPTION'], // Added description
+            'price'       => (float)$productRow['PRICE'],
+            'image'       => $imageBasePath . $productRow['IMAGE_FILE'],
+        ];
 
-    // 2) Get variants from inventory + colors
-    $sql = "SELECT 
+        // 2) Get variants from inventory + colors
+        $sql = "SELECT 
                 i.INVENTORY_ID,
                 i.SIZE,
                 i.QUANTITY,
@@ -124,80 +126,80 @@ echo json_encode([
             JOIN colors c ON c.COLOR_ID = i.COLOR_ID
             WHERE i.PRODUCT_ID = ?
             ORDER BY c.COLOR_VALUE, i.SIZE";
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $productId);
-    $stmt->execute();
-    $invResult = $stmt->get_result();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $productId);
+        $stmt->execute();
+        $invResult = $stmt->get_result();
 
-    $variants = [];
-    while ($row = $invResult->fetch_assoc()) {
-        $variants[] = [
-            'inventory_id' => (int)$row['INVENTORY_ID'],
-            'size'         => $row['SIZE'],
-            'quantity'     => (int)$row['QUANTITY'],
-            'color_id'     => (int)$row['COLOR_ID'],
-            'color_name'   => $row['COLOR_NAME'],
-        ];
-    }
-    $stmt->close();
+        $variants = [];
+        while ($row = $invResult->fetch_assoc()) {
+            $variants[] = [
+                'inventory_id' => (int)$row['INVENTORY_ID'],
+                'size'         => $row['SIZE'],
+                'quantity'     => (int)$row['QUANTITY'],
+                'color_id'     => (int)$row['COLOR_ID'],
+                'color_name'   => $row['COLOR_NAME'],
+            ];
+        }
+        $stmt->close();
 
-    echo json_encode([
-        "success"  => true,
-        "product"  => $product,
-        "variants" => $variants,
-    ]);
-}
-
-public function getCartItems() {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    $userId = $_SESSION['user_id'] ?? null;
-
-    if (!$userId) {
         echo json_encode([
-            "success" => false,
-            "message" => "User not logged in",
-            "items"   => []
+            "success"  => true,
+            "product"  => $product,
+            "variants" => $variants,
         ]);
-        return;
     }
 
-    // 1) Find active cart for this user
-    $sql = "SELECT CART_ID 
+    public function getCartItems() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if (!$userId) {
+            echo json_encode([
+                "success" => false,
+                "message" => "User not logged in",
+                "items"   => []
+            ]);
+            return;
+        }
+
+        // 1) Find active cart for this user
+        $sql = "SELECT CART_ID 
             FROM cart 
             WHERE USER_ID = ? AND STATUS = 0";
 
-    $stmt = $this->db->prepare($sql);
-    if (!$stmt) {
-        echo json_encode([
-            "success" => false,
-            "message" => "DB error: " . $this->db->error
-        ]);
-        return;
-    }
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            echo json_encode([
+                "success" => false,
+                "message" => "DB error: " . $this->db->error
+            ]);
+            return;
+        }
 
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $stmt->bind_result($cartId);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $stmt->bind_result($cartId);
 
-    if (!$stmt->fetch()) {
-        // No active cart -> empty cart
+        if (!$stmt->fetch()) {
+            // No active cart -> empty cart
+            $stmt->close();
+            echo json_encode([
+                "success"     => true,
+                "items"       => [],
+                "totalAmount" => 0,
+                "totalQty"    => 0
+            ]);
+            return;
+        }
+
         $stmt->close();
-        echo json_encode([
-            "success"     => true,
-            "items"       => [],
-            "totalAmount" => 0,
-            "totalQty"    => 0
-        ]);
-        return;
-    }
 
-    $stmt->close();
-
-    // 2) Get items in the cart, with product + variant info
-    $sql = "SELECT 
+        // 2) Get items in the cart, with product + variant info (Added p.DESCRIPTION)
+        $sql = "SELECT 
                 ci.CART_ITEM_ID,
                 ci.PRODUCT_ID,
                 ci.INVENTORY_ID,
@@ -205,6 +207,7 @@ public function getCartItems() {
                 ci.PRICE,
 
                 p.PRODUCT_NAME,
+                p.DESCRIPTION, 
                 p.IMAGE_FILE,
 
                 i.SIZE,
@@ -216,75 +219,77 @@ public function getCartItems() {
             LEFT JOIN colors c    ON i.COLOR_ID      = c.COLOR_ID
             WHERE ci.CART_ID = ?";
 
-    $stmt = $this->db->prepare($sql);
-    if (!$stmt) {
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            echo json_encode([
+                "success" => false,
+                "message" => "DB error: " . $this->db->error
+            ]);
+            return;
+        }
+
+        $stmt->bind_param("i", $cartId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $items = [];
+        $totalAmount = 0;
+        $totalQty = 0;
+
+        $imageBasePath = 'public/image/';
+
+        while ($row = $result->fetch_assoc()) {
+            $lineTotal = $row['PRICE'] * $row['QUANTITY'];
+            $totalAmount += $lineTotal;
+            $totalQty += $row['QUANTITY'];
+
+            $items[] = [
+                'cart_item_id' => (int)$row['CART_ITEM_ID'],
+                'product_id'   => (int)$row['PRODUCT_ID'],
+                'inventory_id' => (int)$row['INVENTORY_ID'],
+                'name'         => $row['PRODUCT_NAME'],
+                'description'  => $row['DESCRIPTION'], // Added description
+                'price'        => (float)$row['PRICE'],
+                'quantity'     => (int)$row['QUANTITY'],
+                'line_total'   => $lineTotal,
+                'image'        => $imageBasePath . $row['IMAGE_FILE'],
+
+                // extra info for display
+                'color'        => $row['COLOR_NAME'] ?? null,
+                'size'         => $row['SIZE'] ?? null,
+                'stock_left'   => isset($row['STOCK_LEFT']) ? (int)$row['STOCK_LEFT'] : null,
+            ];
+        }
+
+        $stmt->close();
+
         echo json_encode([
-            "success" => false,
-            "message" => "DB error: " . $this->db->error
+            "success"     => true,
+            "items"       => $items,
+            "totalAmount" => $totalAmount,
+            "totalQty"    => $totalQty,
+            "cart_count"  => $totalQty  // same as totalQty
         ]);
-        return;
+
     }
 
-    $stmt->bind_param("i", $cartId);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    $items = [];
-    $totalAmount = 0;
-    $totalQty = 0;
-
-$imageBasePath = 'public/image/';
-
-    while ($row = $result->fetch_assoc()) {
-        $lineTotal = $row['PRICE'] * $row['QUANTITY'];
-        $totalAmount += $lineTotal;
-        $totalQty += $row['QUANTITY'];
-
-        $items[] = [
-            'cart_item_id' => (int)$row['CART_ITEM_ID'],
-            'product_id'   => (int)$row['PRODUCT_ID'],
-            'inventory_id' => (int)$row['INVENTORY_ID'],
-            'name'         => $row['PRODUCT_NAME'],
-            'price'        => (float)$row['PRICE'],
-            'quantity'     => (int)$row['QUANTITY'],
-            'line_total'   => $lineTotal,
-            'image'        => $imageBasePath . $row['IMAGE_FILE'],
-
-            // extra info for display
-            'color'        => $row['COLOR_NAME'] ?? null,
-            'size'         => $row['SIZE'] ?? null,
-            'stock_left'   => isset($row['STOCK_LEFT']) ? (int)$row['STOCK_LEFT'] : null,
-        ];
-    }
-
-    $stmt->close();
-
-echo json_encode([
-    "success"     => true,
-    "items"       => $items,
-    "totalAmount" => $totalAmount,
-    "totalQty"    => $totalQty,
-    "cart_count"  => $totalQty  // same as totalQty
-]);
-
-}
-private function getCartItemCount($userId) {
-    $sql = "SELECT COALESCE(SUM(ci.QUANTITY), 0) AS TOTAL_QTY
+    private function getCartItemCount($userId) {
+        $sql = "SELECT COALESCE(SUM(ci.QUANTITY), 0) AS TOTAL_QTY
             FROM cart_items ci
             JOIN cart c ON ci.CART_ID = c.CART_ID
             WHERE c.USER_ID = ? AND c.STATUS = 0";
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $row = $res->fetch_assoc();
-    $stmt->close();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+        $stmt->close();
 
-    return (int)($row['TOTAL_QTY'] ?? 0);
-}
+        return (int)($row['TOTAL_QTY'] ?? 0);
+    }
 
-public function updateCartItemQuantity() {
+    public function updateCartItemQuantity() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
@@ -295,19 +300,19 @@ public function updateCartItemQuantity() {
         return;
     }
 
+    // Get data from POST
     $cartItemId = isset($_POST['cart_item_id']) ? (int)$_POST['cart_item_id'] : 0;
     $quantity   = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
 
-    // 🔹 Debug log so you can see what's coming in
+    // Debug log
     error_log("updateCartItemQuantity: cart_item_id={$cartItemId}, quantity={$quantity}");
 
-    // ✅ cart_item_id must be valid
     if ($cartItemId <= 0) {
         echo json_encode(["success" => false, "message" => "Invalid cart item"]);
         return;
     }
 
-    // ✅ If quantity <= 0, treat as delete instead of throwing "Invalid item/quantity"
+    // If quantity <= 0, treat as delete
     if ($quantity <= 0) {
         $sql = "DELETE ci
                 FROM cart_items ci
@@ -365,12 +370,11 @@ public function updateCartItemQuantity() {
 
     echo json_encode([
         "success"    => true,
-        "cart_count" => $cartCount,
+        "cart_count" => $cartCount
     ]);
 }
 
-
-public function deleteCartItem() {
+    public function deleteCartItem() {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
@@ -401,43 +405,44 @@ public function deleteCartItem() {
     $stmt->close();
 
     if ($affected > 0) {
-    $cartCount = $this->getCartItemCount($userId);
-    echo json_encode([
-        "success"    => true,
-        "cart_count" => $cartCount
-    ]);
-} else {
-    echo json_encode([
-        "success" => false,
-        "message" => "Item not found or already removed"
-    ]);
-}
-}
-public function getCartCount() {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+        $cartCount = $this->getCartItemCount($userId);
+        echo json_encode([
+            "success"    => true,
+            "cart_count" => $cartCount
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false,
+            "message" => "Item not found or already removed"
+        ]);
     }
+}
 
-    $userId = $_SESSION['user_id'] ?? null;
-    if (!$userId) {
-        echo json_encode(["success" => true, "count" => 0]);
-        return;
-    }
+    public function getCartCount() {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $userId = $_SESSION['user_id'] ?? null;
+        if (!$userId) {
+            echo json_encode(["success" => true, "count" => 0]);
+            return;
+        }
 
     $sql = "SELECT COALESCE(SUM(ci.QUANTITY), 0) AS cnt
             FROM cart_items ci
             JOIN cart c ON ci.CART_ID = c.CART_ID
             WHERE c.USER_ID = ? AND c.STATUS = 0";
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_assoc();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
 
-    echo json_encode([
-        "success" => true,
-        "count"   => (int)$result['cnt']
-    ]);
-}
+        echo json_encode([
+            "success" => true,
+            "count"   => (int)$result['cnt']
+        ]);
+    }
 
 }

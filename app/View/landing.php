@@ -8,6 +8,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap">    
     <title>Amarelle - Your Personal Fashion Intelligence</title>
+    <link rel="icon" type="image/png" href="public/image/amarelle.png">
     <link rel="stylesheet" href="public/css/landing.css">
 
 
@@ -39,7 +40,7 @@
         </div>
         <div class="nav-links">
             <div class="nav-auth">
-                <a href="index.php?page=login" class="nav-login">Login</a>
+                <a href="index.php?page=login" class="nav-login">Logins</a>
                 <a href="index.php?page=register" class="nav-cta">Sign Up</a>
             </div>
         </div>
