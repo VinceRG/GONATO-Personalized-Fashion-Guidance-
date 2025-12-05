@@ -357,7 +357,7 @@ showConfirm(message, async () => {
     showNotification('Failed to delete product: ' + error.message, 'error');
   }
 });
-s
+
 }
 
 
@@ -770,10 +770,10 @@ async function saveInventoryVariant() {
     let url = `${API_BASE}&action=addInventory`;
     let method = 'POST';
 
-    if (currentEditInventoryId) {
-      url = `${API_BASE}&action=inventory&id=${currentEditInventoryId}`;
-      method = 'POST';
-    }
+if (currentEditInventoryId) {
+  url = `${API_BASE}&action=inventory&id=${currentEditInventoryId}&_method=PUT`;
+  method = 'POST'; // browser sends POST, PHP sees PUT via override
+}
 
     const res = await fetch(url, {
       method: method,
@@ -875,10 +875,13 @@ async function editInventory(inventoryId) {
 function deleteInventory(inventoryId) {
   showConfirm('Are you sure you want to delete this variant?', async () => {
     try {
-      const res = await fetch(`${API_BASE}&action=inventory&id=${inventoryId}`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      const res = await fetch(
+  `${API_BASE}&action=inventory&id=${inventoryId}&_method=DELETE`,
+  {
+    method: 'POST',         // actual HTTP verb
+    credentials: 'include',
+  }
+);
       const data = await res.json();
       if (!res.ok || data.error) {
         throw new Error(data.error || 'Failed to delete inventory');
@@ -1300,12 +1303,15 @@ function toggleStaffActive(adminId, isActive) {
 
   showConfirm(message, async () => {
     try {
-      const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ is_active: isActive ? 0 : 1 }),
-      });
+      const res = await fetch(
+        `${API_BASE}&action=staff&id=${adminId}&_method=PATCH`,
+        {
+          method: 'POST', // 👈 server sees POST, PHP sees PATCH
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ is_active: isActive ? 0 : 1 }),
+        }
+      );
 
       const data = await res.json();
       if (!res.ok || data.error) {
@@ -1319,7 +1325,10 @@ function toggleStaffActive(adminId, isActive) {
       await loadStaff();
     } catch (err) {
       console.error('toggleStaffActive error:', err);
-      showNotification('Error updating staff status: ' + err.message, 'error');
+      showNotification(
+        'Failed to update staff status: ' + err.message,
+        'error'
+      );
     }
   });
 }
@@ -1329,10 +1338,14 @@ function toggleStaffActive(adminId, isActive) {
 function deleteStaff(adminId) {
   showConfirm('Are you sure you want to delete this staff account?', async () => {
     try {
-      const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      const res = await fetch(
+  `${API_BASE}&action=staff&id=${adminId}&_method=DELETE`,
+  {
+    method: 'POST',
+    credentials: 'include',
+  }
+);
+
 
       const data = await res.json();
       if (!res.ok || data.error) {
@@ -1613,17 +1626,19 @@ function renderOrders() {
 async function updateOrderStatusTable(orderId, newStatus, selectEl) {
   if (!newStatus) return;
 
-  // Remember previous status to revert on error
   const oldOrder = (orders || []).find(o => Number(o.ORDER_ID) === Number(orderId));
   const oldStatus = oldOrder ? oldOrder.STATUS : null;
 
   try {
-    const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ status: newStatus })
-    });
+    const res = await fetch(
+      `${API_BASE}&action=orders&id=${orderId}&status=1&_method=PATCH`,
+      {
+        method: 'POST', // 👈 was PATCH
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ status: newStatus })
+      }
+    );
 
     const data = await res.json();
 
@@ -1631,7 +1646,6 @@ async function updateOrderStatusTable(orderId, newStatus, selectEl) {
       throw new Error(data.error || 'Failed to update order status');
     }
 
-    // ✅ Update local arrays so UI stays in sync
     const updateInArray = (arr) => {
       if (!Array.isArray(arr)) return;
       const idx = arr.findIndex(o => Number(o.ORDER_ID) === Number(orderId));
@@ -1643,27 +1657,15 @@ async function updateOrderStatusTable(orderId, newStatus, selectEl) {
     updateInArray(orders);
     updateInArray(currentOrders);
 
-    // update dropdown color class
-    if (selectEl) {
-      selectEl.className = "order-status-select " + newStatus.toLowerCase();
-    }
-
-    renderOrders(); // re-render table with updated statuses
-
-    if (typeof showNotification === 'function') {
-      showNotification('Order status updated', 'success');
-    }
+    showNotification('Order status updated', 'success');
+    await loadOrders();
   } catch (err) {
     console.error('updateOrderStatusTable error:', err);
+    showNotification('Failed to update order status: ' + err.message, 'error');
 
-    // ⏪ Revert dropdown visually if something failed
-    if (selectEl && oldStatus) {
-      selectEl.value = oldStatus.toLowerCase();
-      selectEl.className = "order-status-select " + oldStatus.toLowerCase();
-    }
-
-    if (typeof showNotification === 'function') {
-      showNotification('Failed to update order status: ' + err.message, 'error');
+    // revert select on error
+    if (selectEl && oldStatus !== null) {
+      selectEl.value = oldStatus;
     }
   }
 }
@@ -1803,12 +1805,16 @@ async function updateOrderStatus(orderId) {
   const newStatus = select.value;
 
   try {
-    const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ status: newStatus })
-    });
+    const res = await fetch(
+  `${API_BASE}&action=orders&id=${orderId}&status=1&_method=PATCH`,
+  {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ status: newStatus }),
+  }
+);
+
 
     const data = await res.json();
 

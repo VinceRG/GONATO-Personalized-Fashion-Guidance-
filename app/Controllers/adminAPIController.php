@@ -36,8 +36,6 @@ class AdminApiController
     }
 }
 
-
-
 private function checkAdminAuth()
 {
     if (
@@ -250,17 +248,17 @@ private function handleStaff(string $method, ?string $idParam): void
 
 
 
-    public function handle()
-    {
-        $this->checkAdminAuth();
+public function handle()
+{
+    $this->checkAdminAuth();
 
-    // Real HTTP method from the server
+    // Real HTTP method from server (GET/POST)
     $httpMethod = $_SERVER['REQUEST_METHOD'];
 
-    // Optional override via query string, e.g. &_method=PATCH
+    // Optional override, e.g. &_method=PATCH
     $override = $_GET['_method'] ?? null;
 
-    // If override is present, use it; otherwise use the real method
+    // Final method value used everywhere below
     $method = $override ? strtoupper($override) : $httpMethod;
 
     $action = $_GET['action'] ?? '';
