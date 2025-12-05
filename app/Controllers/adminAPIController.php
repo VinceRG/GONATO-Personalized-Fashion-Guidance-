@@ -254,11 +254,19 @@ private function handleStaff(string $method, ?string $idParam): void
     {
         $this->checkAdminAuth();
 
-        $method = $_SERVER['REQUEST_METHOD'];
-        $action = $_GET['action'] ?? '';
-        $id     = $_GET['id'] ?? null;
+    // Real HTTP method from the server
+    $httpMethod = $_SERVER['REQUEST_METHOD'];
 
-        header('Content-Type: application/json');
+    // Optional override via query string, e.g. &_method=PATCH
+    $override = $_GET['_method'] ?? null;
+
+    // If override is present, use it; otherwise use the real method
+    $method = $override ? strtoupper($override) : $httpMethod;
+
+    $action = $_GET['action'] ?? '';
+    $id     = $_GET['id'] ?? null;
+
+    header('Content-Type: application/json');
 
         try {
             // ============= PRODUCTS ROUTES =============

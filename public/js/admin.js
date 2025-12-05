@@ -336,24 +336,28 @@ function deleteProduct(productId) {
 
   const message = `Are you sure you want to delete "${product.PRODUCT_NAME}"?\nThis will also delete all inventory variants.`;
 
-  showConfirm(message, async () => {
-    try {
-      const response = await fetch(`${API_BASE}&action=deleteProduct&id=${productId}`, {
-        method: 'DELETE',
+showConfirm(message, async () => {
+  try {
+    const response = await fetch(
+      `${API_BASE}&action=deleteProduct&id=${productId}&_method=DELETE`,
+      {
+        method: 'POST',          // 👈 was DELETE
         credentials: 'include'
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete product');
       }
+    );
 
-      showNotification('Product deleted successfully', 'success');
-      await loadProducts();
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      showNotification('Failed to delete product: ' + error.message, 'error');
+    if (!response.ok) {
+      throw new Error('Failed to delete product');
     }
-  });
+
+    showNotification('Product deleted successfully', 'success');
+    await loadProducts();
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    showNotification('Failed to delete product: ' + error.message, 'error');
+  }
+});
+s
 }
 
 
@@ -768,7 +772,7 @@ async function saveInventoryVariant() {
 
     if (currentEditInventoryId) {
       url = `${API_BASE}&action=inventory&id=${currentEditInventoryId}`;
-      method = 'PUT';
+      method = 'POST';
     }
 
     const res = await fetch(url, {
@@ -872,7 +876,7 @@ function deleteInventory(inventoryId) {
   showConfirm('Are you sure you want to delete this variant?', async () => {
     try {
       const res = await fetch(`${API_BASE}&action=inventory&id=${inventoryId}`, {
-        method: 'DELETE',
+        method: 'POST',
         credentials: 'include'
       });
       const data = await res.json();
@@ -1155,7 +1159,7 @@ function toggleUserStatus(userId, isLocked) {
       const res = await fetch(
         `${API_BASE}&action=users&id=${userId}&toggle-lock=1`,
         {
-          method: 'PATCH',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({ isLocked }) // backend flips it
@@ -1297,7 +1301,7 @@ function toggleStaffActive(adminId, isActive) {
   showConfirm(message, async () => {
     try {
       const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
-        method: 'PATCH',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ is_active: isActive ? 0 : 1 }),
@@ -1326,7 +1330,7 @@ function deleteStaff(adminId) {
   showConfirm('Are you sure you want to delete this staff account?', async () => {
     try {
       const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
-        method: 'DELETE',
+        method: 'POST',
         credentials: 'include',
       });
 
@@ -1615,7 +1619,7 @@ async function updateOrderStatusTable(orderId, newStatus, selectEl) {
 
   try {
     const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
-      method: 'PATCH',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ status: newStatus })
@@ -1800,7 +1804,7 @@ async function updateOrderStatus(orderId) {
 
   try {
     const res = await fetch(`${API_BASE}&action=orders&id=${orderId}&status=1`, {
-      method: 'PATCH',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ status: newStatus })

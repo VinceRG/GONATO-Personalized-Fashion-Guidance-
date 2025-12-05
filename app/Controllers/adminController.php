@@ -90,7 +90,7 @@ class AdminController {
 
             // --- 3. Database Insertion ---
             $query = "
-                INSERT INTO PRODUCTS (PRODUCT_NAME, DESCRIPTION, BODY_SHAPE_ID, PRICE, IMAGE_FILE)
+                INSERT INTO products (PRODUCT_NAME, DESCRIPTION, BODY_SHAPE_ID, PRICE, IMAGE_FILE)
                 VALUES (?, ?, ?, ?, ?)
             ";
             $stmt = $this->db->prepare($query);
@@ -244,13 +244,13 @@ class AdminController {
         
         try {
             // First delete inventory
-            $stmt = $this->db->prepare("DELETE FROM INVENTORY WHERE PRODUCT_ID = ?");
+            $stmt = $this->db->prepare("DELETE FROM inventory WHERE PRODUCT_ID = ?");
             $stmt->bind_param("i", $productId);
             if (!$stmt->execute()) throw new Exception("Inventory delete failed: " . $stmt->error);
             $stmt->close();
             
             // Then delete product
-            $stmt = $this->db->prepare("DELETE FROM PRODUCTS WHERE PRODUCT_ID = ?");
+            $stmt = $this->db->prepare("DELETE FROM products WHERE PRODUCT_ID = ?");
             $stmt->bind_param("i", $productId);
             if (!$stmt->execute()) throw new Exception("Product delete failed: " . $stmt->error);
             $stmt->close();
@@ -291,8 +291,8 @@ class AdminController {
                     i.CREATED_AT,
                     c.COLOR_ID,
                     c.COLOR_VALUE
-                FROM INVENTORY i
-                JOIN COLORS c ON i.COLOR_ID = c.COLOR_ID
+                FROM inventory i
+                JOIN colors c ON i.COLOR_ID = c.COLOR_ID
                 WHERE i.PRODUCT_ID = ?
                 ORDER BY i.SIZE, c.COLOR_VALUE
             ");
@@ -379,7 +379,7 @@ class AdminController {
             $quantity  = (int)$data['quantity'];
 
             $stmt = $this->db->prepare("
-                INSERT INTO INVENTORY (PRODUCT_ID, COLOR_ID, SIZE, QUANTITY)
+                INSERT INTO inventory (PRODUCT_ID, COLOR_ID, SIZE, QUANTITY)
                 VALUES (?, ?, ?, ?)
             ");
             $stmt->bind_param("iisi", $productId, $colorId, $size, $quantity);
@@ -427,7 +427,7 @@ class AdminController {
             $quantity = (int)$data['quantity'];
 
             $stmt = $this->db->prepare("
-                UPDATE INVENTORY
+                UPDATE inventory
                 SET COLOR_ID = ?, SIZE = ?, QUANTITY = ?
                 WHERE INVENTORY_ID = ?
             ");
@@ -456,7 +456,7 @@ class AdminController {
      */
     public function deleteInventory($inventoryId) {
     try {
-        $stmt = $this->db->prepare("DELETE FROM INVENTORY WHERE INVENTORY_ID = ?");
+        $stmt = $this->db->prepare("DELETE FROM inventory WHERE INVENTORY_ID = ?");
         $stmt->bind_param("i", $inventoryId);
 
         if (!$stmt->execute()) {
@@ -528,7 +528,7 @@ class AdminController {
             }
 
             $stmt = $this->db->prepare("
-                INSERT INTO COLORS (COLOR_VALUE, SEASON_ID)
+                INSERT INTO colors (COLOR_VALUE, SEASON_ID)
                 VALUES (?, ?)
             ");
             $stmt->bind_param("si", $colorValue, $seasonId);
@@ -804,8 +804,8 @@ public function getCriticalInventory() {
                     o.CREATED_AT,
                     u.USERNAME,
                     u.EMAIL
-                FROM ORDERS o
-                LEFT JOIN USERS u ON u.USER_ID = o.USER_ID
+                FROM orders o
+                LEFT JOIN users u ON u.USER_ID = o.USER_ID
                 WHERE o.ORDER_ID = ?
             ");
             $stmt->bind_param("i", $orderId);
@@ -833,9 +833,9 @@ public function getCriticalInventory() {
                     p.PRODUCT_NAME,
                     p.PRICE,
                     c.COLOR_VALUE
-                FROM ORDER_ITEMS oi
-                INNER JOIN PRODUCTS p ON oi.PRODUCT_ID = p.PRODUCT_ID
-                INNER JOIN COLORS c ON oi.COLOR_ID = c.COLOR_ID
+                FROM order_items oi
+                INNER JOIN products p ON oi.PRODUCT_ID = p.PRODUCT_ID
+                INNER JOIN colors c ON oi.COLOR_ID = c.COLOR_ID
                 WHERE oi.ORDER_ID = ?
             ");
             $stmt->bind_param("i", $orderId);
