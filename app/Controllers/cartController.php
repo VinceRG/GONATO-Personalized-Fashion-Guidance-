@@ -298,8 +298,34 @@ public function updateCartItemQuantity() {
     $cartItemId = isset($_POST['cart_item_id']) ? (int)$_POST['cart_item_id'] : 0;
     $quantity   = isset($_POST['quantity']) ? (int)$_POST['quantity'] : 0;
 
-    if ($cartItemId <= 0 || $quantity <= 0) {
-        echo json_encode(["success" => false, "message" => "Invalid item/quantity"]);
+    // 🔹 Debug log so you can see what's coming in
+    error_log("updateCartItemQuantity: cart_item_id={$cartItemId}, quantity={$quantity}");
+
+    // ✅ cart_item_id must be valid
+    if ($cartItemId <= 0) {
+        echo json_encode(["success" => false, "message" => "Invalid cart item"]);
+        return;
+    }
+
+    // ✅ If quantity <= 0, treat as delete instead of throwing "Invalid item/quantity"
+    if ($quantity <= 0) {
+        $sql = "DELETE ci
+                FROM cart_items ci
+                JOIN cart c ON ci.CART_ID = c.CART_ID
+                WHERE ci.CART_ITEM_ID = ? AND c.USER_ID = ? AND c.STATUS = 0";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("ii", $cartItemId, $userId);
+        $stmt->execute();
+        $stmt->close();
+
+        $cartCount = $this->getCartItemCount($userId);
+
+        echo json_encode([
+            "success"    => true,
+            "deleted"    => true,
+            "cart_count" => $cartCount,
+        ]);
         return;
     }
 
@@ -322,7 +348,7 @@ public function updateCartItemQuantity() {
         return;
     }
 
-    // Optional: clamp quantity to available stock if inventory exists
+    // Clamp to stock if inventory exists
     if (!is_null($row['STOCK_LEFT'])) {
         $stockLeft = (int)$row['STOCK_LEFT'];
         if ($quantity > $stockLeft) {
@@ -339,9 +365,10 @@ public function updateCartItemQuantity() {
 
     echo json_encode([
         "success"    => true,
-        "cart_count" => $cartCount
+        "cart_count" => $cartCount,
     ]);
 }
+
 
 public function deleteCartItem() {
     if (session_status() === PHP_SESSION_NONE) {
@@ -397,7 +424,7 @@ public function getCartCount() {
         return;
     }
 
-    $sql = "SELECT COUNT(*) AS cnt
+    $sql = "SELECT COALESCE(SUM(ci.QUANTITY), 0) AS cnt
             FROM cart_items ci
             JOIN cart c ON ci.CART_ID = c.CART_ID
             WHERE c.USER_ID = ? AND c.STATUS = 0";
