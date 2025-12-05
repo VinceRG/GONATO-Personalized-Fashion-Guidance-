@@ -330,6 +330,50 @@
             z-index: 10;
             font-family: 'Lexend', sans-serif;
         }
+
+        /* --- Password Toggle Styles --- */
+/* Ensure the wrapper positions the button correctly */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* Make space for the icon inside the input */
+.password-wrapper input[type="password"],
+.password-wrapper input[type="text"] {
+    padding-right: 45px !important; /* Forces padding to override defaults */
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Style the button */
+.password-toggle {
+    position: absolute;
+    right: 12px;
+    top: 40%;
+    transform: translateY(-50%); /* Centers vertically */
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    z-index: 10;
+}
+
+.password-toggle:hover {
+    color: #111827;
+}
+
+/* Icon Size */
+.password-toggle svg {
+    width: 20px;
+    height: 20px;
+}
     </style>
 </head>
 
@@ -399,16 +443,25 @@ $inputUsername = $username ?? $rememberedUsername ?? '';
             <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>
         >
 
-        <div class="form-group password-wrapper">
-            <label for="password">Password</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Enter your password"
-                <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>
-            >
-        </div>
+       <div class="form-group">
+    <label for="password">Password</label>
+    
+    <div class="password-wrapper">
+        <input
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            <?php echo (isset($isLocked) && $isLocked) ? 'disabled' : ''; ?>
+        >
+        <button type="button" class="password-toggle" data-target="password">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+        </button>
+    </div>
+</div>
 
         <p class="forgotpass">
             <a class="forgotpass" href="index.php?page=forgot">Forgot your password?</a>
@@ -502,6 +555,36 @@ document.addEventListener("DOMContentLoaded", () => {
         lockModal.style.display = "none";
     });
 });
+
+// --- Password Toggle Logic ---
+    const toggles = document.querySelectorAll(".password-toggle");
+
+    const eyeIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+        </svg>`;
+    
+    const eyeSlashIcon = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" />
+        </svg>`;
+
+    toggles.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            const targetId = btn.getAttribute("data-target");
+            const input = document.getElementById(targetId);
+            if (!input) return;
+
+            if (input.type === "password") {
+                input.type = "text";
+                btn.innerHTML = eyeSlashIcon;
+            } else {
+                input.type = "password";
+                btn.innerHTML = eyeIcon;
+            }
+        });
+    });
 </script>
 
 </body>
