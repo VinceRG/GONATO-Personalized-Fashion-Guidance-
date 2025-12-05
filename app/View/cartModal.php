@@ -284,3 +284,13 @@ if (isset($user) && is_array($user)) {
   <div class="toast-icon"><i class="bi bi-check2-circle"></i></div>
   <span id="toastMessage"></span>
 </div>
+<!-- Payment Loading Overlay -->
+<div id="paymentLoadingOverlay" class="payment-loading-overlay hidden">
+  <div class="payment-loading-box">
+    <div class="payment-spinner"></div>
+    <p class="payment-loading-message">Processing your payment...</p>
+    <small>Please don’t close or refresh this page.</small>
+  </div>
+</div>
+
+

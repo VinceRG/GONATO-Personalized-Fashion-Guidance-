@@ -1223,3 +1223,8 @@
 .admin-logout-actions .btn-secondary {
   min-width: 105px;
 }
+.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+

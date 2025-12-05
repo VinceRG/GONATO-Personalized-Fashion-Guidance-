@@ -205,9 +205,14 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
             <div class="section-title" id="inventoryProductTitle">Inventory Management</div>
             <div class="section-subtitle" id="inventorySubtitle">Select a product to view its stock variants</div>
           </div>
-          <button class="btn" onclick="openInventoryModal()">
+          <button
+            id="inventoryAddBtn"
+            class="btn"
+            onclick="openInventoryModal()"
+          >
             <i class="bi bi-plus-circle"></i> Add Variant
           </button>
+
         </div>
 
         <div class="data-table">

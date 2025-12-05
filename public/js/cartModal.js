@@ -21,6 +21,28 @@ function showToast(message = "Added to cart!") {
   }, 2000);
 }
 
+function showPaymentLoading(message) {
+    const overlay = document.getElementById('paymentLoadingOverlay');
+    if (!overlay) return;
+
+    const msgEl = overlay.querySelector('.payment-loading-message');
+    if (msgEl && message) msgEl.textContent = message;
+
+    overlay.classList.remove('hidden');
+    overlay.classList.add('show');
+  }
+
+  function hidePaymentLoading() {
+    const overlay = document.getElementById('paymentLoadingOverlay');
+    if (!overlay) return;
+
+    overlay.classList.remove('show');
+    // small delay so fade-out animation can play before hiding completely
+    setTimeout(() => {
+      overlay.classList.add('hidden');
+    }, 200);
+  }
+
 // ---------- Cart counter helper ----------
 async function refreshCartCount() {
   try {
@@ -440,6 +462,9 @@ async function placeOrder() {
     return;
   }
 
+  // 🔄 Show loading overlay from here on
+  showPaymentLoading("Initializing payment...");
+
   try {
     // 1) Create Payment Intent via your MVC controller (already working)
     const response = await fetch("index.php?api=paymongo", {
@@ -448,10 +473,15 @@ async function placeOrder() {
       body: JSON.stringify({ amount: totalAmount }),
     });
 
+    if (!response.ok) {
+      throw new Error("Failed to create payment intent.");
+    }
+
     const data = await response.json();
     console.log("PI created:", data);
 
     if (!data.client_key) {
+      hidePaymentLoading();
       alert("Failed to create payment. Please try again.");
       return;
     }
@@ -464,10 +494,15 @@ async function placeOrder() {
       email: shippingEmail || undefined,
       phone: shippingPhone || undefined,
     };
+
+    showPaymentLoading("Contacting your bank...");
+
     const paymentMethodId = await createPaymongoPaymentMethod(card, billing);
     console.log("PaymentMethod created:", paymentMethodId);
 
     // 3) Attach payment intent
+    showPaymentLoading("Finalizing payment...");
+
     const attachResult = await attachPaymongoPaymentIntent(
       clientKey,
       paymentMethodId
@@ -477,13 +512,18 @@ async function placeOrder() {
     const status = attachResult.data.attributes.status;
     const nextAction = attachResult.data.attributes.next_action;
 
+    // 3D Secure / redirect flow
     if (status === "awaiting_next_action" && nextAction?.redirect?.url) {
+      showPaymentLoading("Redirecting to your bank for verification...");
+      // No need to hide loader; page will change
       window.location.href = nextAction.redirect.url;
       return;
     }
 
     if (status === "succeeded") {
       // 4) Only now create local order in your DB
+      showPaymentLoading("Payment successful! Creating your order...");
+
       const orderResult = await createLocalOrder(
         totalAmount,
         shippingName,
@@ -492,21 +532,29 @@ async function placeOrder() {
       );
 
       if (orderResult.success) {
+        hidePaymentLoading();
         showToast("Order placed successfully!");
         if (typeof closeModals === "function") closeModals();
         await refreshCartCount();
         await loadCartFromServer();
+      } else {
+        hidePaymentLoading();
+        alert(orderResult.message || "Order save failed. Please contact support.");
       }
     } else if (status === "processing") {
+      hidePaymentLoading();
       alert("Payment is processing. We'll confirm shortly.");
     } else {
+      hidePaymentLoading();
       alert("Payment did not succeed. Status: " + status);
     }
   } catch (error) {
     console.error("PayMongo error:", error);
+    hidePaymentLoading();
     alert("Error processing payment: " + error.message);
   }
 }
+
 
 // ---------- DOM + modal wiring ----------
 document.addEventListener("DOMContentLoaded", () => {

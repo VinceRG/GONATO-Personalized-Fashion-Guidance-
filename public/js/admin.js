@@ -81,6 +81,7 @@ function initNavigation() {
 
         switchSection('inventory');
         loadAllInventory();      // 🔹 always "All Products" from nav
+        updateAddVariantButtonState();   // 🔥 disable button
         return;
       }
 
@@ -397,6 +398,23 @@ function deleteProduct(productId) {
 
 
 // ==================== INVENTORY TAB ====================
+function updateAddVariantButtonState() {
+  const btn = document.getElementById('inventoryAddBtn');
+  if (!btn) return;
+
+  if (!selectedProductId) {
+    // Disable when Inventory tab is opened from sidebar
+    btn.disabled = true;
+    btn.title = 'You can only add variants from the Products tab.';
+    btn.classList.add('btn-disabled');
+  } else {
+    // Enable when user clicked Inventory action in Products table
+    btn.disabled = false;
+    btn.title = '';
+    btn.classList.remove('btn-disabled');
+  }
+}
+
 function openInventoryManager(productId, encodedName) {
   selectedProductId = productId;
 
@@ -411,7 +429,7 @@ function openInventoryManager(productId, encodedName) {
 
   // Go to inventory section
   switchSection('inventory');
-
+  updateAddVariantButtonState();   // 🔥 enable button
   // And explicitly load only this product’s inventory
   loadInventory(productId);
 }

@@ -707,3 +707,64 @@
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   margin-top: 1rem;
 }
+.payment-loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* above your modals */
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.payment-loading-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.payment-loading-box {
+  background: #111827;
+  color: #f9fafb;
+  padding: 2rem 2.5rem;
+  border-radius: 1rem;
+  text-align: center;
+  max-width: 320px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
+
+.payment-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 4px solid rgba(249, 250, 251, 0.3);
+  border-top-color: #fbbf24; /* match your accent color */
+  margin: 0 auto 1.5rem;
+  animation: payment-spin 0.8s linear infinite;
+}
+
+.payment-loading-box p {
+  margin: 0 0 0.25rem;
+  font-weight: 500;
+}
+
+.payment-loading-box small {
+  display: block;
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+@keyframes payment-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* if you don't already have this */
+.hidden {
+  display: none;
+}
+
