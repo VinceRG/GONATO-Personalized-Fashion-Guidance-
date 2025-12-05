@@ -64,12 +64,14 @@ class FeaturesController {
         // 3. Catalog (all in-stock products, using your existing method)
         $catalogProducts = [];
         $result = $productModel->readAll();
+        
         if ($result && $result->num_rows > 0) {
             while ($row = $result->fetch_assoc()) {
                 $catalogProducts[] = $row;
             }
         }
 
+        
         // 4. Recommendations based on:
         //    - body_shapes.BODY_TYPE = $bodyShape (e.g. "PEAR")
         //    - seasons.SEASON_TYPE   = $season   (e.g. "Spring")
