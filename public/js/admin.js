@@ -192,17 +192,20 @@ function renderProductsTable() {
       <td>${p.DESCRIPTION || 'No description'}</td>
       <td>${p.BODY_SHAPE_NAME || 'N/A'}</td>
       <td>₱${parseFloat(p.PRICE).toFixed(2)}</td>
-      <td>
-        <button class="btn-icon" onclick="openInventoryManager(${p.PRODUCT_ID}, '${safeName}')">
-          <i class="bi bi-box-seam"></i>
-        </button>
-        <button class="btn-icon" onclick="editProduct(${p.PRODUCT_ID})" title="Edit">
-          <i class="bi bi-pencil"></i>
-        </button>
-        <button class="btn-icon" onclick="deleteProduct(${p.PRODUCT_ID})" title="Delete">
-          <i class="bi bi-trash"></i>
-        </button>
+      <td class="actions-col">
+        <div class="action-btns">
+          <button class="btn-icon" onclick="openInventoryManager(${p.PRODUCT_ID}, '${safeName}')">
+            <i class="bi bi-box-seam"></i>
+          </button>
+          <button class="btn-icon" onclick="editProduct(${p.PRODUCT_ID})" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn-icon" onclick="deleteProduct(${p.PRODUCT_ID})" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
       </td>
+
     `;
     tbody.appendChild(row);
   });
@@ -558,13 +561,15 @@ function renderInventoryTable() {
       <td>${v.COLOR_VALUE}</td>
       <td><span class="badge ${stockClass}">${v.QUANTITY}</span></td>
       <td>${new Date(v.CREATED_AT).toLocaleDateString()}</td>
-      <td>
-        <button class="btn-icon" onclick="editInventory(${v.INVENTORY_ID})" title="Edit">
-          <i class="bi bi-pencil"></i>
-        </button>
-        <button class="btn-icon" onclick="deleteInventory(${v.INVENTORY_ID})" title="Delete">
-          <i class="bi bi-trash"></i>
-        </button>
+      <td class="actions-col">
+        <div class="action-btns">
+          <button class="btn-icon" onclick="editInventory(${v.INVENTORY_ID})" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn-icon" onclick="deleteInventory(${v.INVENTORY_ID})" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
       </td>
     `;
     tbody.appendChild(row);
@@ -683,8 +688,6 @@ function initLowStockNotification() {
 function openInventoryModal(editItem = null) {
   const modal        = document.getElementById('inventoryModal');
   const title        = document.getElementById('inventoryModalTitle');
-  const seasonSelect = document.getElementById('inventorySeasonFilter');
-  const colorSelect  = document.getElementById('inventoryColor');
   const form         = document.getElementById('inventoryForm');
 
   console.log('openInventoryModal editItem:', editItem);
@@ -712,7 +715,7 @@ function openInventoryModal(editItem = null) {
       qtyInput.value = editItem.QUANTITY;
     }
 
-    // Color / season
+    // Figure out which season this color belongs to
     if (editItem.COLOR_ID) {
       selectedColorId = String(editItem.COLOR_ID);
 
@@ -729,50 +732,17 @@ function openInventoryModal(editItem = null) {
     if (title) title.textContent = 'Add Variant';
   }
 
-  // Populate Season dropdown
-  if (seasonSelect) {
-    seasonSelect.innerHTML = '<option value="">Select Season</option>';
+  // 🔹 Use helper to populate season dropdown and preselect season (if editing)
+  populateInventorySeasonFilter(selectedSeasonId);
 
-    (seasons || []).forEach(season => {
-      const opt = document.createElement('option');
-      opt.value = season.SEASON_ID;
-      opt.textContent = season.SEASON_TYPE;
-      if (
-        selectedSeasonId &&
-        String(season.SEASON_ID) === String(selectedSeasonId)
-      ) {
-        opt.selected = true;
-      }
-      seasonSelect.appendChild(opt);
-    });
-  }
-
-  // Build list of colors (maybe filtered by season)
-  if (colorSelect) {
-    colorSelect.innerHTML = '<option value="">Select Color</option>';
-
-    let colorList = colors || [];
-    if (selectedSeasonId) {
-      colorList = colorList.filter(
-        c => String(c.SEASON_ID) === String(selectedSeasonId)
-      );
-    }
-
-    colorList.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.COLOR_ID;
-      opt.textContent = c.COLOR_VALUE;
-      if (String(c.COLOR_ID) === String(selectedColorId)) {
-        opt.selected = true;
-      }
-      colorSelect.appendChild(opt);
-    });
-  }
+  // 🔹 Use helper to populate color dropdown filtered by that season
+  populateInventoryColorDropdown(selectedSeasonId, selectedColorId);
 
   if (modal) {
     modal.style.display = 'block';
   }
 }
+
 
 function closeInventoryModal() {
   document.getElementById('inventoryModal').style.display = 'none';
@@ -1120,10 +1090,12 @@ function renderUsers() {
       <td>${user.EMAIL}</td>
       <td>${new Date(user.CREATED_AT).toLocaleDateString()}</td>
       <td>${user.IS_LOCKED ? 'Locked' : 'Active'}</td>
-      <td>
-        <button class="btn btn-sm" onclick="toggleUserStatus(${user.USER_ID}, ${user.IS_LOCKED})">
-          ${user.IS_LOCKED ? 'Unlock' : 'Lock'}
-        </button>
+      <td class="actions-col">
+        <div class="action-btns">
+          <button class="btn btn-sm" onclick="toggleUserStatus(${user.USER_ID}, ${user.IS_LOCKED})">
+            ${user.IS_LOCKED ? 'Unlock' : 'Lock'}
+          </button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1269,11 +1241,13 @@ function renderStaff() {
       <td>${s.EMAIL || ''}</td>
       <td>${s.ROLE}</td>
       <td>${isActive ? 'Active' : 'Inactive'}</td>
-      <td>
-        <button class="btn btn-sm" type="button"
-          onclick="toggleStaffActive(${s.ADMIN_ID}, ${isActive ? 1 : 0})">
-          ${isActive ? 'Deactivate' : 'Activate'}
-        </button>
+      <td class="actions-col">
+        <div class="action-btns">
+          <button class="btn btn-sm" type="button"
+            onclick="toggleStaffActive(${s.ADMIN_ID}, ${isActive ? 1 : 0})">
+            ${isActive ? 'Deactivate' : 'Activate'}
+          </button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
@@ -1554,6 +1528,16 @@ function initFormHandlers() {
     staffForm.addEventListener('submit', saveStaff);
   }
 
+  // 🔹 NEW: update colors when season changes in the inventory modal
+  const inventorySeasonSelect = document.getElementById('inventorySeasonFilter');
+  if (inventorySeasonSelect) {
+    inventorySeasonSelect.addEventListener('change', (e) => {
+      const seasonId = e.target.value;
+      // rebuild the color dropdown based on selected season
+      populateInventoryColorDropdown(seasonId);
+    });
+  }
+
   // Close modals on outside click
   window.onclick = (event) => {
     if (event.target.classList.contains('modal')) {
@@ -1561,7 +1545,6 @@ function initFormHandlers() {
     }
   };
 }
-
 
 // ==================== ORDERS ====================
 async function loadOrders() {
@@ -1601,7 +1584,7 @@ function renderOrders() {
       <td>#${order.ORDER_ID}</td>
       <td>${order.USERNAME || 'N/A'}</td>
       <td>${order.ITEM_COUNT || 0} item(s)</td>
-      <td>$${parseFloat(order.TOTAL_AMOUNT).toFixed(2)}</td>
+      <td>₱${parseFloat(order.TOTAL_AMOUNT).toFixed(2)}</td>
       <td>
       <select
         class="order-status-select ${order.STATUS.toLowerCase()}"
@@ -1611,10 +1594,12 @@ function renderOrders() {
       </select>
 
       </td>
-      <td>
-        <button class="btn-icon" onclick="viewOrder(${order.ORDER_ID})">
-          <i class="bi bi-eye"></i>
-        </button>
+            <td class="actions-col">
+        <div class="action-btns">
+          <button class="btn-icon" onclick="viewOrder(${order.ORDER_ID})">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
       </td>
     `;
     tbody.appendChild(row);
@@ -1760,12 +1745,12 @@ async function viewOrder(orderId) {
         </div>
 
         <div class="detail-row">
-          <strong>Total:</strong> $${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}
+          <strong>Total:</strong> ₱${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}
         </div>
         <div class="detail-row">
           <strong>Order Date:</strong> ${new Date(orderDetails.CREATED_AT).toLocaleString()}
         </div>
-        <div class="detail-row"><strong>Total:</strong> $${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}</div>
+        <div class="detail-row"><strong>Total:</strong> ₱${parseFloat(orderDetails.TOTAL_AMOUNT).toFixed(2)}</div>
         <div class="detail-row"><strong>Order Date:</strong> ${new Date(orderDetails.CREATED_AT).toLocaleString()}</div>
         <hr>
         <h3 style="margin-top: 20px;">Order Items</h3>

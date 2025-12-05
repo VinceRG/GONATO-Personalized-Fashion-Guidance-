@@ -331,9 +331,9 @@ class AdminController {
                 i.CREATED_AT,
                 p.PRODUCT_NAME,
                 c.COLOR_VALUE
-            FROM INVENTORY i
-            JOIN PRODUCTS p ON i.PRODUCT_ID = p.PRODUCT_ID
-            JOIN COLORS c   ON i.COLOR_ID   = c.COLOR_ID
+            FROM inventory i
+            JOIN products p ON i.PRODUCT_ID = p.PRODUCT_ID
+            JOIN colors c   ON i.COLOR_ID   = c.COLOR_ID
             ORDER BY p.PRODUCT_NAME, i.SIZE, c.COLOR_VALUE
         ";
         $result = $this->db->query($sql);
@@ -495,8 +495,8 @@ class AdminController {
                     c.COLOR_VALUE,
                     c.SEASON_ID,
                     s.SEASON_TYPE
-                FROM COLORS c
-                LEFT JOIN SEASONS s ON c.SEASON_ID = s.SEASON_ID
+                FROM colors c
+                LEFT JOIN seasons s ON c.SEASON_ID = s.SEASON_ID
                 ORDER BY s.SEASON_TYPE, c.COLOR_VALUE
             ";
             $result = $this->db->query($sql);
@@ -561,7 +561,7 @@ class AdminController {
 
     public function getBodyShapes() {
         try {
-            $sql = "SELECT BODY_SHAPE_ID, BODY_TYPE FROM BODY_SHAPES ORDER BY BODY_TYPE";
+            $sql = "SELECT BODY_SHAPE_ID, BODY_TYPE FROM body_shapes ORDER BY BODY_TYPE";
             $result = $this->db->query($sql);
             $shapes = [];
             if ($result) {
@@ -583,7 +583,7 @@ class AdminController {
 
     public function getSeasons() {
         try {
-            $sql = "SELECT SEASON_ID, SEASON_TYPE FROM SEASONS ORDER BY SEASON_TYPE";
+            $sql = "SELECT SEASON_ID, SEASON_TYPE FROM seasons ORDER BY SEASON_TYPE";
             $result = $this->db->query($sql);
             $seasons = [];
             if ($result) {
@@ -695,9 +695,9 @@ public function getCriticalInventory() {
                 i.QUANTITY,
                 p.PRODUCT_NAME,
                 c.COLOR_VALUE
-            FROM INVENTORY i
-            JOIN PRODUCTS p ON i.PRODUCT_ID = p.PRODUCT_ID
-            JOIN COLORS c   ON i.COLOR_ID   = c.COLOR_ID
+            FROM inventory i
+            JOIN products p ON i.PRODUCT_ID = p.PRODUCT_ID
+            JOIN colors c   ON i.COLOR_ID   = c.COLOR_ID
             WHERE i.QUANTITY <= ?
             ORDER BY i.UPDATED_AT DESC
         ";
@@ -760,14 +760,14 @@ public function getCriticalInventory() {
                     u.USERNAME,
                     (
                         SELECT COALESCE(SUM(QUANTITY),0)
-                        FROM ORDER_ITEMS oi
+                        FROM order_items oi
                         WHERE oi.ORDER_ID = o.ORDER_ID
                     ) AS ITEM_COUNT,
                     CASE WHEN o.SHIPPING_ADDRESS IS NULL OR o.SHIPPING_ADDRESS = '' 
                         THEN 0 ELSE 1 
                     END AS SHIPPING_REQUIRED
-                FROM ORDERS o
-                LEFT JOIN USERS u ON u.USER_ID = o.USER_ID
+                FROM orders o
+                LEFT JOIN users u ON u.USER_ID = o.USER_ID
                 ORDER BY o.CREATED_AT DESC
             ";
             $result = $this->db->query($sql);

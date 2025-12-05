@@ -302,13 +302,99 @@ private function handleStaff(string $method, ?string $idParam): void
 
             // ============= INVENTORY ROUTES =============
             elseif ($action === 'addInventory' && $method === 'POST') {
-                $data = json_decode(file_get_contents('php://input'), true);
-                $this->adminController->addInventory($data);
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+            // These keys must match what your JS sends
+            $productId = (int)($data['productId'] ?? 0);
+            $colorId   = (int)($data['colorId']   ?? 0);
+            $size      = trim($data['size']       ?? '');
+
+            if (!$productId || !$colorId || $size === '') {
+                http_response_code(400);
+                echo json_encode(['error' => 'Missing product, color or size']);
+                return;
             }
-            elseif ($action === 'inventory' && $method === 'PUT' && $id) {
-                $data = json_decode(file_get_contents('php://input'), true);
-                $this->adminController->updateInventory((int)$id, $data);
+
+            // 🔍 Check if a variant with same product + color + size already exists
+            $stmt = $this->conn->prepare("
+                SELECT INVENTORY_ID
+                FROM inventory
+                WHERE PRODUCT_ID = ? AND COLOR_ID = ? AND SIZE = ?
+                LIMIT 1
+            ");
+            if (!$stmt) {
+                http_response_code(500);
+                echo json_encode(['error' => 'Database error: ' . $this->conn->error]);
+                return;
             }
+
+            $stmt->bind_param('iis', $productId, $colorId, $size);
+            $stmt->execute();
+            $stmt->store_result();
+
+            if ($stmt->num_rows > 0) {
+                // ❌ Duplicate variant
+                http_response_code(409); // Conflict
+                echo json_encode([
+                    'error' => 'This variant (size, season & color) already exists for this product.'
+                ]);
+                $stmt->close();
+                return;
+            }
+
+            $stmt->close();
+
+            // ✅ No duplicate – continue with the normal add logic
+            $this->adminController->addInventory($data);
+        }
+
+        elseif ($action === 'inventory' && $method === 'PUT' && $id) {
+            $data = json_decode(file_get_contents('php://input'), true) ?? [];
+
+            $inventoryId = (int)$id;
+
+            // Same keys as above
+            $productId = (int)($data['productId'] ?? 0);
+            $colorId   = (int)($data['colorId']   ?? 0);
+            $size      = trim($data['size']       ?? '');
+
+            // Only run duplicate check if all 3 are present
+            if ($productId && $colorId && $size !== '') {
+                $stmt = $this->conn->prepare("
+                    SELECT INVENTORY_ID
+                    FROM inventory
+                    WHERE PRODUCT_ID = ?
+                    AND COLOR_ID   = ?
+                    AND SIZE       = ?
+                    AND INVENTORY_ID <> ?
+                    LIMIT 1
+                ");
+                if (!$stmt) {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Database error: ' . $this->conn->error]);
+                    return;
+                }
+
+                $stmt->bind_param('iisi', $productId, $colorId, $size, $inventoryId);
+                $stmt->execute();
+                $stmt->store_result();
+
+                if ($stmt->num_rows > 0) {
+                    http_response_code(409); // Conflict
+                    echo json_encode([
+                        'error' => 'Another variant with this size, season & color already exists for this product.'
+                    ]);
+                    $stmt->close();
+                    return;
+                }
+
+                $stmt->close();
+            }
+
+            // ✅ No duplicate – proceed with update
+            $this->adminController->updateInventory($inventoryId, $data);
+        }
+
             elseif ($action === 'inventory' && $method === 'DELETE' && $id) {
                 $this->adminController->deleteInventory((int)$id);
             }

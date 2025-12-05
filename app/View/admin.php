@@ -187,7 +187,8 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
                 <th>Description</th>
                 <th>Body Shape</th>
                 <th>Price</th>
-                <th>Actions</th>
+                <th class="actions-col">Actions</th>
+              
               </tr>
             </thead>
             <tbody id="productListBody">
@@ -224,7 +225,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
                 <th>Color</th>
                 <th>Quantity</th>
                 <th>Created At</th>
-                <th>Actions</th>
+                <th class="actions-col">Actions</th>
               </tr>
             </thead>
             <tbody id="inventoryTableBody">
@@ -262,7 +263,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
                 <th>Email</th>
                 <th>Joined Date</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th class="actions-col">Actions</th>
               </tr>
             </thead>
             <tbody id="userTableBody">
@@ -301,7 +302,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
                 <th>Items</th>
                 <th>Total</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th class="actions-col">Actions</th>
               </tr>
             </thead>
             <tbody id="orderTableBody">
@@ -342,7 +343,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
                 <th>Email</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th class="actions-col">Actions</th>
               </tr>
             </thead>
             <tbody id="staffTableBody">

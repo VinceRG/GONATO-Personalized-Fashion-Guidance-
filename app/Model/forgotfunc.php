@@ -64,22 +64,28 @@ class ForgotModel {
     }
 
     // ✅ STEP 2: Update password after OTP verification
-    public function updatePassword($email, $newPassword, $scope) {
-        if ($scope === 'admin') {
-            // Admin/staff login is PLAIN TEXT in adminfunc.php
-            $plain = $newPassword;
-            $stmt = $this->conn->prepare("UPDATE admin SET PASSWORD = ? WHERE EMAIL = ?");
-            $stmt->bind_param("ss", $plain, $email);
-        } else {
-            // Normal user – hashed
-            $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
-            $stmt = $this->conn->prepare("UPDATE users SET PASSWORD = ? WHERE EMAIL = ?");
-            $stmt->bind_param("ss", $hashed, $email);
-        }
+    // forgotfunc.php (UPDATED)
+public function updatePassword($email, $newPassword, $scope) {
+    // Hash the new password for BOTH admin/staff and normal users
+    $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
 
-        $stmt->execute();
-        return $stmt->affected_rows > 0;
+    if ($scope === 'admin') {
+        // Admin / staff password reset
+        $stmt = $this->conn->prepare("UPDATE admin SET PASSWORD = ? WHERE EMAIL = ?");
+        $stmt->bind_param("ss", $hashed, $email);
+    } else {
+        // Normal user password reset
+        $stmt = $this->conn->prepare("UPDATE users SET PASSWORD = ? WHERE EMAIL = ?");
+        $stmt->bind_param("ss", $hashed, $email);
     }
+
+    if ($stmt->execute()) {
+        return true;
+    }
+
+    return false;
+}
+
 
     // ✅ EMAIL SENDER with Beautiful Template
     private function sendOTPEmail($email, $otp) {

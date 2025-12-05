@@ -725,10 +725,10 @@
       background: #fafafa;
     }
 
-    .action-btns {
+    /* .action-btns {
       display: flex;
       gap: 0.5rem;
-    }
+    } */
 
     .icon-btn {
       background: none;
@@ -1227,4 +1227,21 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* --- ACTIONS COLUMN: shared for all tables --- */
+th.actions-col,
+td.actions-col {
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: 140px;        /* base width, can adjust */
+}
+
+/* Buttons wrapper inside Actions cell */
+.action-btns {
+  display: flex;
+  justify-content: center;   /* center horizontally */
+  align-items: center;       /* center vertically */
+  gap: 0.4rem;
+}
+
 
