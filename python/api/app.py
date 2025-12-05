@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 # ---------------- CONFIG ----------------
-CURRENT_FILE_DIR = os.path.dirname(os.path.abspath(_file_))
+CURRENT_FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # Go up ONE level: from /python/api → /python
 PYTHON_DIR = os.path.dirname(CURRENT_FILE_DIR)
