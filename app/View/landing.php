@@ -39,7 +39,7 @@
         </div>
         <div class="nav-links">
             <div class="nav-auth">
-                <a href="index.php?page=login" class="nav-login">Login</a>
+                <a href="index.php?page=login" class="nav-login">Logins</a>
                 <a href="index.php?page=register" class="nav-cta">Sign Up</a>
             </div>
         </div>

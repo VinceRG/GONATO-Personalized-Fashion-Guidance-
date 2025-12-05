@@ -10,6 +10,7 @@ import pandas as pd
 import os
 from sklearn.cluster import KMeans
 from datetime import datetime
+import os
 
 app = Flask(__name__)
 CORS(app)
