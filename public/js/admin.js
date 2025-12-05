@@ -13,7 +13,7 @@ let users = [];
 let orders = [];
 let colors = [];
 let bodyShapes = [];
-let seasons = []; 
+let seasons = [];
 let currentEditId = null;
 let currentEditInventoryId = null; // track edit mode
 let openedColorFromInventory = false;
@@ -76,7 +76,7 @@ function initNavigation() {
 
       if (target === 'inventory') {
         // Coming from the nav: always show ALL inventory
-        selectedProductId   = null;
+        selectedProductId = null;
         selectedProductName = null;
 
         switchSection('inventory');
@@ -178,7 +178,7 @@ function renderProductsTable() {
   }
 
   const start = (productPage - 1) * productPageSize;
-  const end   = start + productPageSize;
+  const end = start + productPageSize;
   const pageItems = products.slice(start, end);
 
   pageItems.forEach(p => {
@@ -208,17 +208,17 @@ function renderProductsTable() {
 }
 
 function renderProductPagination() {
-    renderPagination(
-        "productPagination",
-        productPage,
-        products.length,
-        productPageSize,
-        (p) => {
-            productPage = p;
-            renderProductsTable();
-            renderProductPagination();
-        }
-    );
+  renderPagination(
+    "productPagination",
+    productPage,
+    products.length,
+    productPageSize,
+    (p) => {
+      productPage = p;
+      renderProductsTable();
+      renderProductPagination();
+    }
+  );
 }
 
 
@@ -235,35 +235,35 @@ function openProductModal(productId = null) {
   currentEditId = productId;
   imageInput.required = !productId; // Require image only for new product
 
-if (productId) {
-  // Edit mode
-  title.textContent = 'Edit Product';
+  if (productId) {
+    // Edit mode
+    title.textContent = 'Edit Product';
 
-  // 🔧 Make sure we match even if one is string and one is number
-  const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
+    // 🔧 Make sure we match even if one is string and one is number
+    const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
 
-  console.log('Editing productId:', productId, 'Found product:', product);
+    console.log('Editing productId:', productId, 'Found product:', product);
 
-  if (product) {
-    document.getElementById('productName').value = product.PRODUCT_NAME || '';
-    document.getElementById('productDescription').value = product.DESCRIPTION || '';
-    document.getElementById('productPrice').value = product.PRICE || '';
-    document.getElementById('bodyShapeSelect').value = product.BODY_SHAPE_ID || '';
+    if (product) {
+      document.getElementById('productName').value = product.PRODUCT_NAME || '';
+      document.getElementById('productDescription').value = product.DESCRIPTION || '';
+      document.getElementById('productPrice').value = product.PRICE || '';
+      document.getElementById('bodyShapeSelect').value = product.BODY_SHAPE_ID || '';
 
 
-    if (product.IMAGE_FILE) {
-      currentImage.src = `public/image/${product.IMAGE_FILE}`;
-      imageContainer.style.display = 'block';
+      if (product.IMAGE_FILE) {
+        currentImage.src = `public/image/${product.IMAGE_FILE}`;
+        imageContainer.style.display = 'block';
+      } else {
+        imageContainer.style.display = 'none';
+      }
+
+      imageInput.required = false;
     } else {
-      imageContainer.style.display = 'none';
+      console.warn('No product found for id:', productId);
     }
-
-    imageInput.required = false;
-  } else {
-    console.warn('No product found for id:', productId);
   }
-}
-else {
+  else {
     // Add mode
     title.textContent = 'Add Product';
     imageContainer.style.display = 'none';
@@ -302,7 +302,7 @@ async function saveProduct() {
       let errorData = {};
       try {
         errorData = await response.json();
-      } catch (e) {}
+      } catch (e) { }
       console.error('Error response:', errorData);
       throw new Error(errorData.error || 'Failed to save product');
     }
@@ -331,7 +331,7 @@ async function deleteProduct(productId) {
 let productToDeleteId = null;
 
 function openDeleteModal(productId) {
-   const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
+  const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
   if (!product) {
     console.warn('No product found for delete id:', productId);
     return;
@@ -379,9 +379,9 @@ function openInventoryManager(productId, encodedName) {
   const decodedName = safeDecode(encodedName);
   selectedProductName = decodedName;
 
-  const title    = document.getElementById('inventoryProductTitle');
+  const title = document.getElementById('inventoryProductTitle');
   const subtitle = document.getElementById('inventorySubtitle');
-  if (title)    title.textContent    = `Inventory - ${decodedName}`;
+  if (title) title.textContent = `Inventory - ${decodedName}`;
   if (subtitle) subtitle.textContent = 'Manage size & color stock for this product';
 
   // Go to inventory section
@@ -393,15 +393,15 @@ function openInventoryManager(productId, encodedName) {
 
 
 async function loadAllInventory() {
-  const title    = document.getElementById('inventoryProductTitle');
+  const title = document.getElementById('inventoryProductTitle');
   const subtitle = document.getElementById('inventorySubtitle');
-  const tbody    = document.getElementById('inventoryTableBody');
+  const tbody = document.getElementById('inventoryTableBody');
 
   // Clear selected product so we know we’re in “all inventory” mode
-  selectedProductId   = null;
+  selectedProductId = null;
   selectedProductName = null;
 
-  if (title)    title.textContent    = 'Inventory - All Products';
+  if (title) title.textContent = 'Inventory - All Products';
   if (subtitle) subtitle.textContent = 'Showing stock variants for all products';
 
   if (tbody) {
@@ -495,19 +495,19 @@ function renderInventoryTable() {
   }
 
   const start = (inventoryPage - 1) * inventoryPageSize;
-  const end   = start + inventoryPageSize;
+  const end = start + inventoryPageSize;
   const pageItems = inventoryItems.slice(start, end);
 
   pageItems.forEach(v => {
     const row = document.createElement('tr');
     const stockClass =
       v.QUANTITY === 0 ? 'out-of-stock'
-      : v.QUANTITY < 10 ? 'low-stock'
-      : 'in-stock';
+        : v.QUANTITY < 10 ? 'low-stock'
+          : 'in-stock';
 
-const productLabel = v.PRODUCT_NAME
-  ? v.PRODUCT_NAME
-  : (selectedProductName || '');
+    const productLabel = v.PRODUCT_NAME
+      ? v.PRODUCT_NAME
+      : (selectedProductName || '');
 
     row.innerHTML = `
       <td>${productLabel}</td>
@@ -545,9 +545,9 @@ function renderInventoryPagination() {
 
 async function fetchLowStock() {
   try {
-const res = await fetch(`${API_BASE}&action=criticalInventory`, {
-  credentials: 'include'
-});
+    const res = await fetch(`${API_BASE}&action=criticalInventory`, {
+      credentials: 'include'
+    });
     const text = await res.text(); // read raw body first
     console.log('low stock raw response:', text);
 
@@ -571,7 +571,7 @@ const res = await fetch(`${API_BASE}&action=criticalInventory`, {
 
     const count = data.count || 0;
     const badge = document.getElementById('lowStockCount');
-    const list  = document.getElementById('lowStockList');
+    const list = document.getElementById('lowStockList');
 
     if (!badge || !list) return;
 
@@ -590,18 +590,18 @@ const res = await fetch(`${API_BASE}&action=criticalInventory`, {
     badge.textContent = count > 9 ? '9+' : count;
 
     data.items.forEach(item => {
-  const li = document.createElement('li');
-  li.textContent =
-    `${item.product_name} (${item.color}, ${item.size}) – only ${item.quantity} left`;
+      const li = document.createElement('li');
+      li.textContent =
+        `${item.product_name} (${item.color}, ${item.size}) – only ${item.quantity} left`;
 
-  li.addEventListener('click', () => {
-    // Go straight to the inventory tab for this product,
-    // same behaviour as the box icon in the Products table
-    const safeName = encodeURIComponent(item.product_name);
-    openInventoryManager(item.product_id, safeName);
-  });
+      li.addEventListener('click', () => {
+        // Go straight to the inventory tab for this product,
+        // same behaviour as the box icon in the Products table
+        const safeName = encodeURIComponent(item.product_name);
+        openInventoryManager(item.product_id, safeName);
+      });
 
-  list.appendChild(li);
+      list.appendChild(li);
 
     });
   } catch (err) {
@@ -643,7 +643,7 @@ async function openInventoryModal(editItem = null) {
   const colorSelect = document.getElementById('inventoryColor');
 
   let selectedSeasonId = '';
-  let selectedColorId  = '';
+  let selectedColorId = '';
 
   if (editItem) {
     // 🔹 EDIT mode
@@ -654,10 +654,10 @@ async function openInventoryModal(editItem = null) {
 
     // Set size & quantity from item
     const sizeInput = document.getElementById('inventorySize');
-    const qtyInput  = document.getElementById('inventoryQuantity');
+    const qtyInput = document.getElementById('inventoryQuantity');
 
     if (sizeInput) sizeInput.value = editItem.SIZE || '';
-    if (qtyInput)  qtyInput.value  = editItem.QUANTITY || '';
+    if (qtyInput) qtyInput.value = editItem.QUANTITY || '';
 
     selectedColorId = editItem.COLOR_ID;
 
@@ -823,7 +823,7 @@ function closeAddColorModal() {
 
 async function saveColor() {
   const colorName = document.getElementById('newColorName').value.trim();
-  const seasonId  = document.getElementById('newColorSeason').value;
+  const seasonId = document.getElementById('newColorSeason').value;
 
   if (!colorName || !seasonId) {
     showNotification('Color name and season are required', 'error');
@@ -866,58 +866,58 @@ async function saveColor() {
 }
 
 function renderPagination(containerId, currentPage, totalItems, pageSize, onChangePage) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
+  const container = document.getElementById(containerId);
+  if (!container) return;
 
-    container.innerHTML = '';
+  container.innerHTML = '';
 
-    const totalPages = Math.ceil(totalItems / pageSize);
-    //if (totalPages <= 1) return;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  //if (totalPages <= 1) return;
 
-    const createBtn = (label, page, disabled = false, active = false) => {
-        const btn = document.createElement('button');
-        btn.textContent = label;
-        btn.disabled = disabled;
-        btn.className = 'btn btn-secondary btn-sm';
-        if (active) btn.classList.add('active-page');
-        if (!disabled) btn.onclick = () => onChangePage(page);
-        return btn;
-    };
+  const createBtn = (label, page, disabled = false, active = false) => {
+    const btn = document.createElement('button');
+    btn.textContent = label;
+    btn.disabled = disabled;
+    btn.className = 'btn btn-secondary btn-sm';
+    if (active) btn.classList.add('active-page');
+    if (!disabled) btn.onclick = () => onChangePage(page);
+    return btn;
+  };
 
-    // Prev
-    container.appendChild(createBtn('Prev', currentPage - 1, currentPage === 1));
+  // Prev
+  container.appendChild(createBtn('Prev', currentPage - 1, currentPage === 1));
 
-    let pagesToShow = [];
+  let pagesToShow = [];
 
-    if (totalPages <= 3) {
-        // Show all pages (max 3)
-        for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
+  if (totalPages <= 3) {
+    // Show all pages (max 3)
+    for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
+  } else {
+    // More than 3 pages
+    if (currentPage <= 2) {
+      pagesToShow = [1, 2, 3];
+      pagesToShow.push('...');
+    } else if (currentPage >= totalPages - 1) {
+      pagesToShow = ['...', totalPages - 2, totalPages - 1, totalPages];
     } else {
-        // More than 3 pages
-        if (currentPage <= 2) {
-            pagesToShow = [1, 2, 3];
-            pagesToShow.push('...');
-        } else if (currentPage >= totalPages - 1) {
-            pagesToShow = ['...', totalPages - 2, totalPages - 1, totalPages];
-        } else {
-            pagesToShow = ['...', currentPage - 1, currentPage, currentPage + 1, '...'];
-        }
+      pagesToShow = ['...', currentPage - 1, currentPage, currentPage + 1, '...'];
     }
+  }
 
-    pagesToShow.forEach(p => {
-        if (p === '...') {
-            const dots = document.createElement('span');
-            dots.textContent = '...';
-            container.appendChild(dots);
-        } else {
-            container.appendChild(
-                createBtn(p, p, false, currentPage === p)
-            );
-        }
-    });
+  pagesToShow.forEach(p => {
+    if (p === '...') {
+      const dots = document.createElement('span');
+      dots.textContent = '...';
+      container.appendChild(dots);
+    } else {
+      container.appendChild(
+        createBtn(p, p, false, currentPage === p)
+      );
+    }
+  });
 
-    // Next
-    container.appendChild(createBtn('Next', currentPage + 1, currentPage === totalPages));
+  // Next
+  container.appendChild(createBtn('Next', currentPage + 1, currentPage === totalPages));
 }
 
 
@@ -946,7 +946,7 @@ async function loadUsers() {
 
 function renderUsers() {
   const tbody = document.getElementById('userTableBody');
-    if (!tbody) {
+  if (!tbody) {
     console.warn('renderUsers called but #userTableBody not found');
     return;
   }
@@ -964,7 +964,7 @@ function renderUsers() {
   }
 
   const start = (userPage - 1) * userPageSize;
-  const end   = start + userPageSize;
+  const end = start + userPageSize;
   const pageItems = list.slice(start, end);
 
   pageItems.forEach(user => {
@@ -985,22 +985,22 @@ function renderUsers() {
 }
 
 function renderUserPagination() {
-    renderPagination(
-        "userPagination",
-        userPage,
-        currentUsers.length,
-        userPageSize,
-        (p) => {
-            userPage = p;
-            renderUsers();
-            renderUserPagination();
-        }
-    );
+  renderPagination(
+    "userPagination",
+    userPage,
+    currentUsers.length,
+    userPageSize,
+    (p) => {
+      userPage = p;
+      renderUsers();
+      renderUserPagination();
+    }
+  );
 }
 
 
 function filterUsers() {
-  const searchTerm   = document.getElementById('userSearch').value.toLowerCase();
+  const searchTerm = document.getElementById('userSearch').value.toLowerCase();
   const statusFilter = document.getElementById('statusFilter').value; // "active" | "locked" | ""
 
   const filtered = allUsers.filter(user => {
@@ -1160,7 +1160,7 @@ function filterStaff() {
 
   currentStaff = staffList.filter(s => {
     const uname = (s.USERNAME || '').toLowerCase();
-    const role  = (s.ROLE || '').toLowerCase();
+    const role = (s.ROLE || '').toLowerCase();
     return uname.includes(term) || role.includes(term);
   });
 
@@ -1227,7 +1227,7 @@ async function deleteStaff(adminId) {
 
 function openStaffModal() {
   const modal = document.getElementById('staffModal');
-  const form  = document.getElementById('staffForm');
+  const form = document.getElementById('staffForm');
   const title = document.getElementById('staffModalTitle');
 
   if (!modal || !form) return;
@@ -1246,19 +1246,19 @@ async function saveStaff(event) {
   if (event) event.preventDefault();
 
   const usernameInput = document.getElementById('staffUsername');
-  const emailInput    = document.getElementById('staffEmail');
+  const emailInput = document.getElementById('staffEmail');
   const passwordInput = document.getElementById('staffPassword');
-  const roleSelect    = document.getElementById('staffRole');
+  const roleSelect = document.getElementById('staffRole');
 
   const username = usernameInput.value.trim();
-  const email    = emailInput.value.trim();
+  const email = emailInput.value.trim();
   const password = passwordInput.value;
-  const role     = roleSelect.value;
+  const role = roleSelect.value;
 
-if (!username || !email || !password) {
-  showNotification('Username, email, and password are required', 'error');
-  return;
-}
+  if (!username || !email || !password) {
+    showNotification('Username, email, and password are required', 'error');
+    return;
+  }
 
   try {
     const res = await fetch(`${API_BASE}&action=staff`, {
@@ -1444,7 +1444,7 @@ function renderOrders() {
   }
 
   const start = (orderPage - 1) * orderPageSize;
-  const end   = start + orderPageSize;
+  const end = start + orderPageSize;
   const pageItems = list.slice(start, end);
 
   pageItems.forEach(order => {
@@ -1533,17 +1533,17 @@ async function updateOrderStatusTable(orderId, newStatus, selectEl) {
 
 
 function renderOrderPagination() {
-    renderPagination(
-        "orderPagination",
-        orderPage,
-        currentOrders.length,
-        orderPageSize,
-        (p) => {
-            orderPage = p;
-            renderOrders();
-            renderOrderPagination();
-        }
-    );
+  renderPagination(
+    "orderPagination",
+    orderPage,
+    currentOrders.length,
+    orderPageSize,
+    (p) => {
+      orderPage = p;
+      renderOrders();
+      renderOrderPagination();
+    }
+  );
 }
 
 
@@ -1633,9 +1633,8 @@ async function viewOrder(orderId) {
             </tr>
           </thead>
           <tbody>
-            ${
-              (orderDetails.items || [])
-                .map(item => `
+            ${(orderDetails.items || [])
+        .map(item => `
                   <tr>
                     <td>${item.PRODUCT_NAME}</td>
                     <td>${item.SIZE}</td>
@@ -1645,8 +1644,8 @@ async function viewOrder(orderId) {
                     <td>₱${(parseFloat(item.PRICE || item.UNIT_PRICE) * item.QUANTITY).toFixed(2)}</td>
                   </tr>
                 `)
-                .join('')
-            }
+        .join('')
+      }
           </tbody>
         </table>
       </div>
@@ -1739,7 +1738,7 @@ function showConfirm(message, onConfirm) {
 
   // Wire buttons
   const btnCancel = notification.querySelector('.confirm-cancel');
-  const btnOk     = notification.querySelector('.confirm-ok');
+  const btnOk = notification.querySelector('.confirm-ok');
 
   if (btnCancel) {
     btnCancel.addEventListener('click', () => {
@@ -1814,7 +1813,7 @@ function renderAudit() {
   }
 
   const start = (auditPage - 1) * auditPageSize;
-  const end   = start + auditPageSize;
+  const end = start + auditPageSize;
   const pageItems = list.slice(start, end);
 
   tbody.innerHTML = pageItems.map(log => `
@@ -1829,17 +1828,17 @@ function renderAudit() {
 }
 
 function renderAuditPagination() {
-    renderPagination(
-        "auditPagination",
-        auditPage,
-        displayAuditLogs.length,
-        auditPageSize,
-        (p) => {
-            auditPage = p;
-            renderAudit();
-            renderAuditPagination();
-        }
-    );
+  renderPagination(
+    "auditPagination",
+    auditPage,
+    displayAuditLogs.length,
+    auditPageSize,
+    (p) => {
+      auditPage = p;
+      renderAudit();
+      renderAuditPagination();
+    }
+  );
 }
 
 
