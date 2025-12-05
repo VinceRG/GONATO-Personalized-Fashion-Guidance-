@@ -50,6 +50,15 @@ if (!function_exists('mapStatusClass')) {
         }
     }
 }
+
+if (empty($user['SEASON_TYPE'])) {
+    unset($_SESSION['colorAnalysisResult']);
+}
+
+$hasColorSession   = isset($_SESSION['colorAnalysisResult']);
+$hasColorDb        = !empty($user['SEASON_TYPE']);
+$showColorResults  = ($hasColorSession || $hasColorDb);
+
 // ==========================================
 
   // Flash messages
