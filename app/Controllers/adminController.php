@@ -325,6 +325,7 @@ class AdminController {
             SELECT 
                 i.INVENTORY_ID,
                 i.PRODUCT_ID,
+                i.COLOR_ID,
                 i.SIZE,
                 i.QUANTITY,
                 i.CREATED_AT,
@@ -335,7 +336,6 @@ class AdminController {
             JOIN COLORS c   ON i.COLOR_ID   = c.COLOR_ID
             ORDER BY p.PRODUCT_NAME, i.SIZE, c.COLOR_VALUE
         ";
-
         $result = $this->db->query($sql);
         if (!$result) {
             throw new Exception('Query failed: ' . $this->db->error);
@@ -455,27 +455,35 @@ class AdminController {
      * Delete inventory variant
      */
     public function deleteInventory($inventoryId) {
-        try {
-            $stmt = $this->db->prepare("DELETE FROM INVENTORY WHERE INVENTORY_ID = ?");
-            $stmt->bind_param("i", $inventoryId);
+    try {
+        $stmt = $this->db->prepare("DELETE FROM INVENTORY WHERE INVENTORY_ID = ?");
+        $stmt->bind_param("i", $inventoryId);
 
-            if (!$stmt->execute()) throw new Exception("Execute failed: " . $stmt->error);
-            $stmt->close();
-            // 🔹 AUDIT: Delete inventory
-            if (!empty($_SESSION['admin_id'])) {
-                $audit = new Audit($this->db);
-                $audit->log(
-                    (int)$_SESSION['admin_id'],
-                    'DELETE_INVENTORY',
-                    "Deleted inventory ID {$inventoryId}"
-                );
-            }
-            echo json_encode(['success' => true]);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to delete inventory: ' . $e->getMessage()]);
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
         }
+
+        $stmt->close();
+
+        // 🔹 AUDIT: Delete inventory
+        if (!empty($_SESSION['admin_id'])) {
+            $audit = new Audit($this->db);
+            $audit->log(
+                (int)$_SESSION['admin_id'],
+                'DELETE_INVENTORY',
+                "Deleted inventory ID {$inventoryId}"
+            );
+        }
+
+        echo json_encode(['success' => true]);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            'error' => 'Failed to delete inventory: ' . $e->getMessage()
+        ]);
     }
+}
 
     // ==================== COLORS ====================
 

@@ -235,35 +235,34 @@ function openProductModal(productId = null) {
   currentEditId = productId;
   imageInput.required = !productId; // Require image only for new product
 
-if (productId) {
-  // Edit mode
-  title.textContent = 'Edit Product';
+  if (productId) {
+    // Edit mode
+    title.textContent = 'Edit Product';
 
-  // 🔧 Make sure we match even if one is string and one is number
-  const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
+    // 🔧 Make sure we match even if one is string and one is number
+    const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
 
-  console.log('Editing productId:', productId, 'Found product:', product);
+    console.log('Editing productId:', productId, 'Found product:', product);
 
-  if (product) {
-    document.getElementById('productName').value = product.PRODUCT_NAME || '';
-    document.getElementById('productDescription').value = product.DESCRIPTION || '';
-    document.getElementById('productPrice').value = product.PRICE || '';
-    document.getElementById('bodyShapeSelect').value = product.BODY_SHAPE_ID || '';
+    if (product) {
+      document.getElementById('productName').value = product.PRODUCT_NAME || '';
+      document.getElementById('productDescription').value = product.DESCRIPTION || '';
+      document.getElementById('productPrice').value = product.PRICE || '';
+      document.getElementById('bodyShapeSelect').value = product.BODY_SHAPE_ID || '';
 
+      if (product.IMAGE_FILE) {
+        currentImage.src = `public/image/${product.IMAGE_FILE}`;
+        imageContainer.style.display = 'block';
+      } else {
+        imageContainer.style.display = 'none';
+      }
 
-    if (product.IMAGE_FILE) {
-      currentImage.src = `public/image/${product.IMAGE_FILE}`;
-      imageContainer.style.display = 'block';
+      imageInput.required = false;
     } else {
-      imageContainer.style.display = 'none';
+      console.warn('No product found for id:', productId);
     }
-
-    imageInput.required = false;
-  } else {
-    console.warn('No product found for id:', productId);
   }
-}
-else {
+  else {
     // Add mode
     title.textContent = 'Add Product';
     imageContainer.style.display = 'none';
@@ -324,51 +323,77 @@ async function editProduct(productId) {
   openProductModal(productId);
 }
 
-async function deleteProduct(productId) {
-  openDeleteModal(productId);
-}
-
-let productToDeleteId = null;
-
-function openDeleteModal(productId) {
-   const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
+function deleteProduct(productId) {
+  const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
   if (!product) {
-    console.warn('No product found for delete id:', productId);
+    showNotification('Product not found.', 'error');
     return;
   }
 
-  productToDeleteId = productId;
-  document.getElementById('deleteProductMessage').textContent =
-    `Are you sure you want to delete "${product.PRODUCT_NAME}"?\nThis will also delete all inventory variants.`;
+  const message = `Are you sure you want to delete "${product.PRODUCT_NAME}"?\nThis will also delete all inventory variants.`;
 
-  document.getElementById('deleteProductModal').style.display = 'block';
+  showConfirm(message, async () => {
+    try {
+      const response = await fetch(`${API_BASE}&action=deleteProduct&id=${productId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete product');
+      }
+
+      showNotification('Product deleted successfully', 'success');
+      await loadProducts();
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      showNotification('Failed to delete product: ' + error.message, 'error');
+    }
+  });
 }
 
-function closeDeleteModal() {
-  productToDeleteId = null;
-  document.getElementById('deleteProductModal').style.display = 'none';
-}
 
-// Confirm deletion
-document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
-  if (!productToDeleteId) return;
+// let productToDeleteId = null;
 
-  try {
-    const response = await fetch(`${API_BASE}&action=deleteProduct&id=${productToDeleteId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
+// function openDeleteModal(productId) {
+//    const product = products.find(p => String(p.PRODUCT_ID) === String(productId));
+//   if (!product) {
+//     console.warn('No product found for delete id:', productId);
+//     return;
+//   }
 
-    if (!response.ok) throw new Error('Failed to delete product');
+//   productToDeleteId = productId;
+//   document.getElementById('deleteProductMessage').textContent =
+//     `Are you sure you want to delete "${product.PRODUCT_NAME}"?\nThis will also delete all inventory variants.`;
 
-    showNotification('Product deleted successfully', 'success');
-    closeDeleteModal();
-    await loadProducts();
-  } catch (error) {
-    console.error('Error deleting product:', error);
-    showNotification('Failed to delete product', 'error');
-  }
-});
+//   document.getElementById('deleteProductModal').style.display = 'block';
+// }
+
+// function closeDeleteModal() {
+//   productToDeleteId = null;
+//   document.getElementById('deleteProductModal').style.display = 'none';
+// }
+
+// // Confirm deletion
+// document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+//   if (!productToDeleteId) return;
+
+//   try {
+//     const response = await fetch(`${API_BASE}&action=deleteProduct&id=${productToDeleteId}`, {
+//       method: 'DELETE',
+//       credentials: 'include'
+//     });
+
+//     if (!response.ok) throw new Error('Failed to delete product');
+
+//     showNotification('Product deleted successfully', 'success');
+//     closeDeleteModal();
+//     await loadProducts();
+//   } catch (error) {
+//     console.error('Error deleting product:', error);
+//     showNotification('Failed to delete product', 'error');
+//   }
+// });
 
 
 // ==================== INVENTORY TAB ====================
@@ -505,9 +530,9 @@ function renderInventoryTable() {
       : v.QUANTITY < 10 ? 'low-stock'
       : 'in-stock';
 
-const productLabel = v.PRODUCT_NAME
-  ? v.PRODUCT_NAME
-  : (selectedProductName || '');
+    const productLabel = v.PRODUCT_NAME
+      ? v.PRODUCT_NAME
+      : (selectedProductName || '');
 
     row.innerHTML = `
       <td>${productLabel}</td>
@@ -545,9 +570,9 @@ function renderInventoryPagination() {
 
 async function fetchLowStock() {
   try {
-const res = await fetch(`${API_BASE}&action=criticalInventory`, {
-  credentials: 'include'
-});
+    const res = await fetch(`${API_BASE}&action=criticalInventory`, {
+      credentials: 'include'
+    });
     const text = await res.text(); // read raw body first
     console.log('low stock raw response:', text);
 
@@ -590,24 +615,25 @@ const res = await fetch(`${API_BASE}&action=criticalInventory`, {
     badge.textContent = count > 9 ? '9+' : count;
 
     data.items.forEach(item => {
-  const li = document.createElement('li');
-  li.textContent =
-    `${item.product_name} (${item.color}, ${item.size}) – only ${item.quantity} left`;
+      const li = document.createElement('li');
+      li.textContent =
+        `${item.product_name} (${item.color}, ${item.size}) – only ${item.quantity} left`;
 
-  li.addEventListener('click', () => {
-    // Go straight to the inventory tab for this product,
-    // same behaviour as the box icon in the Products table
-    const safeName = encodeURIComponent(item.product_name);
-    openInventoryManager(item.product_id, safeName);
-  });
+      li.addEventListener('click', () => {
+        // Go straight to the inventory tab for this product,
+        // same behaviour as the box icon in the Products table
+        const safeName = encodeURIComponent(item.product_name);
+        openInventoryManager(item.product_id, safeName);
+      });
 
-  list.appendChild(li);
+      list.appendChild(li);
 
     });
   } catch (err) {
     console.error('Failed to fetch low stock', err);
   }
 }
+
 function initLowStockNotification() {
   const bell = document.getElementById('lowStockBtn');
   const dropdown = document.getElementById('lowStockDropdown');
@@ -636,59 +662,99 @@ function initLowStockNotification() {
 }
 
 
-async function openInventoryModal(editItem = null) {
-  const modal = document.getElementById('inventoryModal');
-  const title = document.getElementById('inventoryModalTitle');
+function openInventoryModal(editItem = null) {
+  const modal        = document.getElementById('inventoryModal');
+  const title        = document.getElementById('inventoryModalTitle');
   const seasonSelect = document.getElementById('inventorySeasonFilter');
-  const colorSelect = document.getElementById('inventoryColor');
+  const colorSelect  = document.getElementById('inventoryColor');
+  const form         = document.getElementById('inventoryForm');
+
+  console.log('openInventoryModal editItem:', editItem);
+
+  // Always start from a clean form
+  if (form) form.reset();
 
   let selectedSeasonId = '';
   let selectedColorId  = '';
 
   if (editItem) {
-    // 🔹 EDIT mode
+    // EDIT mode
     currentEditInventoryId = editItem.INVENTORY_ID;
-    title.textContent = 'Edit Variant';
+    if (title) title.textContent = 'Edit Variant';
 
-    console.log('openInventoryModal editItem:', editItem);
-
-    // Set size & quantity from item
+    // Fill size & quantity
     const sizeInput = document.getElementById('inventorySize');
     const qtyInput  = document.getElementById('inventoryQuantity');
 
-    if (sizeInput) sizeInput.value = editItem.SIZE || '';
-    if (qtyInput)  qtyInput.value  = editItem.QUANTITY || '';
+    if (sizeInput && editItem.SIZE) {
+      sizeInput.value = editItem.SIZE;
+    }
 
-    selectedColorId = editItem.COLOR_ID;
+    if (qtyInput && editItem.QUANTITY !== undefined && editItem.QUANTITY !== null) {
+      qtyInput.value = editItem.QUANTITY;
+    }
 
-    // Look up season from colors[]
-    const colorObj = colors.find(c => String(c.COLOR_ID) === String(editItem.COLOR_ID));
-    if (colorObj) {
-      selectedSeasonId = colorObj.SEASON_ID;
+    // Color / season
+    if (editItem.COLOR_ID) {
+      selectedColorId = String(editItem.COLOR_ID);
+
+      const colorObj = colors.find(
+        c => String(c.COLOR_ID) === String(editItem.COLOR_ID)
+      );
+      if (colorObj && colorObj.SEASON_ID) {
+        selectedSeasonId = String(colorObj.SEASON_ID);
+      }
     }
   } else {
-    // 🔹 ADD mode
+    // ADD mode
     currentEditInventoryId = null;
-    title.textContent = 'Add Variant';
-    document.getElementById('inventoryForm').reset();
+    if (title) title.textContent = 'Add Variant';
   }
 
-  // Populate season dropdown (pre-select if editing)
-  populateInventorySeasonFilter(selectedSeasonId);
+  // Populate Season dropdown
+  if (seasonSelect) {
+    seasonSelect.innerHTML = '<option value="">Select Season</option>';
 
-  // Populate colors based on selected season (or placeholder)
-  populateInventoryColorDropdown(selectedSeasonId, selectedColorId);
+    (seasons || []).forEach(season => {
+      const opt = document.createElement('option');
+      opt.value = season.SEASON_ID;
+      opt.textContent = season.SEASON_TYPE;
+      if (
+        selectedSeasonId &&
+        String(season.SEASON_ID) === String(selectedSeasonId)
+      ) {
+        opt.selected = true;
+      }
+      seasonSelect.appendChild(opt);
+    });
+  }
 
-  // When season changes, update colors in the dropdown
-  seasonSelect.onchange = function () {
-    const newSeasonId = seasonSelect.value;
-    populateInventoryColorDropdown(newSeasonId, '');
-  };
+  // Build list of colors (maybe filtered by season)
+  if (colorSelect) {
+    colorSelect.innerHTML = '<option value="">Select Color</option>';
 
-  modal.style.display = 'block';
+    let colorList = colors || [];
+    if (selectedSeasonId) {
+      colorList = colorList.filter(
+        c => String(c.SEASON_ID) === String(selectedSeasonId)
+      );
+    }
+
+    colorList.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.COLOR_ID;
+      opt.textContent = c.COLOR_VALUE;
+      if (String(c.COLOR_ID) === String(selectedColorId)) {
+        opt.selected = true;
+      }
+      colorSelect.appendChild(opt);
+    });
+  }
+
+  if (modal) {
+    modal.style.display = 'block';
+  }
 }
-
-
 
 function closeInventoryModal() {
   document.getElementById('inventoryModal').style.display = 'none';
@@ -737,50 +803,111 @@ async function saveInventoryVariant() {
 }
 
 async function editInventory(inventoryId) {
+  console.log('editInventory called with id:', inventoryId);
+
+  // 1) Try to get the variant directly from the cached list
+  if (!Array.isArray(inventoryItems)) {
+    console.warn('inventoryItems is not an array:', inventoryItems);
+  }
+
+  const item = (inventoryItems || []).find(
+    i => String(i.INVENTORY_ID) === String(inventoryId)
+  );
+
+  console.log('Found item in inventoryItems:', item);
+
+  if (item) {
+    // Make sure product context is set so saving works
+    if (item.PRODUCT_ID) {
+      selectedProductId = item.PRODUCT_ID;
+    }
+    if (item.PRODUCT_NAME) {
+      selectedProductName = item.PRODUCT_NAME;
+    }
+
+    openInventoryModal(item);
+    return;
+  }
+
+  // 2) Fallback: if we have a selectedProductId and still didn't find the item,
+  //    refetch inventory for that product (single-product view case).
+  if (!selectedProductId) {
+    console.warn(
+      'No selectedProductId and inventory item not found for id',
+      inventoryId
+    );
+    showNotification('Could not load this variant for editing.', 'error');
+    return;
+  }
+
   try {
-    const res = await fetch(`${API_BASE}&action=inventoryByProduct&product_id=${selectedProductId}`, {
-      credentials: 'include'
-    });
+    const res = await fetch(
+      `${API_BASE}&action=inventoryByProduct&product_id=${selectedProductId}`,
+      { credentials: 'include' }
+    );
 
     if (!res.ok) {
       throw new Error(`Failed to load inventory for editing (${res.status})`);
     }
 
     const data = await res.json();
-    console.log('Inventory list for edit:', data);
+    console.log('Inventory list (fallback fetch):', data);
 
-    const item = data.find(i => String(i.INVENTORY_ID) === String(inventoryId));
-    if (!item) {
+    const fetchedItem = (data || []).find(
+      i => String(i.INVENTORY_ID) === String(inventoryId)
+    );
+
+    if (!fetchedItem) {
       console.warn('No inventory item found for id', inventoryId);
+      showNotification('Could not find this variant in the product inventory.', 'error');
       return;
     }
 
-    console.log('Editing inventory item:', item);
-    openInventoryModal(item);
+    if (fetchedItem.PRODUCT_ID) {
+      selectedProductId = fetchedItem.PRODUCT_ID;
+    }
+    if (fetchedItem.PRODUCT_NAME) {
+      selectedProductName = fetchedItem.PRODUCT_NAME;
+    }
+
+    console.log('Editing inventory item (from fetch):', fetchedItem);
+    openInventoryModal(fetchedItem);
   } catch (err) {
     console.error('Error in editInventory:', err);
+    showNotification('Error loading inventory for edit: ' + err.message, 'error');
   }
 }
 
 
-async function deleteInventory(inventoryId) {
-  if (!confirm('Are you sure you want to delete this variant?')) return;
+// ✅ Updated: use showConfirm instead of confirm()
+function deleteInventory(inventoryId) {
+  showConfirm('Are you sure you want to delete this variant?', async () => {
+    try {
+      const res = await fetch(`${API_BASE}&action=inventory&id=${inventoryId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to delete inventory');
+      }
 
-  try {
-    const res = await fetch(`${API_BASE}&action=inventory&id=${inventoryId}`, {
-      method: 'DELETE',
-      credentials: 'include'
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Failed to delete inventory');
+      showNotification('Variant deleted', 'success');
 
-    showNotification('Variant deleted', 'success');
-    await loadInventory(selectedProductId, inventoryPage);
-  } catch (err) {
-    console.error(err);
-    showNotification('Failed to delete variant', 'error');
-  }
+      // 🔹 If we are in "per product" mode (box icon clicked), reload that product's inventory
+      // 🔹 If we are in "All Products" mode (nav → Inventory), reload all inventory
+      if (selectedProductId) {
+        await loadInventory(selectedProductId);
+      } else {
+        await loadAllInventory();
+      }
+    } catch (err) {
+      console.error(err);
+      showNotification('Failed to delete variant: ' + err.message, 'error');
+    }
+  });
 }
+
 // ==================== COLORS ====================
 async function loadColors() {
   try {
@@ -940,7 +1067,8 @@ async function loadUsers() {
     renderUserPagination();
   } catch (err) {
     console.error('loadUsers error:', err);
-    alert('Error loading users. Make sure you are logged in as admin.');
+    // ✅ replaced alert with custom notification
+    showNotification('Error loading users. Make sure you are logged in as admin.', 'error');
   }
 }
 
@@ -1201,26 +1329,27 @@ function toggleStaffActive(adminId, isActive) {
 }
 
 
-async function deleteStaff(adminId) {
-  if (!confirm('Are you sure you want to delete this staff account?')) return;
+// ✅ Updated: use showConfirm instead of confirm()
+function deleteStaff(adminId) {
+  showConfirm('Are you sure you want to delete this staff account?', async () => {
+    try {
+      const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
 
-  try {
-    const res = await fetch(`${API_BASE}&action=staff&id=${adminId}`, {
-      method: 'DELETE',
-      credentials: 'include',
-    });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Failed to delete staff');
+      }
 
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      throw new Error(data.error || 'Failed to delete staff');
+      showNotification('Staff deleted', 'success');
+      await loadStaff();
+    } catch (err) {
+      console.error('deleteStaff error:', err);
+      showNotification('Error deleting staff: ' + err.message, 'error');
     }
-
-    showNotification('Staff deleted', 'success');
-    await loadStaff();
-  } catch (err) {
-    console.error('deleteStaff error:', err);
-    showNotification('Error deleting staff: ' + err.message, 'error');
-  }
+  });
 }
 
 // ===== STAFF MODAL HANDLERS =====
@@ -1255,10 +1384,10 @@ async function saveStaff(event) {
   const password = passwordInput.value;
   const role     = roleSelect.value;
 
-if (!username || !email || !password) {
-  showNotification('Username, email, and password are required', 'error');
-  return;
-}
+  if (!username || !email || !password) {
+    showNotification('Username, email, and password are required', 'error');
+    return;
+  }
 
   try {
     const res = await fetch(`${API_BASE}&action=staff`, {
@@ -1473,6 +1602,7 @@ function renderOrders() {
     tbody.appendChild(row);
   });
 }
+
 async function updateOrderStatusTable(orderId, newStatus, selectEl) {
   if (!newStatus) return;
 
@@ -1658,6 +1788,7 @@ async function viewOrder(orderId) {
     showNotification('Failed to load order details: ' + error.message, 'error');
   }
 }
+
 async function updateOrderStatus(orderId) {
   const select = document.getElementById('orderStatusSelect');
   if (!select) return;
@@ -1762,10 +1893,63 @@ function showConfirm(message, onConfirm) {
 
 
 function logout() {
-  if (confirm('Are you sure you want to logout?')) {
-    window.location.href = '?page=logout';
+  const overlay = document.getElementById('adminLogoutOverlay');
+  if (!overlay) {
+    // Fallback: if overlay is missing, use old confirm
+    if (confirm('Are you sure you want to logout?')) {
+      window.location.href = '?page=logout';
+    }
+    return;
+  }
+
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAdminLogout() {
+  const overlay = document.getElementById('adminLogoutOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+    document.body.style.overflow = '';
   }
 }
+
+function confirmAdminLogout() {
+  const overlay = document.getElementById('adminLogoutOverlay');
+  if (overlay) {
+    // Optional "logging out…" effect, similar to system_features
+    overlay.querySelector('.admin-logout-modal').innerHTML = `
+      <div style="padding: 1.5rem 0;">
+        <h2>Logging out…</h2>
+      </div>
+    `;
+  }
+
+  setTimeout(() => {
+    // Match your existing logout URL for admin
+    window.location.href = '?page=logout';
+  }, 600);
+}
+
+// Close on ESC or clicking outside modal (optional, like system_features)
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape') {
+    const overlay = document.getElementById('adminLogoutOverlay');
+    if (overlay && overlay.style.display === 'flex') {
+      closeAdminLogout();
+    }
+  }
+});
+
+document.addEventListener('click', function (event) {
+  const overlay = document.getElementById('adminLogoutOverlay');
+  if (!overlay) return;
+
+  if (event.target === overlay) {
+    closeAdminLogout();
+  }
+});
+
 
 // === AUDIT TRAIL ===
 

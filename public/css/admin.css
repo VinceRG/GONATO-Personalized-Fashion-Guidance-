@@ -1154,3 +1154,72 @@
 .hidden {
   display: none !important;
 }
+
+/* Change font color of text inside confirm notification */
+.confirm-notification span {
+  color: #2D2D2D;   /* ← change to any color you want */
+}
+
+/* Optional: also style the whole container text */
+.confirm-notification {
+  color: #2D2D2D;   /* ← sets default text color */
+}
+
+
+/* Full-screen dark overlay */
+.admin-logout-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;              /* shown via JS */
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Centered modal card */
+.admin-logout-modal {
+  background: #ffffff;
+  max-width: 380px;
+  width: 90%;
+  padding: 2rem 2.2rem;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.admin-logout-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  margin: 0 auto 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(166, 135, 99, 0.1); /* use your accent color lightly */
+  font-size: 1.8rem;
+  color: var(--color-accent-dark);
+}
+
+.admin-logout-modal h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.3rem;
+}
+
+.admin-logout-modal p {
+  margin: 0 0 1.5rem;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.admin-logout-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+/* Optional: make buttons same width */
+.admin-logout-actions .btn,
+.admin-logout-actions .btn-secondary {
+  min-width: 105px;
+}

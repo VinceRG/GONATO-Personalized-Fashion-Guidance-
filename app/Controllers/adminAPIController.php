@@ -15,30 +15,28 @@ class AdminApiController
     private $conn;
 
     public function __construct()
-    {
-        try {
-            // Use MYSQLI for AdminController and Models
-            $mysqli = new mysqli("localhost", "root", "root", "Amarelle", 3307);
-            
-            if ($mysqli->connect_error) {
-                // If connection fails, throw an exception
-                throw new Exception("MySQLi Connection failed: " . $mysqli->connect_error);
-            }
-            $this->conn = $mysqli; // ✅ keep for audit model
+{
+    try {
+        // ✅ Use your central Database class
+        $mysqli = Database::connect();
 
-            // Pass the mysqli object to AdminController
-            $this->adminController = new AdminController($mysqli);
+        // Store connection for audit + staff functions
+        $this->conn = $mysqli;
 
-        } catch (Exception $e) {
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode([
-                // Change the error message to reflect mysqli failure
-                'error' => 'Database connection failed: ' . $e->getMessage()
-            ]);
-            exit;
-        }
+        // Pass DB to AdminController
+        $this->adminController = new AdminController($mysqli);
+
+    } catch (Exception $e) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'error' => 'Database connection failed: ' . $e->getMessage()
+        ]);
+        exit;
     }
+}
+
+
 
 private function checkAdminAuth()
 {

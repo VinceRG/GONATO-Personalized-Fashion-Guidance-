@@ -593,7 +593,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
   </div>
 
   <!-- DELETE PRODUCT MODAL -->
-  <div id="deleteProductModal" class="modal">
+  <!-- <div id="deleteProductModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
         <h2 class="modal-title">Confirm Delete</h2>
@@ -607,7 +607,7 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
         <button class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
       </div>
     </div>
-  </div>
+  </div> -->
 
   <!-- ADD COLOR MODAL -->
   <div id="addColorModal" class="modal">
@@ -637,6 +637,26 @@ $adminUsername = $_SESSION['admin_username'] ?? '@admin';
       </form>
     </div>
   </div>
+  <!-- Logout confirmation overlay for ADMIN -->
+<div id="adminLogoutOverlay" class="admin-logout-overlay" style="display:none;">
+  <div class="admin-logout-modal">
+    <div class="admin-logout-icon">
+      <i class="bi bi-box-arrow-right"></i>
+    </div>
+    <h2>Sign out?</h2>
+    <p>Are you sure you want to log out of the admin panel?</p>
+
+    <div class="admin-logout-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeAdminLogout()">
+        Cancel
+      </button>
+      <button type="button" class="btn" onclick="confirmAdminLogout()">
+        Logout
+      </button>
+    </div>
+  </div>
+</div>
+
 
   <!-- SCRIPTS -->
   <!-- Chart.js -->
