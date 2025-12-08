@@ -84,6 +84,7 @@ class RegisterController {
                     $_SESSION['register_verify_expires'],
                     $_SESSION['register_email_verified']
                 );
+                
             } else {
                 $error    = $result['message'];
                 $formData = $_POST;
