@@ -1,4 +1,4 @@
-# 👗 GONATO - Personalized Fashion Guidance System
+# 👗 Personalized Fashion Guidance System
 
 **GONATO** is an intelligent **AI-powered fashion recommendation platform** that combines computer vision, machine learning, and e-commerce features. It analyzes your body shape and complexion to provide personalized clothing recommendations tailored to your unique characteristics.
 
